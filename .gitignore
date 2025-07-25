@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 
 
 # Node modules (both client and server)
+=======
+<<<<<<< HEAD
+# Node modules
+>>>>>>> 191c7b9d (Add/ Initial setup)
 node_modules/
 server/node_modules/
 
@@ -20,7 +25,20 @@ public/index.html
 # Environment files (all variations)
 .env
 .env.*
+<<<<<<< HEAD
 server/.env
+=======
+=======
+# node modules
+node_modules/
+
+# .env
+.env
+
+# build
+dist/
+>>>>>>> 38eedd2f (Add/ Initial setup)
+>>>>>>> 191c7b9d (Add/ Initial setup)
 
 # OS-specific junk
 .DS_Store
