@@ -44,6 +44,7 @@ dist/
 .DS_Store
 Thumbs.db
 
+<<<<<<< HEAD
 .env.production
 
 # SSH Keys
@@ -63,4 +64,6 @@ public/bundle.js
 dist/
 .env.local
 .envpublic/bundle.js
-public/
+=======
+node_modules/
+>>>>>>> d5370905 (Removed node_modules from repo and reinstalled clean)
