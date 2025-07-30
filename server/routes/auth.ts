@@ -40,7 +40,7 @@ router.get(
 router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req: Request, res: Response) => {
-    res.redirect('http://localhost:8000/dashboard');
+    res.redirect('http://localhost:8000/dashboard'); // frontend port
   }
 >>>>>>> 9bcdc5cd (Fix/ Client AND server both run on port 8000)
 );
@@ -59,13 +59,31 @@ router.get('/logout', (req: Request, res: Response, next: NextFunction) => {
     if (err) {
       return next(err);
     }
-    res.redirect('http://localhost:8000');
+    res.redirect('http://localhost:8000'); // frontend home
   });
-<<<<<<< HEAD
-} catch (err) {
-  next (err);
-=======
->>>>>>> 118d8902 (Fix/ Delete src folder and moved all relevent files to server folder)
+});
+
+// Check if user is authenticated
+router.get('/user', (req: Request, res: Response) => {
+  if (req.isAuthenticated() && req.user) {
+    res.json({
+      authenticated: true,
+      user: {
+        id: req.user.id,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        email: req.user.email,
+        profilePicture: req.user.profilePicture,
+      },
+    });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
+export default router;
+
+
 });
 
 // Check if user is authenticated
