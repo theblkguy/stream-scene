@@ -84,8 +84,8 @@ router.get('/user', (req: Request, res: Response) => {
 export default router;
 
 
-});
 
+<<<<<<< HEAD
 // Check if user is authenticated
 >>>>>>> a80da8cd (Fix/ fixing server paths (rebase))
 router.get('/user', (req: Request, res: Response) => {
@@ -119,9 +119,20 @@ router.post('/logout', (req: Request, res: Response) => {
 
 export default router;
 =======
+=======
+
+<<<<<<< HEAD
+>>>>>>> 9c0bfed6 (fix: resolve merge conflict in auth.ts and finalize correct redirect port)
 <<<<<<< HEAD
 export default router;
 =======
 export default router;
 >>>>>>> 118d8902 (Fix/ Delete src folder and moved all relevent files to server folder)
+<<<<<<< HEAD
 >>>>>>> a80da8cd (Fix/ fixing server paths (rebase))
+=======
+=======
+
+
+>>>>>>> 7ef24648 (fix: resolve merge conflict in auth.ts and finalize correct redirect port)
+>>>>>>> 9c0bfed6 (fix: resolve merge conflict in auth.ts and finalize correct redirect port)
