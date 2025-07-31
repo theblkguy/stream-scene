@@ -1,6 +1,5 @@
 <<<<<<< HEAD
 import path from 'path';
-import { fileURLToPath } from 'url';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import webpack from 'webpack';
 import Dotenv from 'dotenv-webpack';
@@ -15,6 +14,7 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 >>>>>>> 57eb40fd (Next step in rebase)
 >>>>>>> 4ab83d6d (Fix/ Changed build script to reflect changes to the webpack)
 
+<<<<<<< HEAD
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -92,36 +92,59 @@ export default (env, argv) => {
   };
 };
 =======
+=======
+>>>>>>> a3169de1 (fixed server issue, made task form on front end)
 export default {
-  entry: './client/client/src/index.tsx',
+  entry: './client/index.tsx',
   output: {
+    path: path.resolve('./dist'),
     filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist/public'),
     publicPath: '/',
+    clean: true,
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: ['.ts', '.tsx', '.js', '.jsx'],
   },
   module: {
     rules: [
       {
+<<<<<<< HEAD
         test: /\.(ts|tsx)$/,
+=======
+        test: /\.tsx?$/,
+>>>>>>> a3169de1 (fixed server issue, made task form on front end)
         use: 'ts-loader',
         exclude: /node_modules/,
       },
       {
-        test: /\.css$/,
+        test: /\.css$/i,
         use: ['style-loader', 'css-loader', 'postcss-loader'],
       },
     ],
   },
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   plugins: [ 
+=======
+  devServer: {
+    port: 3001,
+    static: {
+      directory: path.join(process.cwd(), 'dist'),
+    },
+    historyApiFallback: true, 
+    proxy: {
+      '/api': 'http://localhost:8000',
+      '/auth': 'http://localhost:8000',
+    },
+  },
+  plugins: [
+>>>>>>> a3169de1 (fixed server issue, made task form on front end)
     new HtmlWebpackPlugin({
-      template: './client/client/index.html',
+      template: './client/index.html',
     }),
   ],
+<<<<<<< HEAD
 >>>>>>> 57eb40fd (Next step in rebase)
   devtool: 'source-map',
   devServer: {
@@ -133,6 +156,9 @@ export default {
     open: true,
     historyApiFallback: true,
   },
+=======
+  mode: 'development',
+>>>>>>> a3169de1 (fixed server issue, made task form on front end)
 };
 >>>>>>> 92762c45 (Fix/ fixing rebase conflicts)
 >>>>>>> 4ab83d6d (Fix/ Changed build script to reflect changes to the webpack)

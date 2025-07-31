@@ -90,6 +90,7 @@
   "main": "server/server.ts",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+<<<<<<< HEAD
     "dev:client": "webpack serve --config webpack.config.js --mode development",
     "dev:server": "nodemon --watch server --ext ts --exec ts-node server/server.ts",
 <<<<<<< HEAD
@@ -106,6 +107,10 @@
     "start:prod": "NODE_ENV=production node dist/server/src/server.js"
 >>>>>>> 7ef43977 (Fix/ working through rebase)
 =======
+=======
+    "dev:client": "webpack serve --config webpack.config.mjs --mode development",
+    "dev:server": "nodemon --watch server --ext ts --exec ts-node server/app.ts",
+>>>>>>> a3169de1 (fixed server issue, made task form on front end)
     "build": "webpack --config webpack.config.mjs && tsc",
     "start": "node dist/server.js",
     "db:migrate": "sequelize-cli db:migrate",
