@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import LandingPage from './LandingPage';
@@ -73,6 +74,8 @@ const App: React.FC = () => {
         </Routes>
       </div>
 =======
+=======
+>>>>>>> 4ac8bb35 (cleaned up structure)
 import React, { useState } from 'react';
 import GoogleLoginButton from './GoogleLoginButton';
 import StreamSceneTodoList from './StreamSceneTodoList';
@@ -93,8 +96,22 @@ const App: React.FC = () => {
         {showTasks ? 'Back to Login' : 'Show Task Form'}
       </button>
 
+<<<<<<< HEAD
       {showTasks ? <StreamSceneTodoList /> : <GoogleLoginButton />}
 >>>>>>> a3169de1 (fixed server issue, made task form on front end)
+=======
+      {<GoogleLoginButton />}
+=======
+import React from 'react';
+import StreamSceneLandingPage from './LandingPage';
+
+
+const App: React.FC = () => {
+  return (
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center">
+      <StreamSceneLandingPage />
+>>>>>>> 9f419906 (cleaned up structure)
+>>>>>>> 4ac8bb35 (cleaned up structure)
     </div>
   );
 };

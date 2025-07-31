@@ -7,6 +7,7 @@ interface TaskbarProps {
 
 const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+<<<<<<< HEAD
   const [activeItem, setActiveItem] = useState('project-center');
 
   const navigationItems = [
@@ -15,6 +16,16 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       label: 'Project Center',
       icon: '📁',
       href: '#project-center'
+=======
+  const [activeItem, setActiveItem] = useState('project-hub');
+
+  const navigationItems = [
+    {
+      id: 'project-hub',
+      label: 'Project Hub',
+      icon: '📁',
+      href: '#project-hub'
+>>>>>>> 4ac8bb35 (cleaned up structure)
     },
     {
       id: 'budget-tracker',
@@ -47,18 +58,30 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
 
   return (
     <nav className={`bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 shadow-lg border-b border-purple-500/20 ${className}`}>
+<<<<<<< HEAD
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
         <div className="flex justify-between items-center h-14 sm:h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <div className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+=======
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <div className="flex-shrink-0 flex items-center">
+            <div className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+>>>>>>> 4ac8bb35 (cleaned up structure)
               StreamScene
             </div>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
+<<<<<<< HEAD
             <div className="ml-6 lg:ml-10 flex items-baseline space-x-2 lg:space-x-4">
+=======
+            <div className="ml-10 flex items-baseline space-x-4">
+>>>>>>> 4ac8bb35 (cleaned up structure)
               {navigationItems.map((item) => {
                 const isActive = activeItem === item.id;
                 
@@ -70,15 +93,24 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
                       e.preventDefault();
                       handleItemClick(item.id);
                     }}
+<<<<<<< HEAD
                     className={`group flex items-center px-3 lg:px-4 py-2 rounded-lg text-xs lg:text-sm font-medium transition-all duration-300 hover:scale-105 ${
+=======
+                    className={`group flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 ${
+>>>>>>> 4ac8bb35 (cleaned up structure)
                       isActive
                         ? 'bg-purple-600/20 text-purple-300 shadow-lg shadow-purple-500/25'
                         : 'text-gray-300 hover:bg-purple-600/10 hover:text-purple-200'
                     }`}
                   >
+<<<<<<< HEAD
                     <span className="text-sm lg:text-lg mr-1 lg:mr-2">{item.icon}</span>
                     <span className="hidden lg:inline">{item.label}</span>
                     <span className="lg:hidden">{item.label.split(' ')[0]}</span>
+=======
+                    <span className="text-lg mr-2">{item.icon}</span>
+                    {item.label}
+>>>>>>> 4ac8bb35 (cleaned up structure)
                   </a>
                 );
               })}
@@ -132,6 +164,10 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       )}
     </nav>
   );
+<<<<<<< HEAD
 };
 
 export default Taskbar;
+=======
+};
+>>>>>>> 4ac8bb35 (cleaned up structure)
