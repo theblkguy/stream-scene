@@ -109,14 +109,42 @@ const App: React.FC = () => {
 
 >>>>>>> fc277cd1 (Add/ React router route to Project Hub)
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import StreamSceneLandingPage from './LandingPage';
 import ProjectHub from './ProjectHub/ProjectHub';
 
 
 
 const App: React.FC = () => {
+  const location = useLocation();
+
+  const pageVariants = {
+    initial: {
+      x: "100%",
+      opacity: 0,
+      scale: 0.8
+    },
+    in: {
+      x: 0,
+      opacity: 1,
+      scale: 1
+    },
+    out: {
+      x: "-100%",
+      opacity: 0,
+      scale: 1.2
+    }
+  };
+
+  const pageTransition = {
+    type: "tween" as const,
+    ease: "anticipate" as const,
+    duration: 0.6
+  };
+
   return (
+<<<<<<< HEAD
 <<<<<<< HEAD
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center">
 <<<<<<< HEAD
@@ -134,7 +162,47 @@ const App: React.FC = () => {
         <Route path="/project-hub" element={<ProjectHub />} />
       </Routes>
 >>>>>>> fc277cd1 (Add/ React router route to Project Hub)
+<<<<<<< HEAD
 >>>>>>> af4fd1d5 (Add/ React router route to Project Hub)
+=======
+=======
+    <div className="min-h-screen bg-gray-900 text-white overflow-hidden">
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route 
+            path="/" 
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+                className="absolute inset-0"
+              >
+                <StreamSceneLandingPage />
+              </motion.div>
+            } 
+          />
+          <Route 
+            path="/project-hub" 
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+                className="absolute inset-0"
+              >
+                <ProjectHub />
+              </motion.div>
+            } 
+          />
+        </Routes>
+      </AnimatePresence>
+>>>>>>> 9d52cad8 (Add/ Slide page transitions)
+>>>>>>> 78f04578 (Add/ Slide page transitions)
     </div>
   );
 };
