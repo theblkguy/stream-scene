@@ -117,6 +117,7 @@ import ProjectHub from './ProjectHub/ProjectHub';
 
 const App: React.FC = () => {
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center">
 <<<<<<< HEAD
       <StreamSceneLandingPage />
@@ -125,6 +126,9 @@ const App: React.FC = () => {
 >>>>>>> 4ac8bb35 (cleaned up structure)
 =======
 =======
+=======
+    <div className="min-h-screen bg-gray-900 text-white">
+>>>>>>> b9aacaf1 (Fix/ Change componenents to be more mobile friendly)
       <Routes>
         <Route path="/" element={<StreamSceneLandingPage />} />
         <Route path="/project-hub" element={<ProjectHub />} />
