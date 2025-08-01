@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import LandingPage from './LandingPage';
@@ -76,6 +77,8 @@ const App: React.FC = () => {
 =======
 =======
 >>>>>>> 4ac8bb35 (cleaned up structure)
+=======
+>>>>>>> af4fd1d5 (Add/ React router route to Project Hub)
 import React, { useState } from 'react';
 import GoogleLoginButton from './GoogleLoginButton';
 import StreamSceneTodoList from './StreamSceneTodoList';
@@ -102,16 +105,32 @@ const App: React.FC = () => {
 =======
       {<GoogleLoginButton />}
 =======
+=======
+
+>>>>>>> fc277cd1 (Add/ React router route to Project Hub)
 import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 import StreamSceneLandingPage from './LandingPage';
+import ProjectHub from './ProjectHub/ProjectHub';
+
 
 
 const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center">
+<<<<<<< HEAD
       <StreamSceneLandingPage />
 >>>>>>> 9f419906 (cleaned up structure)
+<<<<<<< HEAD
 >>>>>>> 4ac8bb35 (cleaned up structure)
+=======
+=======
+      <Routes>
+        <Route path="/" element={<StreamSceneLandingPage />} />
+        <Route path="/project-hub" element={<ProjectHub />} />
+      </Routes>
+>>>>>>> fc277cd1 (Add/ React router route to Project Hub)
+>>>>>>> af4fd1d5 (Add/ React router route to Project Hub)
     </div>
   );
 };
