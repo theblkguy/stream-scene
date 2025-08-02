@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { uploadFileToS3, S3UploadResult, isS3Configured, deleteFileFromS3, getFileUrl } from '../../services/s3Service';
@@ -5,6 +6,11 @@ import { fileService, FileRecord, CreateFileRequest } from '../../services/fileS
 import { ShareRecord } from '../../services/shareService';
 import useAuth from '../../hooks/useAuth';
 import ShareModal from '../ShareModal';
+=======
+import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { uploadFileToS3, S3UploadResult, isS3Configured, deleteFileFromS3 } from '../../services/s3Service';
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
 
 interface UploadedFile {
   id: string;
@@ -13,14 +19,19 @@ interface UploadedFile {
   size: number;
   url: string;
   s3Key?: string;
+<<<<<<< HEAD
   tags?: string[];
   uploadedAt: Date;
   fileRecordId?: number; // Database record ID
+=======
+  uploadedAt: Date;
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
 }
 
 const FileUpload: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+<<<<<<< HEAD
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -155,6 +166,12 @@ const FileUpload: React.FC = () => {
       setError('Failed to save tags. Please try again.');
     }
   };
+=======
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
@@ -166,14 +183,20 @@ const FileUpload: React.FC = () => {
 
   // S3 upload handler
   const handleS3Upload = async (file: File): Promise<{ url: string; s3Key?: string }> => {
+<<<<<<< HEAD
     console.log('[FileUpload] handleS3Upload: Checking S3 config...');
     if (!isS3Configured()) {
       setError('AWS S3 not configured. Files are stored locally for preview only.');
       console.warn('[FileUpload] S3 not configured. Env:', process.env);
+=======
+    if (!isS3Configured()) {
+      setError('AWS S3 not configured. Files are stored locally for preview only.');
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
       return { url: URL.createObjectURL(file) };
     }
 
     try {
+<<<<<<< HEAD
       console.log('[FileUpload] handleS3Upload: Uploading file:', file);
       // Use your actual upload endpoint here:
       const formData = new FormData();
@@ -194,11 +217,19 @@ const FileUpload: React.FC = () => {
     } catch (s3Error) {
       console.warn('[FileUpload] S3 upload failed, using local preview:', s3Error);
       setError('S3 upload failed. Using local preview.');
+=======
+      const s3Result = await uploadFileToS3(file);
+      return { url: s3Result.url, s3Key: s3Result.key };
+    } catch (s3Error) {
+      console.warn('S3 upload failed, falling back to local preview:', s3Error);
+      setError('S3 upload failed. Using local preview. Check your AWS configuration.');
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
       return { url: URL.createObjectURL(file) };
     }
   };
 
   const uploadFile = async (file: File) => {
+<<<<<<< HEAD
     if (!user) {
       setError('Please log in to upload files.');
       return;
@@ -211,11 +242,19 @@ const FileUpload: React.FC = () => {
     try {
       console.log('Starting upload for file:', file.name, 'Type:', file.type, 'Size:', file.size);
 
+=======
+    setUploading(true);
+    setError(null);
+    setUploadProgress(0);
+    
+    try {
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 200);
       
+<<<<<<< HEAD
       const { url, s3Key } = await handleS3Upload(file); // Waits for backend to finish conversion
 
       clearInterval(progressInterval);
@@ -261,6 +300,24 @@ const FileUpload: React.FC = () => {
         loadUserTags();
         setSelectedTags([]); // Clear selected tags after upload
       }
+=======
+      const { url, s3Key } = await handleS3Upload(file);
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      
+      const newFile: UploadedFile = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        url,
+        s3Key,
+        uploadedAt: new Date()
+      };
+
+      setUploadedFiles(prev => [...prev, newFile]);
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
       
       // Reset progress after a short delay
       setTimeout(() => setUploadProgress(0), 1000);
@@ -270,7 +327,11 @@ const FileUpload: React.FC = () => {
       setError('Upload failed. Please try again.');
       setUploadProgress(0);
     } finally {
+<<<<<<< HEAD
       setIsUploading(false);
+=======
+      setUploading(false);
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
     }
   };
 
@@ -310,13 +371,18 @@ const FileUpload: React.FC = () => {
     if (type.startsWith('video/')) return '🎥';
     if (type.startsWith('audio/')) return '🎵';
     if (type.startsWith('image/')) return '🖼️';
+<<<<<<< HEAD
     if (type.startsWith('text/') || type.includes('document') || type.includes('pdf')) return '📄';
+=======
+    if (type.startsWith('text/') || type.includes('document')) return '📄';
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
     return '📁';
   };
 
   const isVideoFile = (type: string) => type.startsWith('video/');
   const isAudioFile = (type: string) => type.startsWith('audio/');
   const isImageFile = (type: string) => type.startsWith('image/');
+<<<<<<< HEAD
   const isTextFile = (type: string) => type.startsWith('text/') || type.includes('pdf');
   const isPDFFile = (type: string) => type.includes('pdf');
 
@@ -438,6 +504,42 @@ const FileUpload: React.FC = () => {
       </div>
     );
   };
+=======
+  const isTextFile = (type: string) => type.startsWith('text/');
+
+  // Individual file preview components
+  const VideoPreview = ({ url, type }: { url: string; type: string }) => (
+    <video 
+      controls 
+      className="w-full max-w-md rounded-lg shadow-lg"
+      style={{ maxHeight: '300px' }}
+    >
+      <source src={url} type={type} />
+      Your browser does not support the video tag.
+    </video>
+  );
+
+  const AudioPreview = ({ url, type, name }: { url: string; type: string; name: string }) => (
+    <div className="w-full max-w-md bg-slate-800/50 rounded-lg p-4">
+      <div className="flex items-center gap-3 mb-3">
+        <span className="text-2xl">🎵</span>
+        <span className="text-sm text-gray-300 truncate">{name}</span>
+      </div>
+      <audio controls className="w-full">
+        <source src={url} type={type} />
+        Your browser does not support the audio tag.
+      </audio>
+    </div>
+  );
+
+  const ImagePreview = ({ url, name }: { url: string; name: string }) => (
+    <img 
+      src={url} 
+      alt={name}
+      className="max-w-md max-h-80 rounded-lg shadow-lg object-contain"
+    />
+  );
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
 
   const TextPreview = ({ url, name }: { url: string; name: string }) => (
     <div className="w-full max-w-md bg-slate-800/50 rounded-lg p-4">
@@ -445,6 +547,7 @@ const FileUpload: React.FC = () => {
         <span className="text-2xl">📄</span>
         <span className="text-sm text-gray-300 truncate">{name}</span>
       </div>
+<<<<<<< HEAD
       {isPDFFile(name) ? (
         <div className="bg-white/10 rounded p-2 text-center">
           <a 
@@ -466,10 +569,18 @@ const FileUpload: React.FC = () => {
           }}
         />
       )}
+=======
+      <iframe
+        src={url}
+        className="w-full h-40 bg-white rounded border-none"
+        title={name}
+      />
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
     </div>
   );
 
   const DefaultFilePreview = ({ type, name }: { type: string; name: string }) => (
+<<<<<<< HEAD
     <div className="w-full max-w-md bg-slate-800/50 rounded-lg p-4 min-h-[120px] flex items-center">
       <div className="flex items-center gap-3 w-full">
         <span className="text-4xl">{getFileIcon(type)}</span>
@@ -477,12 +588,21 @@ const FileUpload: React.FC = () => {
           <div className="text-sm font-medium text-white truncate mb-1" title={name}>{name}</div>
           <div className="text-xs text-gray-400 mb-2">{type || 'Unknown type'}</div>
           <div className="text-xs text-blue-400">Click to download</div>
+=======
+    <div className="w-full max-w-md bg-slate-800/50 rounded-lg p-4">
+      <div className="flex items-center gap-3">
+        <span className="text-2xl">{getFileIcon(type)}</span>
+        <div>
+          <div className="text-sm font-medium text-white truncate">{name}</div>
+          <div className="text-xs text-gray-400">{type}</div>
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
         </div>
       </div>
     </div>
   );
 
   const renderFilePreview = (file: UploadedFile) => {
+<<<<<<< HEAD
   const { type, url, name, s3Key } = file;
 
     console.log('Rendering preview for file:', { name, type, url: url.substring(0, 50) + '...' });
@@ -496,6 +616,14 @@ const FileUpload: React.FC = () => {
     if (isAudioFile(type)) return <AudioPreview url={previewUrl} type={type} name={name} />;
     if (isImageFile(type)) return <ImagePreview url={url} name={name} />;
     if (isTextFile(type) || isPDFFile(type)) return <TextPreview url={url} name={name} />;
+=======
+    const { type, url, name } = file;
+
+    if (isVideoFile(type)) return <VideoPreview url={url} type={type} />;
+    if (isAudioFile(type)) return <AudioPreview url={url} type={type} name={name} />;
+    if (isImageFile(type)) return <ImagePreview url={url} name={name} />;
+    if (isTextFile(type)) return <TextPreview url={url} name={name} />;
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
     return <DefaultFilePreview type={type} name={name} />;
   };
 
@@ -518,6 +646,7 @@ const FileUpload: React.FC = () => {
   };
 
   // Remove file handler
+<<<<<<< HEAD
   const removeFile = async (fileId: string) => {
     const fileToRemove = uploadedFiles.find(f => f.id === fileId);
     if (!fileToRemove) return;
@@ -655,10 +784,22 @@ const FileUpload: React.FC = () => {
       console.error('Failed to remove tag:', error);
       setError('Failed to remove tag. Please try again.');
     }
+=======
+  const removeFile = (fileId: string) => {
+    setUploadedFiles(prev => {
+      const fileToRemove = prev.find(f => f.id === fileId);
+      if (fileToRemove) {
+        cleanupLocalUrl(fileToRemove.url);
+        cleanupS3(fileToRemove.s3Key);
+      }
+      return prev.filter(f => f.id !== fileId);
+    });
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
   };
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
+<<<<<<< HEAD
       {/* Authentication Check */}
       {!user && (
         <motion.div
@@ -695,6 +836,21 @@ const FileUpload: React.FC = () => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
+=======
+      {/* Upload Area */}
+      <motion.div
+        className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
+          isDragging 
+            ? 'border-purple-400 bg-purple-400/10' 
+            : 'border-gray-600 hover:border-purple-500 bg-slate-800/30'
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
         <input
           ref={fileInputRef}
           type="file"
@@ -720,6 +876,7 @@ const FileUpload: React.FC = () => {
             className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+<<<<<<< HEAD
             disabled={isUploading}
           >
             {isUploading ? (
@@ -773,6 +930,15 @@ const FileUpload: React.FC = () => {
           
           {/* Upload Progress Bar */}
           {isUploading && (
+=======
+            disabled={uploading}
+          >
+            {uploading ? `Uploading... ${uploadProgress}%` : 'Select Files'}
+          </motion.button>
+          
+          {/* Upload Progress Bar */}
+          {uploading && (
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
             <div className="w-full max-w-xs mx-auto">
               <div className="bg-gray-700 rounded-full h-2 overflow-hidden">
                 <motion.div
@@ -803,15 +969,22 @@ const FileUpload: React.FC = () => {
           )}
         </div>
       </motion.div>
+<<<<<<< HEAD
       )}
 
       {/* Uploaded Files Display */}
       {user && !loading && uploadedFiles.length > 0 && (
+=======
+
+      {/* Uploaded Files Display */}
+      {uploadedFiles.length > 0 && (
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6"
         >
+<<<<<<< HEAD
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h3 className="text-xl font-semibold text-white">Uploaded Files ({uploadedFiles.length})</h3>
             
@@ -848,6 +1021,9 @@ const FileUpload: React.FC = () => {
               </div>
             )}
           </div>
+=======
+          <h3 className="text-xl font-semibold text-white">Uploaded Files ({uploadedFiles.length})</h3>
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {uploadedFiles.map((file) => (
@@ -857,6 +1033,7 @@ const FileUpload: React.FC = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="relative bg-gradient-to-br from-slate-800/50 to-gray-900/50 border border-purple-500/20 backdrop-blur-sm rounded-xl p-4 shadow-xl"
               >
+<<<<<<< HEAD
                 {/* Action buttons */}
                 <div className="absolute top-2 right-2 flex space-x-1 z-10">
                   {/* Share button */}
@@ -879,6 +1056,15 @@ const FileUpload: React.FC = () => {
                     ×
                   </button>
                 </div>
+=======
+                {/* Remove button */}
+                <button
+                  onClick={() => removeFile(file.id)}
+                  className="absolute top-2 right-2 w-6 h-6 bg-red-600/80 hover:bg-red-600 text-white text-xs rounded-full flex items-center justify-center transition-colors duration-200 z-10"
+                >
+                  ×
+                </button>
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
 
                 {/* File preview */}
                 <div className="mb-3">
@@ -886,13 +1072,18 @@ const FileUpload: React.FC = () => {
                 </div>
 
                 {/* File info */}
+<<<<<<< HEAD
                 <div className="space-y-3">
+=======
+                <div className="space-y-1">
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
                   <div className="text-sm font-medium text-white truncate" title={file.name}>
                     {file.name}
                   </div>
                   <div className="text-xs text-gray-400">
                     {formatFileSize(file.size)} • {file.uploadedAt.toLocaleDateString()}
                   </div>
+<<<<<<< HEAD
                   
                   {/* Tags Section */}
                   <div className="space-y-2">
@@ -929,12 +1120,15 @@ const FileUpload: React.FC = () => {
                       <span className="text-xs text-gray-400">Press Enter to save</span>
                     </div>
                   </div>
+=======
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
                 </div>
               </motion.div>
             ))}
           </div>
         </motion.div>
       )}
+<<<<<<< HEAD
 
       {/* Share Modal */}
       {selectedFileForShare && (
@@ -946,6 +1140,8 @@ const FileUpload: React.FC = () => {
           onShareCreated={handleShareCreated}
         />
       )}
+=======
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
     </div>
   );
 };

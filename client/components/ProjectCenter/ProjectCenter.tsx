@@ -1,9 +1,35 @@
 import React, { useState } from "react";
+<<<<<<< HEAD
 import ProjectCenterTabs from "./ProjectCenterTabs";
 
 
 const ProjectCenter: React.FC = () => {
   return (
+=======
+<<<<<<< HEAD:client/components/ProjectHub/ProjectHub.tsx
+<<<<<<< HEAD
+import ProjectHubCanvas from "./ProjectHubCanvas";
+=======
+<<<<<<< HEAD
+import ProjectHubTabs from "./ProjectHubTabs";
+<<<<<<<< HEAD:client/components/ProjectHub/ProjectHub.tsx
+>>>>>>> 28477e47 (fix: temporarily comment out missing ProjectHubCanvas import to resolve build errors)
+========
+=======
+import ProjectCenterTabs from "./ProjectCenterTabs";
+>>>>>>> c92301a0 (Fix/ All references to the "Project Hub" have been changed to "Project Center"):client/components/ProjectCenter/ProjectCenter.tsx
+>>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center"):client/components/ProjectCenter/ProjectCenter.tsx
+
+=======
+// import ProjectHubCanvas from "./ProjectHubCanvas";
+>>>>>>> fad70e0b (fix: temporarily comment out missing ProjectHubCanvas import to resolve build errors)
+
+const ProjectCenter: React.FC = () => {
+  return (
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-transparent to-pink-900/20"></div>
@@ -27,6 +53,34 @@ const ProjectCenter: React.FC = () => {
         </p>
         <ProjectCenterTabs />
       </div>
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 28477e47 (fix: temporarily comment out missing ProjectHubCanvas import to resolve build errors)
+    <div style={{ 
+      display: "flex", 
+      flexDirection: "column", 
+      alignItems: "center",
+      minHeight: "100vh",
+      width: "100%",
+      padding: "20px 0"
+    }}>
+      <h2 style={{ 
+        marginBottom: "20px", 
+        fontSize: "clamp(1.5rem, 4vw, 2rem)",
+        textAlign: "center",
+        color: "#fff"
+      }}>Draw and Type Your Ideas</h2>
+<<<<<<< HEAD
+      <ProjectHubCanvas />
+=======
+      {/* <ProjectHubCanvas /> */}
+      <p style={{ color: "#fff", textAlign: "center" }}>
+        Canvas component will be added when ProjectHubCanvas.tsx is available
+      </p>
+>>>>>>> fad70e0b (fix: temporarily comment out missing ProjectHubCanvas import to resolve build errors)
+>>>>>>> 28477e47 (fix: temporarily comment out missing ProjectHubCanvas import to resolve build errors)
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
     </div>
   );
 };

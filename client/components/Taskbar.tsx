@@ -8,6 +8,7 @@ interface TaskbarProps {
 const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 <<<<<<< HEAD
+<<<<<<< HEAD
   const [activeItem, setActiveItem] = useState('project-center');
 
   const navigationItems = [
@@ -18,14 +19,21 @@ const Taskbar: React.FC<TaskbarProps> = ({ className = '' }) => {
       href: '#project-center'
 =======
   const [activeItem, setActiveItem] = useState('project-hub');
+=======
+  const [activeItem, setActiveItem] = useState('project-center');
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
 
   const navigationItems = [
     {
-      id: 'project-hub',
-      label: 'Project Hub',
+      id: 'project-center',
+      label: 'Project Center',
       icon: '📁',
+<<<<<<< HEAD
       href: '#project-hub'
 >>>>>>> 4ac8bb35 (cleaned up structure)
+=======
+      href: '#project-center'
+>>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
     },
     {
       id: 'budget-tracker',
