@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import LandingPage from './LandingPage';
@@ -79,6 +80,8 @@ const App: React.FC = () => {
 >>>>>>> 4ac8bb35 (cleaned up structure)
 =======
 >>>>>>> af4fd1d5 (Add/ React router route to Project Hub)
+=======
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
 import React, { useState } from 'react';
 import GoogleLoginButton from './GoogleLoginButton';
 import StreamSceneTodoList from './StreamSceneTodoList';
@@ -120,6 +123,9 @@ const App: React.FC = () => {
   const location = useLocation();
 
   const pageVariants = {
+=======
+const pageVariants = {
+>>>>>>> eee7efea (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
     initial: {
       x: "100%",
       opacity: 0,
@@ -136,12 +142,20 @@ const App: React.FC = () => {
       scale: 1.2
     }
   };
-
+  
   const pageTransition = {
     type: "tween" as const,
     ease: "anticipate" as const,
     duration: 0.6
-  };
+  };import React from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import StreamSceneLandingPage from './LandingPage';
+import ProjectHub from './ProjectHub/ProjectHub';
+import AIWeeklyPlanner from './AIWeeklyPlanner';
+
+const App: React.FC = () => {
+  const location = useLocation();
 
   return (
 <<<<<<< HEAD
@@ -199,6 +213,21 @@ const App: React.FC = () => {
               </motion.div>
             } 
           />
+          <Route 
+            path="/ai-planner" 
+            element={
+              <motion.div
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+                className="absolute inset-0"
+              >
+                <AIWeeklyPlanner />
+              </motion.div>
+            } 
+          />
         </Routes>
       </AnimatePresence>
 >>>>>>> 9d52cad8 (Add/ Slide page transitions)
@@ -207,4 +236,8 @@ const App: React.FC = () => {
   );
 };
 
+<<<<<<< HEAD
 export default App;
+=======
+export default App;
+>>>>>>> eee7efea (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)

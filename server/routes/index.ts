@@ -1,5 +1,6 @@
 // server/routes/index.ts
 import { Router } from "express";
+import taskRouter from './tasks';
 
 // ESM imports
 import taskRouter from './tasks.js';
@@ -24,6 +25,7 @@ router.get("/healthz", (_req, res) => {
   });
 });
 
+<<<<<<< HEAD
 // Route mounts
 router.use('/api/tasks', taskRouter);
 router.use('/api/content-scheduler', contentSchedulerRouter); 
@@ -31,3 +33,7 @@ router.use('/api/auth/social', socialAuthRouter);
 router.use('/api/threads', threadsRouter);
 
 export default router;
+=======
+router.use('/api/tasks', taskRouter);
+export default router; 
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)

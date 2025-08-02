@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import TaskForm from './TaskForm';
+<<<<<<< HEAD
+=======
+import TaskList from './TaskList';
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
 import { Task, TaskFormData } from '../types/task';
 
 interface WeeklySchedule {
@@ -12,6 +16,7 @@ interface WeeklySchedule {
   totalHours: number;
 }
 
+<<<<<<< HEAD
 interface CalendarEvent {
   id: string;
   title: string;
@@ -37,11 +42,14 @@ interface AISuggestion {
 
 type CalendarView = 'monthly' | 'weekly' | 'daily';
 
+=======
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
 const AIWeeklyPlanner: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [isGeneratingSchedule, setIsGeneratingSchedule] = useState(false);
+<<<<<<< HEAD
   const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
   const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule | null>(null);
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -79,17 +87,24 @@ const AIWeeklyPlanner: React.FC = () => {
   };
 
   const filteredTasks = getFilteredTasks();
+=======
+  const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule | null>(null);
+  const [showTaskForm, setShowTaskForm] = useState(false);
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
 
   // Load tasks on component mount
   useEffect(() => {
     loadTasks();
   }, []);
 
+<<<<<<< HEAD
   // Update calendar when tasks change
   useEffect(() => {
     generateCalendarEvents();
   }, [tasks, currentDate]);
 
+=======
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
   const loadTasks = async () => {
     setIsLoadingTasks(true);
     try {
@@ -133,21 +148,32 @@ const AIWeeklyPlanner: React.FC = () => {
         const newTask = await response.json();
         setTasks(prev => [...prev, newTask]);
         setShowTaskForm(false);
+<<<<<<< HEAD
         alert('Task created successfully! 🎉');
       } else if (response.status === 401) {
         alert('Please log in to create tasks. You need to be authenticated to use this feature.');
+=======
+        
+        // Show success message
+        alert('Task created successfully! 🎉');
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
       } else {
         const error = await response.json();
         alert(`Failed to create task: ${error.message || error.error}`);
       }
     } catch (error) {
       console.error('Error creating task:', error);
+<<<<<<< HEAD
       alert('Failed to create task. Please check your connection and try again.');
+=======
+      alert('Failed to create task. Please try again.');
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
     } finally {
       setIsCreatingTask(false);
     }
   };
 
+<<<<<<< HEAD
   // Delete task functionality
   const handleDeleteTask = async (task: Task) => {
     setTaskToDelete(task);
@@ -240,6 +266,8 @@ const AIWeeklyPlanner: React.FC = () => {
     setCalendarEvents(events);
   };
 
+=======
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
   const generateAISchedule = async () => {
     if (tasks.length === 0) {
       alert('Please add some tasks first before generating a schedule!');
@@ -259,7 +287,11 @@ const AIWeeklyPlanner: React.FC = () => {
           preferences: {
             workHoursPerDay: 8,
             workDaysPerWeek: 5,
+<<<<<<< HEAD
             creativeBias: 0.6 
+=======
+            creativeBias: 0.6 // 60% creative, 40% admin
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
           }
         })
       });
@@ -279,6 +311,7 @@ const AIWeeklyPlanner: React.FC = () => {
     }
   };
 
+<<<<<<< HEAD
   const generateAISuggestions = async () => {
     setIsGeneratingSuggestions(true);
     
@@ -478,6 +511,8 @@ const AIWeeklyPlanner: React.FC = () => {
     });
   };
 
+=======
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
   const getTaskStats = () => {
     const pending = tasks.filter(t => t.status === 'pending').length;
     const inProgress = tasks.filter(t => t.status === 'in_progress').length;
@@ -488,6 +523,7 @@ const AIWeeklyPlanner: React.FC = () => {
     return { pending, inProgress, completed, creative, admin, total: tasks.length };
   };
 
+<<<<<<< HEAD
   const renderMonthlyView = () => {
     const monthDays = getMonthDays();
     const today = new Date();
@@ -835,6 +871,8 @@ const AIWeeklyPlanner: React.FC = () => {
     );
   };
 
+=======
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
   const stats = getTaskStats();
 
   return (
@@ -849,6 +887,7 @@ const AIWeeklyPlanner: React.FC = () => {
             Balance creative and admin work with AI-powered scheduling
           </p>
           
+<<<<<<< HEAD
           {/* Navigation Tabs */}
           <div className="flex justify-center mb-6">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-1 flex">
@@ -916,12 +955,34 @@ const AIWeeklyPlanner: React.FC = () => {
                 taskFilter === 'admin' ? 'bg-green-500/30 ring-2 ring-green-400/50' : 'bg-green-500/20'
               }`}
             >
+=======
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+              <div className="text-2xl font-bold text-white">{stats.total}</div>
+              <div className="text-sm text-gray-300">Total Tasks</div>
+            </div>
+            <div className="bg-yellow-500/20 backdrop-blur-sm rounded-lg p-4">
+              <div className="text-2xl font-bold text-yellow-300">{stats.pending}</div>
+              <div className="text-sm text-gray-300">Pending</div>
+            </div>
+            <div className="bg-blue-500/20 backdrop-blur-sm rounded-lg p-4">
+              <div className="text-2xl font-bold text-blue-300">{stats.inProgress}</div>
+              <div className="text-sm text-gray-300">In Progress</div>
+            </div>
+            <div className="bg-purple-500/20 backdrop-blur-sm rounded-lg p-4">
+              <div className="text-2xl font-bold text-purple-300">{stats.creative}</div>
+              <div className="text-sm text-gray-300">Creative</div>
+            </div>
+            <div className="bg-green-500/20 backdrop-blur-sm rounded-lg p-4">
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
               <div className="text-2xl font-bold text-green-300">{stats.admin}</div>
               <div className="text-sm text-gray-300">Admin</div>
             </div>
           </div>
         </div>
 
+<<<<<<< HEAD
         {/* Tab Content */}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1121,6 +1182,135 @@ const AIWeeklyPlanner: React.FC = () => {
             {renderSuggestionsView()}
           </div>
         )}
+=======
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Task Management */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={() => setShowTaskForm(true)}
+                className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+              >
+                ➕ Add New Task
+              </button>
+              <button
+                onClick={generateAISchedule}
+                disabled={isGeneratingSchedule || tasks.length === 0}
+                className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGeneratingSchedule ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Generating...
+                  </span>
+                ) : (
+                  '🚀 Generate AI Schedule'
+                )}
+              </button>
+            </div>
+
+            {/* Task Form Modal */}
+            {showTaskForm && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                  <TaskForm
+                    onSubmit={handleTaskSubmit}
+                    onCancel={() => setShowTaskForm(false)}
+                    isLoading={isCreatingTask}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Task List */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-white mb-4">📋 Your Tasks</h2>
+              {isLoadingTasks ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+                  <p className="text-gray-300 mt-4">Loading tasks...</p>
+                </div>
+              ) : tasks.length > 0 ? (
+                <TaskList tasks={tasks} onTaskUpdate={loadTasks} />
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">📝</div>
+                  <h3 className="text-xl font-semibold text-white mb-2">No tasks yet</h3>
+                  <p className="text-gray-300 mb-6">Create your first task to get started with AI scheduling!</p>
+                  <button
+                    onClick={() => setShowTaskForm(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                  >
+                    ➕ Add Your First Task
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - AI Schedule */}
+          <div className="space-y-6">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-white mb-4">🤖 AI Weekly Schedule</h2>
+              
+              {weeklySchedule ? (
+                <div className="space-y-4">
+                  <div className="text-green-300 font-medium">
+                    ✅ Schedule Generated!
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-purple-500/20 rounded-lg p-3">
+                      <div className="font-medium text-purple-300">Creative Hours</div>
+                      <div className="text-2xl font-bold text-white">{weeklySchedule.creativeHours}h</div>
+                    </div>
+                    <div className="bg-blue-500/20 rounded-lg p-3">
+                      <div className="font-medium text-blue-300">Admin Hours</div>
+                      <div className="text-2xl font-bold text-white">{weeklySchedule.adminHours}h</div>
+                    </div>
+                  </div>
+
+                  {weeklySchedule.aiSuggestions && (
+                    <div className="bg-gray-800/50 rounded-lg p-4">
+                      <h4 className="font-medium text-white mb-2">💡 AI Suggestions:</h4>
+                      <p className="text-gray-300 text-sm">{weeklySchedule.aiSuggestions}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">🤖</div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Ready for AI Magic?</h3>
+                  <p className="text-gray-300 text-sm mb-4">Add some tasks and let AI create your perfect weekly schedule</p>
+                  <button
+                    onClick={generateAISchedule}
+                    disabled={tasks.length === 0}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Generate Schedule
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Tips */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
+              <h3 className="text-lg font-bold text-white mb-3">💡 Pro Tips</h3>
+              <ul className="space-y-2 text-sm text-gray-300">
+                <li>• Mix creative and admin tasks for better balance</li>
+                <li>• Set realistic deadlines for better AI scheduling</li>
+                <li>• Use estimated hours to help AI plan your week</li>
+                <li>• High priority tasks get scheduled first</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
       </div>
     </div>
   );

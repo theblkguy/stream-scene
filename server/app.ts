@@ -146,10 +146,14 @@ import path from 'path';
 import "./config/passport";
 import authRoutes from "./routes/auth";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import routes from "./routes";
 import { sequelize } from "./db";
 =======
 >>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
+=======
+import routes from "./routes/index";
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
 
 const app = express();
 
@@ -177,6 +181,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // Auth routes - must come before catch-all routes
 app.use('/auth', authRoutes);
+app.use('/', routes);
 
 // API test route
 app.get('/test-server', (req, res) => {
@@ -189,7 +194,7 @@ app.get('*', (req, res) => {
   if (req.path.startsWith('/api/') || req.path.startsWith('/auth/')) {
     return res.status(404).json({ error: 'Route not found' });
   }
-  
+
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 

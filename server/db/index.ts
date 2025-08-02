@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { Sequelize } from 'sequelize';
 
 
@@ -72,30 +73,50 @@ export const db = {
 // Import Sequelize and your models
 import { Sequelize } from 'sequelize-typescript';
 // import { User } from '../models/User'; // Temporarily disabled - using mock User
+=======
+// Import Sequelize 
+import { Sequelize } from 'sequelize';
+>>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
 
-// Set up Sequelize connection (disabled for testing)
+// Set up Sequelize connection
 const sequelize = new Sequelize({
   dialect: 'mysql', 
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  models: [], // No models for now
+  host: process.env.DB_HOST || 'localhost',
+  database: process.env.DB_NAME || 'streamscene_db',
+  username: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
   logging: false,
 });
 
-// Simplified associations (disabled for testing)
+// Test the connection
+const testConnection = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database connection established successfully.');
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  }
+};
+
+// Simplified associations 
 export const associate = () => {
-  console.log('Database associations disabled for testing');
+  console.log('Database associations set up');
 };
 
-// call this to sync the DB (disabled for testing)
+// call this to sync the DB
 export const syncDB = async (force = false) => {
-  console.log('Database sync disabled for testing');
-  // await sequelize.sync({ force });
+  try {
+    await sequelize.sync({ force });
+    console.log('Database synced successfully');
+  } catch (error) {
+    console.error('Database sync failed:', error);
+  }
 };
 
-// Export everything in one object (minimal for testing)
+// Test connection on startup
+testConnection();
+
+// Export everything in one object
 export const db = {
   sequelize,
 >>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
