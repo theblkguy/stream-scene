@@ -2,6 +2,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import LandingPage from './LandingPage';
@@ -82,6 +83,8 @@ const App: React.FC = () => {
 >>>>>>> af4fd1d5 (Add/ React router route to Project Hub)
 =======
 >>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
+=======
+>>>>>>> 6ea7dd1f (Save local changes before merging upstream)
 import React, { useState } from 'react';
 import GoogleLoginButton from './GoogleLoginButton';
 import StreamSceneTodoList from './StreamSceneTodoList';
@@ -111,11 +114,14 @@ const App: React.FC = () => {
 =======
 
 >>>>>>> fc277cd1 (Add/ React router route to Project Hub)
+=======
+>>>>>>> dedc015f (Save local changes before merging upstream)
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import StreamSceneLandingPage from './LandingPage';
 import ProjectHub from './ProjectHub/ProjectHub';
+<<<<<<< HEAD
 
 
 
@@ -126,6 +132,14 @@ const App: React.FC = () => {
 =======
 const pageVariants = {
 >>>>>>> eee7efea (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
+=======
+import AIWeeklyPlanner from './AIWeeklyPlanner';
+
+const App: React.FC = () => {
+  const location = useLocation();
+  
+  const pageVariants = {
+>>>>>>> dedc015f (Save local changes before merging upstream)
     initial: {
       x: "100%",
       opacity: 0,
@@ -147,15 +161,7 @@ const pageVariants = {
     type: "tween" as const,
     ease: "anticipate" as const,
     duration: 0.6
-  };import React from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
-import StreamSceneLandingPage from './LandingPage';
-import ProjectHub from './ProjectHub/ProjectHub';
-import AIWeeklyPlanner from './AIWeeklyPlanner';
-
-const App: React.FC = () => {
-  const location = useLocation();
+  };
 
   return (
 <<<<<<< HEAD
