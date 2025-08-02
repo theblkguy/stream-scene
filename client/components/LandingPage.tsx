@@ -5,7 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import GoogleLoginButton from './GoogleLoginButton';
 =======
 import { Link } from 'react-router-dom';
+<<<<<<< HEAD
 >>>>>>> af4fd1d5 (Add/ React router route to Project Hub)
+=======
+import GoogleLoginButton from './GoogleLoginButton';
+>>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
 
 // Define the CurrentView type to match App.tsx
 type CurrentView = 'landing' | 'planner' | 'project-center' | 'budget-tracker' | 'demos-trailers' | 'content-scheduler';
@@ -516,6 +520,7 @@ const StreamSceneLandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
           {/* Google Login in Right Upper Corner */}
           <GoogleLoginButton />
 =======
@@ -531,6 +536,10 @@ const StreamSceneLandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <span className="sm:hidden">Login</span>
           </button>
 >>>>>>> 0938b3b4 (Fix/ Change componenents to be more mobile friendly)
+=======
+          {/* Google Login in Right Upper Corner */}
+         <GoogleLoginButton/>
+>>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
         </div>
       </nav>
 

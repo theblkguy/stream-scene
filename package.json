@@ -6,6 +6,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   "type": "module",
   "main": "server/app.ts",
   "ts-node": {
@@ -26,6 +27,16 @@
     "build:client:prod": "webpack --config webpack.config.mjs --mode production",
     "build:server": "tsc",
     "start": "node dist/server/app.js",
+=======
+  "main": "server/app.ts",
+  "scripts": {
+    "dev": "npm run build:client && npm run dev:server",
+    "dev:client": "webpack --config webpack.config.mjs --mode development",
+    "dev:server": "nodemon --watch server --ext ts --exec ts-node server/app.ts",
+    "build": "webpack --config webpack.config.mjs --mode production && tsc",
+    "build:client": "webpack --config webpack.config.mjs --mode development",
+    "start": "node dist/server.js",
+>>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
     "db:migrate": "sequelize-cli db:migrate",
     "db:seed": "sequelize-cli db:seed:all"
   },
@@ -121,7 +132,7 @@
     "@emotion/is-prop-valid": "^1.3.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
-    "express": "^5.1.0",
+    "express": "^4.21.2",
     "express-session": "^1.18.2",
     "framer-motion": "^12.23.12",
     "mysql2": "^3.14.2",
@@ -138,7 +149,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
+    "@types/express": "^4.17.23",
     "@types/express-session": "^1.18.2",
     "@types/node": "^24.1.0",
 <<<<<<< HEAD

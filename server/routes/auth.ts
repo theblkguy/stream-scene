@@ -30,6 +30,7 @@ router.get(
 
 // Google OAuth callback
 <<<<<<< HEAD
+<<<<<<< HEAD
 router.get(
  '/google/callback',
  passport.authenticate('google', { failureRedirect: 'http://localhost:8000/?error=auth_failed' }),
@@ -37,17 +38,27 @@ router.get(
    res.redirect('http://localhost:8000/');
  }
 =======
+=======
+>>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
 router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
+=======
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { failureRedirect: '/' }),
+>>>>>>> 9a9e39ee (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
   (req: Request, res: Response) => {
-    res.redirect('http://localhost:8000/dashboard'); // frontend port
+    res.redirect('/dashboard');
   }
 >>>>>>> 9bcdc5cd (Fix/ Client AND server both run on port 8000)
 );
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 // Get current authenticated user
 =======
+=======
+>>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
 // Logout route
 router.get('/logout', (req: Request, res: Response, next: NextFunction) => {
 <<<<<<< HEAD
@@ -135,4 +146,10 @@ export default router;
 
 
 >>>>>>> 7ef24648 (fix: resolve merge conflict in auth.ts and finalize correct redirect port)
+<<<<<<< HEAD
 >>>>>>> 9c0bfed6 (fix: resolve merge conflict in auth.ts and finalize correct redirect port)
+=======
+=======
+export default router;
+>>>>>>> 9a9e39ee (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
+>>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)

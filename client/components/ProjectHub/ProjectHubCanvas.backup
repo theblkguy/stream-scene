@@ -1,3 +1,4 @@
+<<<<<<< HEAD:client/components/ProjectHub/ProjectHubCanvas.tsx
 <<<<<<< HEAD
 import React, { useState } from "react";
 import { ReactSketchCanvas } from "react-sketch-canvas";
@@ -6,6 +7,18 @@ import React, { useState, useRef } from "react";
 import { ReactSketchCanvas, ReactSketchCanvasRef } from "react-sketch-canvas";
 import { motion } from "framer-motion";
 >>>>>>> 78f04578 (Add/ Slide page transitions)
+=======
+<<<<<<< HEAD:client/components/ProjectHub/ProjectHubCanvas.tsx
+import React, { useState, useRef } from "react";
+import { ReactSketchCanvas, ReactSketchCanvasRef } from "react-sketch-canvas";
+import { motion } from "framer-motion";
+=======
+import React, { useState } from "react";
+//@ts-ignore
+import  ReactSketchCanvas  from "react-sketch-canvas";
+
+>>>>>>> 9a9e39ee (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button):client/components/ProjectHub/ProjectHubCanvas.backup
+>>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button):client/components/ProjectHub/ProjectHubCanvas.backup
 
 const canvasStyles = {
   border: "1px solid #ccc",

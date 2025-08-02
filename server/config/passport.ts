@@ -5,7 +5,7 @@
 >>>>>>> d43afa49 (fixed server issue, made task form on front end)
 import passport from 'passport';
 import { Strategy as GoogleStrategy, Profile } from 'passport-google-oauth20';
-import { User } from '../models/User';
+import { User } from '../models/User'; // Re-enable with minimal User model
 
 >>>>>>> 118d8902 (Fix/ Delete src folder and moved all relevent files to server folder)
 import dotenv from 'dotenv';
@@ -48,6 +48,9 @@ passport.use(
 =======
 =======
 console.log('GOOGLE_CLIENT_ID loaded in passport.ts:', process.env.GOOGLE_CLIENT_ID);
+console.log('GOOGLE_CLIENT_SECRET loaded:', process.env.GOOGLE_CLIENT_SECRET ? 'EXISTS' : 'MISSING');
+console.log('GOOGLE_CALLBACK_URL loaded:', process.env.GOOGLE_CALLBACK_URL);
+console.log('SESSION_SECRET loaded:', process.env.SESSION_SECRET ? 'EXISTS' : 'MISSING');
 
 // Set up Google OAuth strategy
 passport.use(
@@ -60,7 +63,7 @@ passport.use(
     async (accessToken: string, refreshToken: string, profile: Profile, done) => {
       try {
         const email = profile.emails?.[0]?.value;
-        const photo = profile.photos?.[0]?.value ?? null;
+        const photo = profile.photos?.[0]?.value || undefined;
 
 >>>>>>> a80da8cd (Fix/ fixing server paths (rebase))
         if (!email) {
@@ -109,6 +112,7 @@ passport.serializeUser((user: any, done) => {
 <<<<<<< HEAD
 passport.deserializeUser(async (id: number, done) => {
 <<<<<<< HEAD
+<<<<<<< HEAD
   try {
     const user = await User.findByPk(id);
     done(null, user);
@@ -118,6 +122,8 @@ passport.deserializeUser(async (id: number, done) => {
   }
 });
 =======
+=======
+>>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
   const user = await User.findByPk(id);
   done(null, user);
 });
@@ -139,4 +145,17 @@ passport.deserializeUser(async (id: number, done) => {
 
 export default passport;
 >>>>>>> 118d8902 (Fix/ Delete src folder and moved all relevent files to server folder)
+<<<<<<< HEAD
 >>>>>>> a80da8cd (Fix/ fixing server paths (rebase))
+=======
+=======
+  try {
+    const user = await User.findByPk(id);
+    done(null, user);
+  } catch (err) {
+    console.error('Error deserializing user:', err);
+    done(err, null);
+  }
+});
+>>>>>>> 9a9e39ee (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
+>>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)

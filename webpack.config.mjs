@@ -97,7 +97,15 @@ export default (env, argv) => {
 export default {
   entry: './client/index.tsx',
   output: {
+<<<<<<< HEAD
     path: path.resolve('./dist'),
+=======
+<<<<<<< HEAD
+    path: path.resolve(__dirname, 'dist'),
+=======
+    path: path.resolve('./public'),
+>>>>>>> 9a9e39ee (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
+>>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
     filename: 'bundle.js',
     publicPath: '/',
     clean: true,
