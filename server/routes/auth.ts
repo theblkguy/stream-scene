@@ -44,13 +44,24 @@ router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
 =======
 router.get(
+<<<<<<< HEAD
   '/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
 >>>>>>> 9a9e39ee (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
   (req: Request, res: Response) => {
     res.redirect('/dashboard');
   }
+<<<<<<< HEAD
 >>>>>>> 9bcdc5cd (Fix/ Client AND server both run on port 8000)
+=======
+=======
+ '/google/callback',
+ passport.authenticate('google', { failureRedirect: 'http://localhost:8000/?error=auth_failed' }),
+ (req: Request, res: Response) => {
+   res.redirect('http://localhost:8000/');
+ }
+>>>>>>> 2b3d98b8 (fixed oauth callback)
+>>>>>>> afead569 (fixed oauth callback)
 );
 
 <<<<<<< HEAD
