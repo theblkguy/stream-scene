@@ -153,7 +153,12 @@ import { sequelize } from "./db";
 >>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
 =======
 import routes from "./routes/index";
+<<<<<<< HEAD
 >>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
+=======
+import aiRoutes from "./routes/ai";
+import scheduleRoutes from "./routes/schedule";
+>>>>>>> ec3152d4 (redid the task form to make text show up, built out the ai routes on the backend)
 
 const app = express();
 
@@ -179,9 +184,11 @@ app.use(passport.session());
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Auth routes - must come before catch-all routes
+// Auth routes 
 app.use('/auth', authRoutes);
 app.use('/', routes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/schedule', scheduleRoutes);
 
 // API test route
 app.get('/test-server', (req, res) => {

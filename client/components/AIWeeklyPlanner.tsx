@@ -288,10 +288,14 @@ const AIWeeklyPlanner: React.FC = () => {
             workHoursPerDay: 8,
             workDaysPerWeek: 5,
 <<<<<<< HEAD
+<<<<<<< HEAD
             creativeBias: 0.6 
 =======
             creativeBias: 0.6 // 60% creative, 40% admin
 >>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
+=======
+            creativeBias: 0.6 
+>>>>>>> ec3152d4 (redid the task form to make text show up, built out the ai routes on the backend)
           }
         })
       });

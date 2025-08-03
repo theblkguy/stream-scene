@@ -139,6 +139,7 @@ const pageVariants = {
 =======
 import AIWeeklyPlanner from './AIWeeklyPlanner';
 
+
 const App: React.FC = () => {
   const location = useLocation();
   
@@ -170,6 +171,7 @@ const App: React.FC = () => {
   return (
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center">
 <<<<<<< HEAD
       <StreamSceneLandingPage />
@@ -191,6 +193,9 @@ const App: React.FC = () => {
 =======
 =======
     <div className="min-h-screen bg-gray-900 text-white overflow-hidden">
+=======
+    <div className="min-h-screen bg-gray-900 text-black overflow-hidden">
+>>>>>>> 08de5005 (redid the task form to make text show up, built out the ai routes on the backend)
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route 

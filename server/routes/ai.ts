@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+<<<<<<< HEAD
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const router = express.Router();
@@ -7,6 +8,10 @@ const router = express.Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
+=======
+const router = express.Router();
+
+>>>>>>> ec3152d4 (redid the task form to make text show up, built out the ai routes on the backend)
 interface AITaskRequest {
   prompt: string;
 }
@@ -19,6 +24,7 @@ interface GeneratedTask {
   estimated_hours: number;
 }
 
+<<<<<<< HEAD
 interface Task {
   id: string;
   title: string;
@@ -65,10 +71,13 @@ interface AISuggestion {
 }
 
 // Enhanced route with actual Gemini AI
+=======
+>>>>>>> ec3152d4 (redid the task form to make text show up, built out the ai routes on the backend)
 router.post('/generate-tasks', async (req: Request, res: Response) => {
   try {
     const { prompt }: AITaskRequest = req.body;
     
+<<<<<<< HEAD
     if (!prompt || prompt.trim().length === 0) {
       return res.status(400).json({ error: 'Prompt is required' });
     }
@@ -337,5 +346,30 @@ function getOptimalCreativeDay(): Date {
   date.setDate(date.getDate() + daysUntilWednesday);
   return date;
 }
+=======
+    // Mock data 
+    const mockTasks: GeneratedTask[] = [
+      {
+        title: "Edit video footage",
+        description: "Cut and edit raw footage for main project",
+        priority: "high",
+        task_type: "creative",
+        estimated_hours: 8
+      },
+      {
+        title: "Create thumbnail designs", 
+        description: "Design 3 thumbnail options",
+        priority: "medium",
+        task_type: "creative",
+        estimated_hours: 2
+      }
+    ];
+    
+    res.json({ tasks: mockTasks });
+  } catch (error) {
+    res.status(500).json({ error: 'AI generation failed' });
+  }
+});
+>>>>>>> ec3152d4 (redid the task form to make text show up, built out the ai routes on the backend)
 
 export default router;
