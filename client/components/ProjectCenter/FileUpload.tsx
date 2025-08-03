@@ -184,18 +184,25 @@ const FileUpload: React.FC = () => {
   // S3 upload handler
   const handleS3Upload = async (file: File): Promise<{ url: string; s3Key?: string }> => {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e486de3f (Patch/ Errors in upload feature resolved)
     console.log('[FileUpload] handleS3Upload: Checking S3 config...');
     if (!isS3Configured()) {
       setError('AWS S3 not configured. Files are stored locally for preview only.');
       console.warn('[FileUpload] S3 not configured. Env:', process.env);
+<<<<<<< HEAD
 =======
     if (!isS3Configured()) {
       setError('AWS S3 not configured. Files are stored locally for preview only.');
 >>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
+=======
+>>>>>>> e486de3f (Patch/ Errors in upload feature resolved)
       return { url: URL.createObjectURL(file) };
     }
 
     try {
+<<<<<<< HEAD
 <<<<<<< HEAD
       console.log('[FileUpload] handleS3Upload: Uploading file:', file);
       // Use your actual upload endpoint here:
@@ -218,10 +225,14 @@ const FileUpload: React.FC = () => {
       console.warn('[FileUpload] S3 upload failed, using local preview:', s3Error);
       setError('S3 upload failed. Using local preview.');
 =======
+=======
+      console.log('[FileUpload] handleS3Upload: Uploading file:', file);
+>>>>>>> e486de3f (Patch/ Errors in upload feature resolved)
       const s3Result = await uploadFileToS3(file);
+      console.log('[FileUpload] handleS3Upload: S3 upload result:', s3Result);
       return { url: s3Result.url, s3Key: s3Result.key };
     } catch (s3Error) {
-      console.warn('S3 upload failed, falling back to local preview:', s3Error);
+      console.warn('[FileUpload] S3 upload failed, falling back to local preview:', s3Error);
       setError('S3 upload failed. Using local preview. Check your AWS configuration.');
 >>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
       return { url: URL.createObjectURL(file) };
@@ -1147,3 +1158,5 @@ const FileUpload: React.FC = () => {
 };
 
 export default FileUpload;
+
+console.log('REACT_APP_AWS_ACCESS_KEY_ID', process.env.REACT_APP_AWS_ACCESS_KEY_ID);

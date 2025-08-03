@@ -3,6 +3,7 @@ import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import webpack from 'webpack';
 import Dotenv from 'dotenv-webpack';
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 =======
@@ -13,6 +14,8 @@ import { fileURLToPath } from 'url';
 import HtmlWebpackPlugin from 'html-webpack-plugin'; 
 >>>>>>> 57eb40fd (Next step in rebase)
 >>>>>>> 4ab83d6d (Fix/ Changed build script to reflect changes to the webpack)
+=======
+>>>>>>> e486de3f (Patch/ Errors in upload feature resolved)
 
 <<<<<<< HEAD
 const __filename = fileURLToPath(import.meta.url);
@@ -151,6 +154,15 @@ export default {
     new HtmlWebpackPlugin({
       template: './client/index.html',
     }),
+<<<<<<< HEAD
+=======
+    new webpack.ProvidePlugin({
+      process: 'process/browser.js',
+      Buffer: ['buffer', 'Buffer'],
+    }),
+    // Environment variables are now injected by dotenv-webpack only
+    new Dotenv(),
+>>>>>>> e486de3f (Patch/ Errors in upload feature resolved)
   ],
 <<<<<<< HEAD
 >>>>>>> 57eb40fd (Next step in rebase)
