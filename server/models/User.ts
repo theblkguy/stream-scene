@@ -1,19 +1,31 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 9bac74e2 (Fix/ session continutuity maintained upon login)
+=======
+>>>>>>> 3d24405f (AI API calls working)
 // Simple in-memory user storage for demo purposes
 // In production, this would be replaced with proper database persistence
 
 interface UserRecord {
+=======
+import { DataTypes, Model, Optional } from 'sequelize';
+import db from '../db/index';
+
+export interface UserAttributes {
+>>>>>>> 645559b4 (AI API calls working)
   id: number;
   googleId: string;
   firstName: string;
   lastName: string;
   email: string;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
+=======
+>>>>>>> 3d24405f (AI API calls working)
   profilePic?: string;
 }
 
@@ -30,13 +42,20 @@ export class User {
   firstName!: string;
   lastName!: string;
   email!: string;
+<<<<<<< HEAD
 >>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
+=======
+=======
+>>>>>>> 645559b4 (AI API calls working)
+>>>>>>> 3d24405f (AI API calls working)
   profilePic?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
-  constructor(data: any) {
-    Object.assign(this, data);
-  }
+export interface UserCreationAttributes extends Optional<UserAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
 
+<<<<<<< HEAD
   static async findOne(options: any): Promise<User | null> {
     console.log('User.findOne called with:', options);
     
@@ -90,9 +109,27 @@ export class User {
       totalUsers: userStorage.size,
       users: Array.from(userStorage.values())
     };
+=======
+export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
+  public id!: number;
+  public googleId!: string;
+  public firstName!: string;
+  public lastName!: string;
+  public email!: string;
+  public profilePic?: string;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+
+  // Static method to find by Google ID
+  static async findByGoogleId(googleId: string): Promise<User | null> {
+    return await User.findOne({
+      where: { googleId }
+    });
+>>>>>>> 645559b4 (AI API calls working)
   }
 }
 
+<<<<<<< HEAD
 // In-memory user storage
 const userStorage = new Map<number, UserRecord>();
 const userByGoogleId = new Map<string, number>(); // googleId -> userId mapping
@@ -170,5 +207,55 @@ export class User {
     };
   }
 }
+=======
+User.init({
+  id: {
+    type: DataTypes.INTEGER.UNSIGNED,
+    autoIncrement: true,
+    primaryKey: true,
+  },
+  googleId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  firstName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  lastName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  profilePic: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW,
+  },
+}, {
+  sequelize: db.sequelize,
+  modelName: 'User',
+  tableName: 'users',
+  timestamps: true,
+  indexes: [
+    { fields: ['googleId'], unique: true },
+    { fields: ['email'], unique: true },
+  ],
+});
+>>>>>>> 3d24405f (AI API calls working)
 
 export default User;

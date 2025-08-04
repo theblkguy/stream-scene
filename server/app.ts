@@ -160,12 +160,24 @@ import routes from "./routes/index";
 import aiRoutes from "./routes/ai";
 import scheduleRoutes from "./routes/schedule";
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> ec3152d4 (redid the task form to make text show up, built out the ai routes on the backend)
 =======
 import s3ProxyRoutes from "./routes/s3Proxy";
 import fileRoutes from "./routes/files";
 import { syncDB } from "./db/index";
 >>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
+=======
+import s3ProxyRoutes from "./routes/s3Proxy";
+import fileRoutes from "./routes/files";
+import { syncDB } from "./db/index";
+=======
+import taskRoutes from "./routes/tasks"; 
+import db from './db/index'; 
+import User from './models/User'; 
+import Task from './models/Task'; 
+>>>>>>> 645559b4 (AI API calls working)
+>>>>>>> 3d24405f (AI API calls working)
 
 const app = express();
 
@@ -185,12 +197,12 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: false, // Set to true in production with HTTPS
+    secure: false, 
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
 
-// Passport middleware (REQUIRED for OAuth)
+// Passport middleware 
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -203,19 +215,26 @@ app.use('/', routes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/schedule', scheduleRoutes);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 app.use('/api/s3', s3ProxyRoutes);
 app.use('/api/files', fileRoutes);
 >>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
+=======
+app.use('/api/s3', s3ProxyRoutes);
+app.use('/api/files', fileRoutes);
+=======
+app.use('/api/tasks', taskRoutes); 
+>>>>>>> 645559b4 (AI API calls working)
+>>>>>>> 3d24405f (AI API calls working)
 
 // API test route
 app.get('/test-server', (req, res) => {
   res.json({ message: 'Server is working!' });
 });
 
-// Catch-all handler for SPA routes - must be LAST
+// Catch-all handler for SPA routes
 app.get('*', (req, res) => {
-  // Don't serve index.html for API routes
   if (req.path.startsWith('/api/') || req.path.startsWith('/auth/')) {
     return res.status(404).json({ error: 'Route not found' });
   }
@@ -225,6 +244,7 @@ app.get('*', (req, res) => {
 
 const PORT = process.env.PORT || 8000;
 
+<<<<<<< HEAD
 // Initialize database
 syncDB().then(() => {
   app.listen(PORT, () => {
@@ -234,6 +254,37 @@ syncDB().then(() => {
   console.error('Failed to initialize database:', error);
   process.exit(1);
 });
+=======
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Connect to database
+    await db.sequelize.authenticate();
+    console.log('Database connection established successfully.');
+    
+    // Sync models (create tables if they don't exist)
+    await User.sync();
+    await Task.sync();
+    
+    // Set up model associations
+    User.hasMany(Task, { foreignKey: 'user_id' });
+    Task.belongsTo(User, { foreignKey: 'user_id' });
+    
+    console.log('Models synced successfully.');
+    
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`Server is running at http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer();
+>>>>>>> 645559b4 (AI API calls working)
 
 <<<<<<< HEAD
 export default app;
