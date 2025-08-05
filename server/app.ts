@@ -158,7 +158,13 @@ import routes from "./routes/index";
 =======
 import aiRoutes from "./routes/ai";
 import scheduleRoutes from "./routes/schedule";
+<<<<<<< HEAD
 >>>>>>> ec3152d4 (redid the task form to make text show up, built out the ai routes on the backend)
+=======
+import s3ProxyRoutes from "./routes/s3Proxy";
+import fileRoutes from "./routes/files";
+import { syncDB } from "./db/index";
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
 
 const app = express();
 
@@ -189,6 +195,11 @@ app.use('/auth', authRoutes);
 app.use('/', routes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/schedule', scheduleRoutes);
+<<<<<<< HEAD
+=======
+app.use('/api/s3', s3ProxyRoutes);
+app.use('/api/files', fileRoutes);
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
 
 // API test route
 app.get('/test-server', (req, res) => {
@@ -207,8 +218,14 @@ app.get('*', (req, res) => {
 
 const PORT = process.env.PORT || 8000;
 
-app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:8000`);
+// Initialize database
+syncDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server is running at http://localhost:8000`);
+  });
+}).catch((error) => {
+  console.error('Failed to initialize database:', error);
+  process.exit(1);
 });
 
 <<<<<<< HEAD

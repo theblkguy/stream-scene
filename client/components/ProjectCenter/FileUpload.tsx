@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { uploadFileToS3, S3UploadResult, isS3Configured, deleteFileFromS3, getFileUrl } from '../../services/s3Service';
@@ -11,6 +12,13 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { uploadFileToS3, S3UploadResult, isS3Configured, deleteFileFromS3 } from '../../services/s3Service';
 >>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
+=======
+import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { uploadFileToS3, S3UploadResult, isS3Configured, deleteFileFromS3, getPresignedReadUrl } from '../../services/s3Service';
+import { fileService, FileRecord, CreateFileRequest } from '../../services/fileService';
+import useAuth from '../../hooks/useAuth';
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
 
 interface UploadedFile {
   id: string;
@@ -23,9 +31,12 @@ interface UploadedFile {
   tags?: string[];
   uploadedAt: Date;
   fileRecordId?: number; // Database record ID
+<<<<<<< HEAD
 =======
   uploadedAt: Date;
 >>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
+=======
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
 }
 
 const FileUpload: React.FC = () => {
@@ -170,8 +181,50 @@ const FileUpload: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+<<<<<<< HEAD
 >>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
+=======
+  const { user } = useAuth();
+
+  // Load user's files when component mounts or user changes
+  useEffect(() => {
+    if (user) {
+      loadUserFiles();
+    } else {
+      setUploadedFiles([]);
+      setLoading(false);
+    }
+  }, [user]);
+
+  const loadUserFiles = async () => {
+    try {
+      setLoading(true);
+      const fileRecords = await fileService.getFiles();
+      
+      // Convert FileRecord to UploadedFile format
+      const files: UploadedFile[] = fileRecords.map(record => ({
+        id: `db-${record.id}`, // Prefix to distinguish from local IDs
+        name: record.name,
+        type: record.type,
+        size: record.size,
+        url: record.url,
+        s3Key: record.s3Key,
+        uploadedAt: new Date(record.uploadedAt),
+        fileRecordId: record.id
+      }));
+      
+      setUploadedFiles(files);
+      console.log('Loaded user files:', files);
+    } catch (error) {
+      console.error('Failed to load user files:', error);
+      setError('Failed to load your files. Please refresh the page.');
+    } finally {
+      setLoading(false);
+    }
+  };
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
@@ -241,11 +294,15 @@ const FileUpload: React.FC = () => {
 
   const uploadFile = async (file: File) => {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
     if (!user) {
       setError('Please log in to upload files.');
       return;
     }
 
+<<<<<<< HEAD
     setIsUploading(true);
     setError(null);
     setUploadProgress(0);
@@ -254,6 +311,8 @@ const FileUpload: React.FC = () => {
       console.log('Starting upload for file:', file.name, 'Type:', file.type, 'Size:', file.size);
 
 =======
+=======
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
     setUploading(true);
     setError(null);
     setUploadProgress(0);
@@ -315,20 +374,45 @@ const FileUpload: React.FC = () => {
       const { url, s3Key } = await handleS3Upload(file);
       
       clearInterval(progressInterval);
-      setUploadProgress(100);
+      setUploadProgress(95);
       
+<<<<<<< HEAD
       const newFile: UploadedFile = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+=======
+      console.log('Upload completed. URL:', url, 'S3Key:', s3Key);
+      
+      // Create file record in database
+      const fileData: CreateFileRequest = {
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
         name: file.name,
+        originalName: file.name,
         type: file.type,
         size: file.size,
         url,
-        s3Key,
-        uploadedAt: new Date()
+        s3Key
+      };
+
+      const fileRecord = await fileService.createFile(fileData);
+      console.log('File record created:', fileRecord);
+      
+      const newFile: UploadedFile = {
+        id: `db-${fileRecord.id}`,
+        name: fileRecord.name,
+        type: fileRecord.type,
+        size: fileRecord.size,
+        url: fileRecord.url,
+        s3Key: fileRecord.s3Key,
+        uploadedAt: new Date(fileRecord.uploadedAt),
+        fileRecordId: fileRecord.id
       };
 
       setUploadedFiles(prev => [...prev, newFile]);
+<<<<<<< HEAD
 >>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
+=======
+      setUploadProgress(100);
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
       
       // Reset progress after a short delay
       setTimeout(() => setUploadProgress(0), 1000);
@@ -658,6 +742,9 @@ const FileUpload: React.FC = () => {
 
   // Remove file handler
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
   const removeFile = async (fileId: string) => {
     const fileToRemove = uploadedFiles.find(f => f.id === fileId);
     if (!fileToRemove) return;
@@ -669,6 +756,7 @@ const FileUpload: React.FC = () => {
       // If file has a database record, delete it
       if (fileToRemove.fileRecordId) {
         await fileService.deleteFile(fileToRemove.fileRecordId);
+<<<<<<< HEAD
       }
 
       // Clean up local blob URL
@@ -806,11 +894,31 @@ const FileUpload: React.FC = () => {
       return prev.filter(f => f.id !== fileId);
     });
 >>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
+=======
+      }
+
+      // Clean up local blob URL
+      cleanupLocalUrl(fileToRemove.url);
+      
+      // Clean up S3 if needed
+      await cleanupS3(fileToRemove.s3Key);
+      
+      console.log('File removed successfully:', fileToRemove.name);
+    } catch (error) {
+      console.error('Failed to remove file:', error);
+      // Re-add the file to the list if deletion failed
+      setUploadedFiles(prev => [...prev, fileToRemove]);
+      setError('Failed to delete file. Please try again.');
+    }
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
   };
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
       {/* Authentication Check */}
       {!user && (
         <motion.div
@@ -847,6 +955,7 @@ const FileUpload: React.FC = () => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
+<<<<<<< HEAD
 =======
       {/* Upload Area */}
       <motion.div
@@ -862,6 +971,8 @@ const FileUpload: React.FC = () => {
         whileTap={{ scale: 0.98 }}
       >
 >>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
+=======
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
         <input
           ref={fileInputRef}
           type="file"
@@ -981,6 +1092,7 @@ const FileUpload: React.FC = () => {
         </div>
       </motion.div>
 <<<<<<< HEAD
+<<<<<<< HEAD
       )}
 
       {/* Uploaded Files Display */}
@@ -990,6 +1102,12 @@ const FileUpload: React.FC = () => {
       {/* Uploaded Files Display */}
       {uploadedFiles.length > 0 && (
 >>>>>>> 5fc44ace (Fix/ All references to the "Project Hub" have been changed to "Project Center")
+=======
+      )}
+
+      {/* Uploaded Files Display */}
+      {user && !loading && uploadedFiles.length > 0 && (
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

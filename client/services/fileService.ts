@@ -8,7 +8,10 @@ export interface FileRecord {
   size: number;
   s3Key?: string;
   url: string;
+<<<<<<< HEAD
   tags?: string[];
+=======
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
   uploadedAt: string;
   updatedAt: string;
 }
@@ -20,13 +23,17 @@ export interface CreateFileRequest {
   size: number;
   s3Key?: string;
   url: string;
+<<<<<<< HEAD
   tags?: string[];
+=======
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
 }
 
 const API_BASE = 'http://localhost:8000/api/files';
 
 export const fileService = {
   // Get all files for the authenticated user
+<<<<<<< HEAD
   async getFiles(tags?: string[]): Promise<FileRecord[]> {
     try {
       let url = API_BASE;
@@ -35,6 +42,11 @@ export const fileService = {
       }
       
       const response = await fetch(url, {
+=======
+  async getFiles(): Promise<FileRecord[]> {
+    try {
+      const response = await fetch(API_BASE, {
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
         credentials: 'include'
       });
       
@@ -111,6 +123,7 @@ export const fileService = {
   },
 
   // Update file metadata
+<<<<<<< HEAD
   async updateFile(id: number, updates: Partial<FileRecord>): Promise<FileRecord> {
     try {
       console.log('Updating file:', id, 'with data:', updates);
@@ -154,6 +167,27 @@ export const fileService = {
       return data.tags || [];
     } catch (error) {
       console.error('Error fetching tags:', error);
+=======
+  async updateFile(id: number, updates: Partial<Pick<FileRecord, 'name'>>): Promise<FileRecord> {
+    try {
+      const response = await fetch(`${API_BASE}/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(updates)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to update file: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data.file;
+    } catch (error) {
+      console.error('Error updating file:', error);
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
       throw error;
     }
   }

@@ -76,7 +76,11 @@ import { Sequelize } from 'sequelize-typescript';
 =======
 // Import Sequelize 
 import { Sequelize } from 'sequelize';
+<<<<<<< HEAD
 >>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
+=======
+import { File } from '../models/File';
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
 
 // Set up Sequelize connection
 const sequelize = new Sequelize({
@@ -103,11 +107,11 @@ export const associate = () => {
   console.log('Database associations set up');
 };
 
-// call this to sync the DB
+// call this to sync the DB (excluding File model for now)
 export const syncDB = async (force = false) => {
   try {
-    await sequelize.sync({ force });
-    console.log('Database synced successfully');
+    // Skip File model sync since we're using in-memory storage
+    console.log('Database sync skipped - using in-memory file storage');
   } catch (error) {
     console.error('Database sync failed:', error);
   }
@@ -119,7 +123,11 @@ testConnection();
 // Export everything in one object
 export const db = {
   sequelize,
+<<<<<<< HEAD
 >>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
+=======
+  File, // This is now our in-memory File class
+>>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
   associate,
 };
 
