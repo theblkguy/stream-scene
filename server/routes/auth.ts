@@ -172,6 +172,10 @@ export default router;
 =======
 // Get current authenticated user
 router.get('/user', (req: Request, res: Response) => {
+  console.log('Auth check - Session ID:', req.sessionID);
+  console.log('Auth check - User:', req.user);
+  console.log('Auth check - Session:', req.session);
+  
   if (req.user) {
     res.json({
       authenticated: true,
