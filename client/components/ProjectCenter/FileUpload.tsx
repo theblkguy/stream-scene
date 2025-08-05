@@ -15,7 +15,7 @@ import { uploadFileToS3, S3UploadResult, isS3Configured, deleteFileFromS3 } from
 =======
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { uploadFileToS3, S3UploadResult, isS3Configured, deleteFileFromS3, getPresignedReadUrl } from '../../services/s3Service';
+import { uploadFileToS3, S3UploadResult, isS3Configured, deleteFileFromS3, getFileUrl } from '../../services/s3Service';
 import { fileService, FileRecord, CreateFileRequest } from '../../services/fileService';
 import useAuth from '../../hooks/useAuth';
 >>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
@@ -1276,5 +1276,3 @@ const FileUpload: React.FC = () => {
 };
 
 export default FileUpload;
-
-console.log('REACT_APP_AWS_ACCESS_KEY_ID', process.env.REACT_APP_AWS_ACCESS_KEY_ID);
