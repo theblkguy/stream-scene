@@ -58,6 +58,7 @@ server/dist/
 server/node_modules/
 server/.env
 
+<<<<<<< HEAD
 # GitHub Actions secrets
 secrets/
 public/bundle.js
@@ -67,3 +68,5 @@ dist/
 =======
 node_modules/
 >>>>>>> d5370905 (Removed node_modules from repo and reinstalled clean)
+=======
+>>>>>>> 92762c45 (Fix/ fixing rebase conflicts)

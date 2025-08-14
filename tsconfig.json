@@ -1,8 +1,13 @@
 {
   "compilerOptions": {
+<<<<<<< HEAD
     "target": "ES2020",
     "module": "ES2022",
     "lib": ["ES2020", "DOM"],
+=======
+    "target": "es2020",
+    "module": "commonjs",
+>>>>>>> 92762c45 (Fix/ fixing rebase conflicts)
     "jsx": "react-jsx",
     "baseUrl": "./",
     "paths": {
@@ -10,6 +15,7 @@
       "@utils/*": ["client/src/utils/*"]
     },
     "outDir": "dist",
+<<<<<<< HEAD
     "rootDir": "./", 
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -26,6 +32,16 @@
     "useDefineForClassFields": false,
     "typeRoots": ["./node_modules/@types", "./types", "./client/types"]
   },
-  "include": ["client/**/*", "types/**/*"],
-  "exclude": ["node_modules", "dist", "server"]
+  "include": ["client/src/**/*", "server/src/**/*", "types/**/*", "server/types", "server/routes", "server/models", "server/middleware", "server/db", "server/config", "server/app.ts", "server/server.ts"],
+=======
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node"
+  },
+  "include": ["client/src", "server/src"],
+>>>>>>> 92762c45 (Fix/ fixing rebase conflicts)
+  "exclude": ["node_modules", "dist"]
 }

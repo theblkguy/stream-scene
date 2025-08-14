@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+<<<<<<< HEAD
     "target": "es2017",
     "module": "ES2022",
     "lib": ["esnext"],
@@ -33,4 +34,18 @@
     "server.ts"
   ],
   "exclude": ["node_modules", "dist"]
+=======
+    "target": "es2020",
+    "module": "commonjs",
+    "rootDir": "src",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true
+  },
+  "include": ["src"]
+>>>>>>> 92762c45 (Fix/ fixing rebase conflicts)
 }
