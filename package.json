@@ -92,6 +92,7 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "webpack serve --config webpack.config.js --mode development",
     "dev:server": "nodemon --watch server --ext ts --exec ts-node server/server.ts",
+<<<<<<< HEAD
 >>>>>>> a80da8cd (Fix/ fixing server paths (rebase))
     "build": "webpack --config webpack.config.js && tsc",
     "start": "node dist/server.js",
@@ -104,6 +105,12 @@
     "start": "node dist/server/src/server.js",
     "start:prod": "NODE_ENV=production node dist/server/src/server.js"
 >>>>>>> 7ef43977 (Fix/ working through rebase)
+=======
+    "build": "webpack --config webpack.config.mjs && tsc",
+    "start": "node dist/server.js",
+    "db:migrate": "sequelize-cli db:migrate",
+    "db:seed": "sequelize-cli db:seed:all"
+>>>>>>> 4ab83d6d (Fix/ Changed build script to reflect changes to the webpack)
   },
   "dependencies": {
     "cors": "^2.8.5",
