@@ -36,6 +36,7 @@ public/index.html
 .env.*
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 server/.env
 =======
 =======
@@ -55,6 +56,8 @@ dist/
 Thumbs.db
 
 <<<<<<< HEAD
+=======
+>>>>>>> 7ef43977 (Fix/ working through rebase)
 .env.production
 
 # SSH Keys
@@ -66,6 +69,7 @@ node_modules/
 # Ignore backend build output and secrets
 server/dist/
 server/node_modules/
+<<<<<<< HEAD
 server/.env
 
 <<<<<<< HEAD
@@ -87,3 +91,9 @@ server/.env
 .DS_Store
 Thumbs.db
 >>>>>>> 57eb40fd (Next step in rebase)
+=======
+server/.env
+
+# GitHub Actions secrets (should be in repository secrets)
+secrets/
+>>>>>>> 7ef43977 (Fix/ working through rebase)

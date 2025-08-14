@@ -1,9 +1,27 @@
+<<<<<<< HEAD
 name: Deploy to Personal Server
 
 on:
   push:
     branches: [ deployment-strikes-back-revenge-of-the-dist ]  # Deploy from your branch
   workflow_dispatch: # Allow manual trigger
+=======
+<<<<<<< HEAD
+name: Deploy to EC2 (Development)
+
+on:
+  push:
+    branches: [ main ]  # Deploy when pushing to main or typescript-deployment-branch
+=======
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ main, intial-setup-branch ]
+>>>>>>> 7ef43977 (Fix/ working through rebase)
+  pull_request:
+    branches: [ main ]
+>>>>>>> 20e8821c (Fix/ working through rebase)
 
 jobs:
   build-and-deploy:
@@ -12,6 +30,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+<<<<<<< HEAD
       
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -54,7 +73,27 @@ jobs:
         AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
         EOF
 
+<<<<<<< HEAD
     - name: Setup server directory
+=======
+    - name: Test SSH Connection
+=======
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: npm run build
+
+    - name: Deploy to EC2
+>>>>>>> 7ef43977 (Fix/ working through rebase)
+>>>>>>> 20e8821c (Fix/ working through rebase)
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SERVER_HOST }}
@@ -62,9 +101,61 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT || 22 }}
         script: |
+<<<<<<< HEAD
           # Create app directory if it doesn't exist
           sudo mkdir -p /var/www/stream-scene
           sudo chown $USER:$USER /var/www/stream-scene
+=======
+<<<<<<< HEAD
+          echo "SSH connection successful!"
+          whoami
+          pwd
+          ls -la
+
+    - name: Deploy to EC2 (Development Mode)
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: 22
+        script: |
+          # Navigate to app directory
+          cd /home/ubuntu
+          
+          # Clone or update repository from upstream Project Vision
+          if [ ! -d "stream-scene" ]; then
+            git clone https://github.com/Project-Visi0n/stream-scene.git
+            cd stream-scene
+            git checkout main
+          else
+            cd stream-scene
+            git fetch upstream
+            git checkout main
+            git pull upstream main
+          fi
+          
+          # Install dependencies
+          npm ci
+          
+          # Build with increased memory
+          NODE_OPTIONS="--max-old-space-size=2048" npm run build
+          
+          # Create environment file if it doesn't exist
+          if [ ! -f ".env" ]; then
+            cat > .env << EOF
+          PORT=8000
+          SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_CALLBACK_URL=http://${{ secrets.EC2_HOST }}:8000/auth/google/callback
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+          EOF
+          fi
+>>>>>>> 20e8821c (Fix/ working through rebase)
           
           # Install PM2 globally if not installed
           if ! command -v pm2 &> /dev/null; then
@@ -101,7 +192,18 @@ jobs:
           # Stop existing PM2 process
           pm2 stop stream-scene || true
           pm2 delete stream-scene || true
+<<<<<<< HEAD
           
           # Start with PM2 using ecosystem config
           pm2 start ecosystem.config.js --env production
+=======
+          pm2 start dist/server/app.js --name stream-scene --env production
+=======
+          cd /home/ubuntu/stream-scene
+          git pull origin ${{ github.ref_name }}
+          npm install
+          npm run build
+          pm2 restart stream-scene-server || pm2 start dist/server/src/server.js --name stream-scene-server
+>>>>>>> 7ef43977 (Fix/ working through rebase)
+>>>>>>> 20e8821c (Fix/ working through rebase)
           pm2 save
