@@ -5,6 +5,7 @@
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   "type": "module",
   "main": "server/app.ts",
   "ts-node": {
@@ -85,6 +86,13 @@
     "dev:client": "webpack serve --config webpack.config.js --mode development",
     "dev:server": "ts-node-dev --respawn --transpile-only server/src/server.ts",
 <<<<<<< HEAD
+=======
+  "main": "server/server.ts",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "webpack serve --config webpack.config.js --mode development",
+    "dev:server": "nodemon --watch server --ext ts --exec ts-node server/server.ts",
+>>>>>>> a80da8cd (Fix/ fixing server paths (rebase))
     "build": "webpack --config webpack.config.js && tsc",
     "start": "node dist/server.js",
     "db:migrate": "sequelize-cli db:migrate",

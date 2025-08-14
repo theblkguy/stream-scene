@@ -21,6 +21,7 @@
       "@models/*": ["models/*"]
     }
   },
+<<<<<<< HEAD
   "include": [
     "src/**/*",
     "server/types",  
@@ -33,6 +34,9 @@
     "app.ts",
     "server.ts"
   ],
+=======
+  "include": ["src/**/*", "types", "routes", "models", "middleware", "db", "config", "app.ts", "server.ts"],
+>>>>>>> a80da8cd (Fix/ fixing server paths (rebase))
   "exclude": ["node_modules", "dist"]
 =======
     "target": "es2020",

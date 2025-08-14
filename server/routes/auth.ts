@@ -37,7 +37,31 @@ router.get(
  }
 );
 
+<<<<<<< HEAD
 // Get current authenticated user
+=======
+// Logout route
+router.get('/logout', (req: Request, res: Response, next: NextFunction) => {
+<<<<<<< HEAD
+  try {
+    req.logout((err) => {
+=======
+  req.logout((err) => {
+>>>>>>> 118d8902 (Fix/ Delete src folder and moved all relevent files to server folder)
+    if (err) {
+      return next(err);
+    }
+    res.redirect('http://localhost:3001');
+  });
+<<<<<<< HEAD
+} catch (err) {
+  next (err);
+=======
+>>>>>>> 118d8902 (Fix/ Delete src folder and moved all relevent files to server folder)
+});
+
+// Check if user is authenticated
+>>>>>>> a80da8cd (Fix/ fixing server paths (rebase))
 router.get('/user', (req: Request, res: Response) => {
   console.log('Auth check - Session ID:', req.sessionID);
   console.log('Auth check - User:', req.user);
@@ -56,6 +80,7 @@ router.get('/user', (req: Request, res: Response) => {
   }
 });
 
+<<<<<<< HEAD
 // Logout endpoint
 router.post('/logout', (req: Request, res: Response) => {
   req.logout((err) => {
@@ -67,3 +92,10 @@ router.post('/logout', (req: Request, res: Response) => {
 });
 
 export default router;
+=======
+<<<<<<< HEAD
+export default router;
+=======
+export default router;
+>>>>>>> 118d8902 (Fix/ Delete src folder and moved all relevent files to server folder)
+>>>>>>> a80da8cd (Fix/ fixing server paths (rebase))
