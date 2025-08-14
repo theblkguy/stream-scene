@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 
 # Node modules (both client and server)
@@ -6,6 +7,11 @@
 <<<<<<< HEAD
 # Node modules
 >>>>>>> 191c7b9d (Add/ Initial setup)
+=======
+
+
+# Node modules (both client and server)
+>>>>>>> 57eb40fd (Next step in rebase)
 node_modules/
 server/node_modules/
 
@@ -17,14 +23,18 @@ server/node_modules/
 dist/
 build/
 server/dist/
+<<<<<<< HEAD
 public/bundle.js
 public/bundle.js.LICENSE.txt
 public/index.html
+=======
+>>>>>>> 57eb40fd (Next step in rebase)
 
 
 # Environment files (all variations)
 .env
 .env.*
+<<<<<<< HEAD
 <<<<<<< HEAD
 server/.env
 =======
@@ -70,3 +80,10 @@ node_modules/
 >>>>>>> d5370905 (Removed node_modules from repo and reinstalled clean)
 =======
 >>>>>>> 92762c45 (Fix/ fixing rebase conflicts)
+=======
+server/.env
+
+# OS-specific junk
+.DS_Store
+Thumbs.db
+>>>>>>> 57eb40fd (Next step in rebase)

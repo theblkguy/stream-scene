@@ -2,12 +2,16 @@
 =======
 import path from 'path';
 import { fileURLToPath } from 'url';
+<<<<<<< HEAD
+=======
+import HtmlWebpackPlugin from 'html-webpack-plugin'; 
+>>>>>>> 57eb40fd (Next step in rebase)
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default {
-  entry: './client/src/index.ts',
+  entry: './client/client/src/index.tsx',
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist/public'),
@@ -29,6 +33,14 @@ export default {
       },
     ],
   },
+<<<<<<< HEAD
+=======
+  plugins: [ 
+    new HtmlWebpackPlugin({
+      template: './client/client/index.html',
+    }),
+  ],
+>>>>>>> 57eb40fd (Next step in rebase)
   devtool: 'source-map',
   devServer: {
     static: {
