@@ -33,9 +33,19 @@ jobs:
         # Create a deployment directory
         mkdir -p deploy
         
-        # Copy built files
-        cp -r dist/ deploy/
-        cp -r public/ deploy/
+        # Copy built server files
+        cp -r dist/server/ deploy/dist/server/
+        
+        # Copy built frontend files to public directory (where server expects them)
+        mkdir -p deploy/public
+        cp dist/*.js deploy/public/ 2>/dev/null || true
+        cp dist/*.html deploy/public/ 2>/dev/null || true
+        cp dist/*.txt deploy/public/ 2>/dev/null || true
+        
+        # Copy any existing public assets
+        if [ -d "public" ]; then
+          cp -r public/* deploy/public/ 2>/dev/null || true
+        fi
         
         # Copy configuration files
         cp ecosystem.config.cjs deploy/
