@@ -38,7 +38,7 @@ jobs:
         cp -r public/ deploy/
         
         # Copy configuration files
-        cp ecosystem.config.js deploy/
+        cp ecosystem.config.cjs deploy/
         cp package-server.json deploy/package.json
         
         # Create environment file template (will be populated with secrets)
@@ -106,7 +106,7 @@ jobs:
           
           # Start fresh PM2 process using ecosystem config
           echo "Starting new stream-scene process..."
-          pm2 start ecosystem.config.js --env production
+          pm2 start ecosystem.config.cjs --env production
           
           # Save PM2 configuration for auto-restart on reboot
           pm2 save
