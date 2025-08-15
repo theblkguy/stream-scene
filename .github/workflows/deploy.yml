@@ -93,6 +93,11 @@ jobs:
           # Check PM2 availability
           echo "PM2 version: $(pm2 --version)"
           
+          # Clear Node.js cache and PM2 cache
+          echo "Clearing caches..."
+          pm2 flush
+          npm cache clean --force
+          
           # Install production dependencies
           npm install --production
           
