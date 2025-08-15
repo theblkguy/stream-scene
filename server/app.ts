@@ -75,8 +75,12 @@ app.use(passport.session());
 // Serve static files from public directory
 // Dynamically determine the correct path based on whether we're running from dist/ or server/
 const publicPath = __dirname.includes('dist/server') 
-  ? path.join(__dirname, '../../public')  
-  : path.join(__dirname, '../public');    
+  ? path.join(__dirname, '../../public')  // For deployment: dist/server -> ../../public
+  : path.join(__dirname, '../public');    // For local dev: server -> ../public
+
+console.log('Static files path:', publicPath);
+console.log('Current __dirname:', __dirname);
+console.log('Files in public directory:', fs.existsSync(publicPath) ? fs.readdirSync(publicPath) : 'Directory does not exist');
 
 app.use(express.static(publicPath));
 
@@ -109,8 +113,16 @@ app.get('*', (req, res) => {
     ? path.join(__dirname, '../../public/index.html')  // For deployment
     : path.join(__dirname, '../public/index.html');    // For local dev
   
+  console.log('Looking for index.html at:', indexPath);
+  console.log('File exists:', fs.existsSync(indexPath));
+  
   if (!fs.existsSync(indexPath)) {
     console.error('index.html file not found at:', indexPath);
+    // Let's also check alternative paths for debugging
+    const altPath1 = path.join(__dirname, '../../dist/index.html');
+    const altPath2 = path.join(__dirname, '../public/index.html');
+    console.log('Alternative path 1 (../../dist/index.html):', fs.existsSync(altPath1));
+    console.log('Alternative path 2 (../public/index.html):', fs.existsSync(altPath2));
     return res.status(404).send('index.html file not found');
   }
   
