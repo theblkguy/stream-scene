@@ -1,99 +1,31 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-
 # Node modules (both client and server)
-=======
-<<<<<<< HEAD
-# Node modules
->>>>>>> 191c7b9d (Add/ Initial setup)
-=======
-
-
-# Node modules (both client and server)
->>>>>>> 57eb40fd (Next step in rebase)
 node_modules/
 server/node_modules/
 
 # TypeScript build info
 *.tsbuildinfo
 
-
 # Build output (dist, build)
 dist/
 build/
 server/dist/
-<<<<<<< HEAD
 public/bundle.js
 public/bundle.js.LICENSE.txt
 public/index.html
-=======
->>>>>>> 57eb40fd (Next step in rebase)
-
 
 # Environment files (all variations)
 .env
 .env.*
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 server/.env
-=======
-=======
-# node modules
-node_modules/
-
-# .env
-.env
-
-# build
-dist/
->>>>>>> 38eedd2f (Add/ Initial setup)
->>>>>>> 191c7b9d (Add/ Initial setup)
+.env.production
 
 # OS-specific junk
 .DS_Store
 Thumbs.db
-
-<<<<<<< HEAD
-=======
->>>>>>> 7ef43977 (Fix/ working through rebase)
-.env.production
 
 # SSH Keys
 *.pem
 *.ppk
 
-node_modules/
-
-# Ignore backend build output and secrets
-server/dist/
-server/node_modules/
-<<<<<<< HEAD
-server/.env
-
-<<<<<<< HEAD
 # GitHub Actions secrets
 secrets/
-public/bundle.js
-dist/
-.env.local
-.envpublic/bundle.js
-=======
-node_modules/
->>>>>>> d5370905 (Removed node_modules from repo and reinstalled clean)
-=======
->>>>>>> 92762c45 (Fix/ fixing rebase conflicts)
-=======
-server/.env
-
-# OS-specific junk
-.DS_Store
-Thumbs.db
->>>>>>> 57eb40fd (Next step in rebase)
-=======
-server/.env
-
-# GitHub Actions secrets (should be in repository secrets)
-secrets/
->>>>>>> 7ef43977 (Fix/ working through rebase)
