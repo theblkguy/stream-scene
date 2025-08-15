@@ -15,7 +15,7 @@ export default (env, argv) => {
     mode: argv.mode || 'development',
     target: 'web',
     output: {
-      path: path.resolve('./public'),
+      path: path.resolve('./dist'),
       filename: 'bundle.js',
       publicPath: '/',
       clean: true,
