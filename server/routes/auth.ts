@@ -8,6 +8,8 @@ router.get('/test', (req: Request, res: Response) => {
   res.json({ message: 'Auth routes are working!' });
 });
 
+// Updated: Database environment variables added to deployment
+
 // Extend Request interface to include user
 declare global {
   namespace Express {
