@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import GoogleLoginButton from './GoogleLoginButton';
 
 // Define the CurrentView type to match App.tsx
+// Fixed static file deployment - files now served from correct directory
 type CurrentView = 'landing' | 'planner' | 'project-center' | 'budget-tracker' | 'demos-trailers' | 'content-scheduler';
 
 interface LandingPageProps {
