@@ -1,13 +1,6 @@
 {
   "name": "stream-scene",
   "version": "1.0.0",
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
   "type": "module",
   "main": "server/app.ts",
   "ts-node": {
@@ -26,34 +19,24 @@
     "build": "npm run build:client:prod && npm run build:server",
     "build:client": "webpack --config webpack.config.mjs --mode development",
     "build:client:prod": "webpack --config webpack.config.mjs --mode production",
-    "build:server": "tsc",
+    "build:server": "tsc -p server/tsconfig.json",
     "start": "node dist/server/app.js",
-=======
-  "main": "server/app.ts",
-  "scripts": {
-    "dev": "npm run build:client && npm run dev:server",
-    "dev:client": "webpack --config webpack.config.mjs --mode development",
-    "dev:server": "nodemon --watch server --ext ts --exec ts-node server/app.ts",
-    "build": "webpack --config webpack.config.mjs --mode production && tsc",
-    "build:client": "webpack --config webpack.config.mjs --mode development",
-    "start": "node dist/server.js",
->>>>>>> 741fab68 (fixed google OAuth authentication -Fixed Express Version Conflict, Changed GoogleLoginButton with styling, set up different routes for auth/google in cloud console, cleaned up conflicting server files, updated landing page to use new button)
     "db:migrate": "sequelize-cli db:migrate",
-    "db:seed": "sequelize-cli db:seed:all"
+    "db:seed": "sequelize-cli db:seed:all",
+    "seed": "ts-node server/db/seed.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.859.0",
+    "@aws-sdk/client-s3": "^3.864.0",
     "@aws-sdk/client-transcribe": "^3.866.0",
-    "@aws-sdk/s3-request-presigner": "^3.859.0",
-    "@emotion/is-prop-valid": "^1.3.1",
+    "@aws-sdk/s3-request-presigner": "^3.864.0",
     "@google/generative-ai": "^0.24.1",
-    "@types/passport-twitter": "^1.0.40",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "express-session": "^1.18.2",
     "fluent-ffmpeg": "^2.1.3",
     "framer-motion": "^12.23.12",
+    "lightningcss": "^1.30.1",
     "mime-types": "^3.0.1",
     "multer": "^2.0.2",
     "mysql2": "^3.14.2",
@@ -62,69 +45,26 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-twitter": "^1.0.4",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "react-hot-toast": "^2.5.2",
-    "react-router-dom": "^7.7.1",
+    "react-router-dom": "^7.8.0",
     "react-sketch-canvas": "^6.2.0",
     "sequelize": "^6.37.7",
     "sequelize-typescript": "^2.1.6",
+    "tesseract.js": "^6.0.1",
     "twitter-api-v2": "^1.24.0",
     "wavesurfer.js": "^7.10.1"
-=======
->>>>>>> 1935a56c (Fix/ working through rebase)
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "webpack"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.23",
     "@types/express-session": "^1.18.2",
+    "@types/mime-types": "^3.0.1",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.2.1",
     "@types/node-cron": "^3.0.11",
-    "@types/passport": "^1.0.17",
-    "@types/passport-google-oauth20": "^2.0.16",
-=======
-  "main": "server/src/server.ts",
-=======
->>>>>>> 9783a685 (Fix/ package errors)
-  "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:client": "webpack serve --config webpack.config.js --mode development",
-    "dev:server": "ts-node-dev --respawn --transpile-only server/src/server.ts",
-    "build": "webpack --config webpack.config.js && tsc",
-    "start": "node dist/server.js",
-    "db:migrate": "sequelize-cli db:migrate",
-    "db:seed": "sequelize-cli db:seed:all"
-  },
-  "dependencies": {
-    "@emotion/is-prop-valid": "^1.3.1",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
-    "express": "^4.21.2",
-    "express-session": "^1.18.2",
-    "framer-motion": "^12.23.12",
-    "mysql2": "^3.14.2",
-    "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router-dom": "^7.7.1",
-    "sequelize": "^6.37.7"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.11",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^4.17.23",
-    "@types/express-session": "^1.18.2",
-    "@types/node": "^24.1.0",
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/react": "^19.1.8",
@@ -150,49 +90,11 @@
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3",
+    "typescript": "^4.9.5",
     "util": "^0.12.5",
     "vm-browserify": "^1.1.2",
     "webpack": "^5.100.2",
     "webpack-cli": "^6.0.1",
-<<<<<<< HEAD
-    "webpack-dev-server": "^5.2.2",
-=======
     "webpack-dev-server": "^5.2.2"
-  }
-}
->>>>>>> 9783a685 (Fix/ package errors)
-    "@eslint/js": "^9.32.0",
-    "eslint": "^9.32.0",
-    "ts-loader": "^9.5.2",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.38.0",
-    "webpack": "^5.100.2",
-    "webpack-cli": "^6.0.1"
-<<<<<<< HEAD
-=======
->>>>>>> 191c7b9d (Add/ Initial setup)
-=======
-    "autoprefixer": "^10.4.21",
-    "concurrently": "^9.2.0",
-    "css-loader": "^6.8.1",
-<<<<<<< HEAD
-=======
-    "html-webpack-plugin": "^5.6.3",
-    "css-loader": "^6.8.1",
-    "html-webpack-plugin": "^5.6.3",
->>>>>>> 57eb40fd (Next step in rebase)
-    "postcss": "^8.5.6",
-    "postcss-loader": "^8.1.1",
-    "style-loader": "^3.3.4",
-    "tailwindcss": "^4.1.11",
-    "ts-loader": "^9.5.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.8.3",
-    "webpack": "^5.100.2",
-    "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.2"
->>>>>>> 51fc902a (Fix/ working through rebase)
->>>>>>> 1935a56c (Fix/ working through rebase)
   }
 }

@@ -43,8 +43,6 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onTaskUpdate }) => {
     return new Date(deadline) < new Date();
   };
 
-<<<<<<< HEAD
-<<<<<<< HEAD
   // DEBUG: Log tasks to see what we're getting
   console.log('TaskList received tasks:', tasks);
 
@@ -54,23 +52,6 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onTaskUpdate }) => {
         <div className="text-4xl mb-2">📝</div>
         <p className="text-black font-medium">No tasks found</p>
         <p className="text-black mt-2">Create your first task to get started!</p>
-=======
-=======
-  // DEBUG: Log tasks to see what we're getting
-  console.log('TaskList received tasks:', tasks);
-
->>>>>>> ec3152d4 (redid the task form to make text show up, built out the ai routes on the backend)
-  if (tasks.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-800">
-        <div className="text-4xl mb-2">📝</div>
-<<<<<<< HEAD
-        <p>No tasks found</p>
->>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
-=======
-        <p className="text-black font-medium">No tasks found</p>
-        <p className="text-black mt-2">Create your first task to get started!</p>
->>>>>>> ec3152d4 (redid the task form to make text show up, built out the ai routes on the backend)
       </div>
     );
   }
@@ -80,28 +61,12 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onTaskUpdate }) => {
       {tasks.map((task) => (
         <div
           key={task.id}
-<<<<<<< HEAD
-<<<<<<< HEAD
           className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-all shadow-sm hover:shadow-md"
-=======
-          className="bg-white/20 backdrop-blur-sm rounded-lg p-4 border border-white/10 hover:bg-white/30 transition-all"
->>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
-=======
-          className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-all shadow-sm hover:shadow-md"
->>>>>>> ec3152d4 (redid the task form to make text show up, built out the ai routes on the backend)
         >
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center space-x-2">
               <span className="text-lg">{getTypeIcon(task.task_type)}</span>
-<<<<<<< HEAD
-<<<<<<< HEAD
               <h3 className="font-semibold text-black text-lg">{task.title}</h3>
-=======
-              <h3 className="font-semibold text-white text-lg">{task.title}</h3>
->>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
-=======
-              <h3 className="font-semibold text-black text-lg">{task.title}</h3>
->>>>>>> ec3152d4 (redid the task form to make text show up, built out the ai routes on the backend)
             </div>
             <div className="flex flex-wrap gap-2">
               <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
@@ -114,30 +79,12 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onTaskUpdate }) => {
           </div>
 
           {task.description && (
-<<<<<<< HEAD
-<<<<<<< HEAD
             <p className="text-black text-sm mb-3">{task.description}</p>
           )}
 
           <div className="flex flex-wrap items-center justify-between text-sm">
             <div className="flex items-center space-x-4 text-black">
                 <span className={`${isOverdue(task.deadline) ? 'text-red-600 font-semibold' : 'text-black'}`}>
-=======
-            <p className="text-gray-300 text-sm mb-3">{task.description}</p>
-          )}
-
-          <div className="flex flex-wrap items-center justify-between text-sm">
-            <div className="flex items-center space-x-4 text-gray-300">
-              <span className={`${isOverdue(task.deadline) ? 'text-red-400 font-semibold' : ''}`}>
->>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
-=======
-            <p className="text-black text-sm mb-3">{task.description}</p>
-          )}
-
-          <div className="flex flex-wrap items-center justify-between text-sm">
-            <div className="flex items-center space-x-4 text-black">
-                <span className={`${isOverdue(task.deadline) ? 'text-red-600 font-semibold' : 'text-black'}`}>
->>>>>>> ec3152d4 (redid the task form to make text show up, built out the ai routes on the backend)
                 📅 {formatDate(task.deadline)}
                 {isOverdue(task.deadline) && ' (Overdue!)'}
               </span>

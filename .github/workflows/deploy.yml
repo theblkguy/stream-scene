@@ -1,9 +1,9 @@
-name: Deploy to EC2
+name: Deploy to Personal Server
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches: [ deployment-strikes-back-revenge-of-the-dist ]  # Deploy from your branch
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   build-and-deploy:
@@ -19,11 +19,14 @@ jobs:
         node-version: '18'
         cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
+    - name: Clean install dependencies
+      run: |
+        rm -rf node_modules
+        npm ci
       
     - name: Build application
-      run: npm run build
+      run: |
+        npm run build
         
     - name: Create deployment package
       run: |

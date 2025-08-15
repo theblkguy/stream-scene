@@ -1,9 +1,5 @@
 import { DataTypes, Model, Optional, Op } from 'sequelize';
-<<<<<<< HEAD
 import db from '../db/index.js';
-=======
-import db from '../db/index';
->>>>>>> f858fd26 (built AIWeeklyPlanner component, made click function on landing page, created routes to create tasks, tasklist)
 
 // Define the Task attributes interface
 export interface TaskAttributes {

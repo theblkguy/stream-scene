@@ -1,10 +1,6 @@
 import { Router, Request, Response } from 'express';
-<<<<<<< HEAD
 import { db } from '../db/index.js';
 import { Op } from 'sequelize';
-=======
-import { db } from '../db/index';
->>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
 
 const router = Router();
 const { File } = db;
@@ -20,7 +16,6 @@ const requireAuth = (req: Request, res: Response, next: any) => {
 // Get all files for the authenticated user
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   try {
-<<<<<<< HEAD
     const userId = (req.user as any)?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -49,11 +44,6 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     });
     
     res.json({ files: filesWithTags });
-=======
-    const userId = (req.user as any).id;
-    const files = await File.findAllByUserId(userId);
-    res.json({ files });
->>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
   } catch (error) {
     console.error('Error fetching user files:', error);
     res.status(500).json({ error: 'Failed to fetch files' });
@@ -64,17 +54,12 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
 router.post('/', requireAuth, async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any).id;
-<<<<<<< HEAD
     const { name, originalName, type, size, s3Key, url, tags } = req.body;
-=======
-    const { name, originalName, type, size, s3Key, url } = req.body;
->>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
 
     if (!name || !type || !size || !url) {
       return res.status(400).json({ error: 'Missing required file information' });
     }
 
-<<<<<<< HEAD
     // Process tags - ensure they're lowercase and unique
     let processedTags: string[] = [];
     if (tags && Array.isArray(tags)) {
@@ -84,8 +69,6 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
         .filter((tag, index, array) => array.indexOf(tag) === index);
     }
 
-=======
->>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
     const file = await File.create({
       userId,
       name,
@@ -93,7 +76,6 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
       type,
       size,
       s3Key,
-<<<<<<< HEAD
       url,
       tags: processedTags.length > 0 ? processedTags.join(',') : undefined,
       uploadedAt: new Date(),
@@ -109,19 +91,12 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
     };
 
     res.status(201).json({ file: response });
-=======
-      url
-    });
-
-    res.status(201).json({ file });
->>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
   } catch (error) {
     console.error('Error creating file record:', error);
     res.status(500).json({ error: 'Failed to create file record' });
   }
 });
 
-<<<<<<< HEAD
 // Get all unique tags for the authenticated user
 router.get('/tags/list', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -148,8 +123,6 @@ router.get('/tags/list', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-=======
->>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
 // Get a specific file by ID (only if it belongs to the user)
 router.get('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -160,17 +133,11 @@ router.get('/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid file ID' });
     }
 
-<<<<<<< HEAD
     const file = await File.findOne({ where: { id: fileId, userId } });
-=======
-    const file = await File.findByIdAndUserId(fileId, userId);
-    
->>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
     if (!file) {
       return res.status(404).json({ error: 'File not found' });
     }
 
-<<<<<<< HEAD
     // Convert tags back to array for response
     let responseTags: string[] = [];
     if (file.tags) {
@@ -184,9 +151,6 @@ router.get('/:id', requireAuth, async (req: Request, res: Response) => {
     const response = { ...file.toJSON(), tags: responseTags };
 
     res.json({ file: response });
-=======
-    res.json({ file });
->>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
   } catch (error) {
     console.error('Error fetching file:', error);
     res.status(500).json({ error: 'Failed to fetch file' });
@@ -203,23 +167,11 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid file ID' });
     }
 
-<<<<<<< HEAD
     const file = await File.findOne({ where: { id: fileId, userId } });
     if (!file) {
       return res.status(404).json({ error: 'File not found' });
     }
     await file.destroy();
-=======
-    const file = await File.findByIdAndUserId(fileId, userId);
-    
-    if (!file) {
-      return res.status(404).json({ error: 'File not found' });
-    }
-
-    // Delete the file record
-    await file.destroy();
-
->>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
     res.json({ message: 'File deleted successfully' });
   } catch (error) {
     console.error('Error deleting file:', error);
@@ -227,7 +179,6 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-<<<<<<< HEAD
 // Update a specific file
 router.put('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -281,40 +232,12 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
     };
 
     res.json(response);
-=======
-// Update file metadata
-router.put('/:id', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const userId = (req.user as any).id;
-    const fileId = parseInt(req.params.id);
-    const { name } = req.body;
-
-    if (isNaN(fileId)) {
-      return res.status(400).json({ error: 'Invalid file ID' });
-    }
-
-    const file = await File.findByIdAndUserId(fileId, userId);
-    
-    if (!file) {
-      return res.status(404).json({ error: 'File not found' });
-    }
-
-    // Update allowed fields
-    if (name) {
-      file.name = name;
-    }
-
-    await file.save();
-
-    res.json({ file });
->>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
   } catch (error) {
     console.error('Error updating file:', error);
     res.status(500).json({ error: 'Failed to update file' });
   }
 });
 
-<<<<<<< HEAD
 // Handle tag key press for adding tags to files
 router.post('/tags', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -347,6 +270,3 @@ router.post('/tags', requireAuth, async (req: Request, res: Response) => {
 });
 
 export default router;
-=======
-export default router;
->>>>>>> a2852ee5 (Add/ uploaded file model, uploaded file route, frontend file service to communicate with the backend. File upload now retrieves previously uploaded files. Associates files with logged-in user)
