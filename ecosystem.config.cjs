@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'stream-scene',
-    script: 'dist/server/server.js',
+    script: 'server.js',  // Server files are now in the root of deploy directory
     instances: 1,
     autorestart: true,
     watch: false,
