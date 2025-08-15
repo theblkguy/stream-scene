@@ -62,27 +62,9 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT || 22 }}
         script: |
-          # Update system packages
-          sudo apt-get update
-          
           # Create app directory if it doesn't exist
           sudo mkdir -p /var/www/stream-scene
           sudo chown $USER:$USER /var/www/stream-scene
-          
-          # Install Node.js if not installed
-          if ! command -v node &> /dev/null; then
-            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-          fi
-          
-          # Install PM2 globally if not installed
-          if ! command -v pm2 &> /dev/null; then
-            sudo npm install -g pm2
-            echo "PM2 installed successfully"
-          else
-            echo "PM2 is already installed"
-            pm2 --version
-          fi
           
           # Create logs directory
           mkdir -p /var/www/stream-scene/logs
@@ -108,24 +90,31 @@ jobs:
         script: |
           cd /var/www/stream-scene
           
-          # Verify PM2 is available
-          if ! command -v pm2 &> /dev/null; then
-            echo "PM2 not found, installing..."
-            sudo npm install -g pm2
-          fi
-          
+          # Check PM2 availability
           echo "PM2 version: $(pm2 --version)"
           
           # Install production dependencies
           npm install --production
           
-          # Stop existing PM2 process if it exists
-          pm2 stop stream-scene || echo "No existing stream-scene process found"
-          pm2 delete stream-scene || echo "No existing stream-scene process to delete"
+          # Stop and remove existing PM2 process completely
+          echo "Stopping and removing existing stream-scene process..."
+          pm2 stop stream-scene 2>/dev/null || echo "No existing process to stop"
+          pm2 delete stream-scene 2>/dev/null || echo "No existing process to delete"
           
-          # Start with PM2 using ecosystem config
+          # Clear any lingering PM2 processes with similar names
+          pm2 delete all 2>/dev/null || echo "No processes to clear"
+          
+          # Start fresh PM2 process using ecosystem config
+          echo "Starting new stream-scene process..."
           pm2 start ecosystem.config.js --env production
+          
+          # Save PM2 configuration for auto-restart on reboot
           pm2 save
           
-          # Show PM2 status
+          # Show current PM2 status
+          echo "Current PM2 processes:"
           pm2 status
+          
+          # Show logs for verification
+          echo "Recent logs:"
+          pm2 logs stream-scene --lines 10 --nostream || echo "No logs available yet"
