@@ -2,6 +2,7 @@
   "name": "stream-scene",
   "version": "1.0.0",
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -92,41 +93,16 @@
     "@types/passport-google-oauth20": "^2.0.16",
 =======
   "main": "server/src/server.ts",
+=======
+>>>>>>> 9783a685 (Fix/ package errors)
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "webpack serve --config webpack.config.js --mode development",
     "dev:server": "ts-node-dev --respawn --transpile-only server/src/server.ts",
-<<<<<<< HEAD
-=======
-  "main": "server/server.ts",
-  "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-<<<<<<< HEAD
-    "dev:client": "webpack serve --config webpack.config.js --mode development",
-    "dev:server": "nodemon --watch server --ext ts --exec ts-node server/server.ts",
-<<<<<<< HEAD
->>>>>>> a80da8cd (Fix/ fixing server paths (rebase))
     "build": "webpack --config webpack.config.js && tsc",
     "start": "node dist/server.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:seed": "sequelize-cli db:seed:all"
-=======
-    "build": "webpack --config webpack.config.js --mode production && tsc",
-    "build:server": "tsc",
-    "build:client": "webpack --config webpack.config.js --mode production",
-    "start": "node dist/server/src/server.js",
-    "start:prod": "NODE_ENV=production node dist/server/src/server.js"
->>>>>>> 7ef43977 (Fix/ working through rebase)
-=======
-=======
-    "dev:client": "webpack serve --config webpack.config.mjs --mode development",
-    "dev:server": "nodemon --watch server --ext ts --exec ts-node server/app.ts",
->>>>>>> a3169de1 (fixed server issue, made task form on front end)
-    "build": "webpack --config webpack.config.mjs && tsc",
-    "start": "node dist/server.js",
-    "db:migrate": "sequelize-cli db:migrate",
-    "db:seed": "sequelize-cli db:seed:all"
->>>>>>> 4ab83d6d (Fix/ Changed build script to reflect changes to the webpack)
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.3.1",
@@ -136,11 +112,8 @@
     "express-session": "^1.18.2",
     "framer-motion": "^12.23.12",
     "mysql2": "^3.14.2",
-<<<<<<< HEAD
-=======
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
->>>>>>> 57eb40fd (Next step in rebase)
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1",
@@ -152,17 +125,12 @@
     "@types/express": "^4.17.23",
     "@types/express-session": "^1.18.2",
     "@types/node": "^24.1.0",
-<<<<<<< HEAD
->>>>>>> 51fc902a (Fix/ working through rebase)
-=======
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.16",
->>>>>>> 57eb40fd (Next step in rebase)
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@types/react-router-dom": "^5.3.3",
     "@types/sequelize": "^4.28.20",
-<<<<<<< HEAD
     "@types/wavesurfer.js": "^6.0.12",
     "autoprefixer": "^10.4.21",
     "buffer": "^6.0.3",
@@ -187,7 +155,13 @@
     "vm-browserify": "^1.1.2",
     "webpack": "^5.100.2",
     "webpack-cli": "^6.0.1",
+<<<<<<< HEAD
     "webpack-dev-server": "^5.2.2",
+=======
+    "webpack-dev-server": "^5.2.2"
+  }
+}
+>>>>>>> 9783a685 (Fix/ package errors)
     "@eslint/js": "^9.32.0",
     "eslint": "^9.32.0",
     "ts-loader": "^9.5.2",
