@@ -62,13 +62,26 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT || 22 }}
         script: |
+          # Update system packages
+          sudo apt-get update
+          
           # Create app directory if it doesn't exist
           sudo mkdir -p /var/www/stream-scene
           sudo chown $USER:$USER /var/www/stream-scene
           
+          # Install Node.js if not installed
+          if ! command -v node &> /dev/null; then
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+          fi
+          
           # Install PM2 globally if not installed
           if ! command -v pm2 &> /dev/null; then
             sudo npm install -g pm2
+            echo "PM2 installed successfully"
+          else
+            echo "PM2 is already installed"
+            pm2 --version
           fi
           
           # Create logs directory
@@ -95,13 +108,24 @@ jobs:
         script: |
           cd /var/www/stream-scene
           
+          # Verify PM2 is available
+          if ! command -v pm2 &> /dev/null; then
+            echo "PM2 not found, installing..."
+            sudo npm install -g pm2
+          fi
+          
+          echo "PM2 version: $(pm2 --version)"
+          
           # Install production dependencies
           npm install --production
           
-          # Stop existing PM2 process
-          pm2 stop stream-scene || true
-          pm2 delete stream-scene || true
+          # Stop existing PM2 process if it exists
+          pm2 stop stream-scene || echo "No existing stream-scene process found"
+          pm2 delete stream-scene || echo "No existing stream-scene process to delete"
           
           # Start with PM2 using ecosystem config
           pm2 start ecosystem.config.js --env production
           pm2 save
+          
+          # Show PM2 status
+          pm2 status
