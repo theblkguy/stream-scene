@@ -127,6 +127,15 @@ jobs:
           # Clear any lingering PM2 processes with similar names
           pm2 delete all 2>/dev/null || echo "No processes to clear"
           
+          # Debug: Show what files are actually on the server
+          echo "=== Server Debug Info ==="
+          echo "Current directory: $(pwd)"
+          echo "Files in /var/www/stream-scene:"
+          ls -la /var/www/stream-scene/
+          echo "Contents of .env file (first 5 lines, masked):"
+          head -5 /var/www/stream-scene/.env | sed 's/=.*$/=***MASKED***/' 2>/dev/null || echo "No .env file found"
+          echo "========================="
+          
           # Start fresh PM2 process using ecosystem config
           echo "Starting new stream-scene process..."
           pm2 start ecosystem.config.cjs --env production
@@ -138,6 +147,13 @@ jobs:
           echo "Current PM2 processes:"
           pm2 status
           
+          # Force a complete restart to ensure new code is loaded
+          echo "Force restarting to ensure new code is loaded..."
+          pm2 restart stream-scene --update-env || echo "Process restart failed"
+          
+          # Wait a moment for startup
+          sleep 3
+          
           # Show logs for verification
           echo "Recent logs:"
-          pm2 logs stream-scene --lines 10 --nostream || echo "No logs available yet"
+          pm2 logs stream-scene --lines 20 --nostream || echo "No logs available yet"
