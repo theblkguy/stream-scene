@@ -6,6 +6,26 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Debug: Show current working directory and file structure
+console.log('=== Environment Debug Info ===');
+console.log('process.cwd():', process.cwd());
+console.log('__dirname:', __dirname);
+console.log('__filename:', __filename);
+
+// List files in current working directory
+try {
+  console.log('Files in process.cwd():', fs.readdirSync(process.cwd()));
+} catch (err) {
+  console.log('Could not read process.cwd():', (err as Error).message);
+}
+
+// List files in __dirname
+try {
+  console.log('Files in __dirname:', fs.readdirSync(__dirname));
+} catch (err) {
+  console.log('Could not read __dirname:', (err as Error).message);
+}
+
 // Load environment variables - try multiple locations
 const envPaths = [
   path.resolve(process.cwd(), '.env'),     // Current working directory
@@ -15,11 +35,29 @@ const envPaths = [
 
 let envLoaded = false;
 for (const envPath of envPaths) {
+  console.log(`Checking for .env at: ${envPath}`);
   if (fs.existsSync(envPath)) {
-    console.log(`Loading environment from: ${envPath}`);
+    console.log(`Found .env file at: ${envPath}`);
+    // Show file contents (first few lines only, masked)
+    try {
+      const envContent = fs.readFileSync(envPath, 'utf8');
+      const lines = envContent.split('\n').slice(0, 5);
+      console.log('First few lines of .env file:');
+      lines.forEach((line, i) => {
+        if (line.trim()) {
+          const [key] = line.split('=');
+          console.log(`  ${i + 1}: ${key}=***MASKED***`);
+        }
+      });
+    } catch (err) {
+      console.log('Could not read .env file:', (err as Error).message);
+    }
+    
     dotenv.config({ path: envPath });
     envLoaded = true;
     break;
+  } else {
+    console.log(`No .env file found at: ${envPath}`);
   }
 }
 
