@@ -71,6 +71,14 @@ jobs:
         echo "=== .env file created ==="
         cat deploy/.env | sed 's/=.*$/=***MASKED***/'
         echo "========================="
+        
+        # Debug: Check if secrets are actually populated
+        echo "=== Secrets Check ==="
+        echo "DB_HOST is set: ${{ secrets.DB_HOST != '' }}"
+        echo "DB_USER is set: ${{ secrets.DB_USER != '' }}"
+        echo "DB_PASS is set: ${{ secrets.DB_PASS != '' }}"
+        echo "SESSION_SECRET is set: ${{ secrets.SESSION_SECRET != '' }}"
+        echo "===================="
 
     - name: Setup server directory
       uses: appleboy/ssh-action@v1.0.3
