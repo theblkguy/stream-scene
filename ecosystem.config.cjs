@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'stream-scene',
-    script: 'dist/server/src/server.js',  // Server files are built to dist directory
+    script: 'dist/server/server.js',  // Server files are built to dist/server directory
     instances: 1,
     autorestart: true,
     watch: false,

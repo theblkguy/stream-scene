@@ -201,18 +201,4 @@ app.get('*', (req, res) => {
   res.sendFile(indexPath);
 });
 
-const PORT = Number(process.env.PORT) || 8000;
-const HOST = '0.0.0.0'; 
-
-// Initialize database
-syncDB().then(() => {
-  app.listen(PORT, HOST, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
-    console.log(`External access: http://${HOST}:${PORT}`);
-  });
-}).catch((error) => {
-  console.error('Failed to initialize database:', error);
-  process.exit(1);
-});
-
 export default app;
