@@ -1,4 +1,6 @@
 // server/db/index.ts
+// Minor change for commit and push
+
 // Always load environment variables first
 import dotenv from 'dotenv';
 dotenv.config();
