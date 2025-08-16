@@ -12,6 +12,7 @@ console.log('process.cwd():', process.cwd());
 console.log('__dirname:', __dirname);
 console.log('__filename:', __filename);
 
+//small change
 // List files in current working directory
 try {
   console.log('Files in process.cwd():', fs.readdirSync(process.cwd()));
@@ -176,11 +177,11 @@ app.get('*', (req, res) => {
     return res.status(404).json({ error: 'Route not found' });
   }
 
-  // Dynamically determine the correct path for index.html
+  // Serve index.html from the same directory as other static files
   const isDeployment = process.env.NODE_ENV === 'production';
   const indexPath = isDeployment 
-    ? path.join(__dirname, './public/index.html')     // For deployment: ./public/index.html
-    : path.join(__dirname, '../public/index.html');  // For local dev: ../public/index.html
+    ? path.join(__dirname, '../../index.html')      // For deployment: dist/server/src -> ../../index.html (in dist/)
+    : path.join(__dirname, '../../dist/index.html'); // For local dev: server/src -> ../../dist/index.html
   
   console.log('Looking for index.html at:', indexPath);
   console.log('File exists:', fs.existsSync(indexPath));
@@ -190,10 +191,10 @@ app.get('*', (req, res) => {
     // Let's also check alternative paths for debugging
     const altPath1 = path.join(__dirname, './public/index.html');
     const altPath2 = path.join(__dirname, '../public/index.html');
-    const altPath3 = path.join(__dirname, '../../public/index.html');
+    const altPath3 = path.join(__dirname, '../../index.html');
     console.log('Alternative path 1 (./public/index.html):', fs.existsSync(altPath1));
     console.log('Alternative path 2 (../public/index.html):', fs.existsSync(altPath2));
-    console.log('Alternative path 3 (../../public/index.html):', fs.existsSync(altPath3));
+    console.log('Alternative path 3 (../../index.html):', fs.existsSync(altPath3));
     return res.status(404).send('index.html file not found');
   }
   
