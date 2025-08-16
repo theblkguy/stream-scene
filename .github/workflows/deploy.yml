@@ -153,36 +153,15 @@ jobs:
           head -5 /var/www/stream-scene/.env | sed 's/=.*$/=***MASKED***/' 2>/dev/null || echo "No .env file found"
           echo "========================="
           
-          # Create additional .env files in locations where dotenv might be looking
-          echo "Creating additional .env files for dotenv discovery..."
-          mkdir -p /var/www/stream-scene/../../
-          cp /var/www/stream-scene/.env /var/www/stream-scene/../../.env 2>/dev/null || echo "Could not copy to ../../"
-          mkdir -p /var/www/stream-scene/../../../
-          cp /var/www/stream-scene/.env /var/www/stream-scene/../../../.env 2>/dev/null || echo "Could not copy to ../../../"
-          
-          # Also ensure the .env is in the working directory where server.js runs
-          echo "Current working directory for PM2:"
-          pwd
-          
-          # Test environment loading manually
-          echo "=== Manual Environment Test ==="
-          echo "Testing dotenv loading directly..."
-          node -e "
-            require('dotenv').config({ path: '/var/www/stream-scene/.env' });
-            console.log('DB_HOST from manual load:', process.env.DB_HOST ? 'SET' : 'NOT SET');
-            console.log('DB_USER from manual load:', process.env.DB_USER ? 'SET' : 'NOT SET');
-            console.log('NODE_ENV from manual load:', process.env.NODE_ENV ? 'SET' : 'NOT SET');
-          " || echo "Manual test failed"
-          echo "========================="
-          
           # Start fresh PM2 process using ecosystem config
           echo "Starting new stream-scene process..."
+          
           pm2 start ecosystem.config.cjs --env production
           
           # Wait for the process to start and show immediate logs
-          sleep 2
+          sleep 3
           echo "=== Immediate startup logs ==="
-          pm2 logs stream-scene --lines 30 --nostream || echo "No logs available yet"
+          pm2 logs stream-scene --lines 50 --nostream || echo "No logs available yet"
           
           # Save PM2 configuration for auto-restart on reboot
           pm2 save
