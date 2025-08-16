@@ -1,14 +1,20 @@
 // server/db/index.ts
-// Always load environment variables first
-import dotenv from 'dotenv';
-dotenv.config();
+// Don't load environment variables here - let app.ts handle it
+// import dotenv from 'dotenv';
+// dotenv.config();
 
 import { Sequelize } from 'sequelize';
-
 
 let sequelize: Sequelize | null = null;
 export const getSequelize = () => {
   if (!sequelize) {
+    // Debug database configuration
+    console.log('Database configuration:');
+    console.log('DB_HOST:', process.env.DB_HOST || 'NOT SET');
+    console.log('DB_NAME:', process.env.DB_NAME || 'NOT SET');
+    console.log('DB_USER:', process.env.DB_USER || 'NOT SET');
+    console.log('DB_PASS:', process.env.DB_PASS ? '***SET***' : 'NOT SET');
+    
     sequelize = new Sequelize({
       dialect: 'mysql',
       host: process.env.DB_HOST || 'localhost',

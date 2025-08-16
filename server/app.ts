@@ -6,8 +6,29 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from the root .env file
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+// Load environment variables - try multiple locations
+const envPaths = [
+  path.resolve(process.cwd(), '.env'),     // Current working directory
+  path.resolve(__dirname, '.env'),        // Same directory as server
+  path.resolve(__dirname, '../.env'),     // Parent directory (for dev)
+];
+
+let envLoaded = false;
+for (const envPath of envPaths) {
+  if (fs.existsSync(envPath)) {
+    console.log(`Loading environment from: ${envPath}`);
+    dotenv.config({ path: envPath });
+    envLoaded = true;
+    break;
+  }
+}
+
+if (!envLoaded) {
+  console.warn('No .env file found in any of the expected locations:', envPaths);
+} else {
+  console.log('Environment variables loaded. DB_HOST:', process.env.DB_HOST ? 'Set' : 'Not set');
+  console.log('Environment variables loaded. DB_USER:', process.env.DB_USER ? 'Set' : 'Not set');
+}
 
 import express from "express";
 import session from 'express-session';
