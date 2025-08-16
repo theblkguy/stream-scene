@@ -26,11 +26,11 @@ try {
   console.log('Could not read __dirname:', (err as Error).message);
 }
 
-// Load environment variables - try multiple locations
+// Load environment variables - prioritize current working directory (where PM2 runs from)
 const envPaths = [
-  path.resolve(process.cwd(), '.env'),     // Current working directory
-  path.resolve(__dirname, '.env'),        // Same directory as server
-  path.resolve(__dirname, '../.env'),     // Parent directory (for dev)
+  path.resolve(process.cwd(), '.env'),     // Current working directory (PM2 working dir)
+  path.resolve(__dirname, '../.env'),     // Parent directory (for dev when in server/ folder)
+  path.resolve(__dirname, '.env'),        // Same directory as server (fallback)
 ];
 
 let envLoaded = false;
@@ -53,6 +53,7 @@ for (const envPath of envPaths) {
       console.log('Could not read .env file:', (err as Error).message);
     }
     
+    console.log(`Loading environment variables from: ${envPath}`);
     dotenv.config({ path: envPath });
     envLoaded = true;
     break;
@@ -64,9 +65,15 @@ for (const envPath of envPaths) {
 if (!envLoaded) {
   console.warn('No .env file found in any of the expected locations:', envPaths);
 } else {
-  console.log('Environment variables loaded. DB_HOST:', process.env.DB_HOST ? 'Set' : 'Not set');
-  console.log('Environment variables loaded. DB_USER:', process.env.DB_USER ? 'Set' : 'Not set');
+  console.log('✅ Environment variables loaded successfully!');
+  console.log('DB_HOST:', process.env.DB_HOST ? `Set (${process.env.DB_HOST})` : 'Not set');
+  console.log('DB_USER:', process.env.DB_USER ? `Set (${process.env.DB_USER})` : 'Not set');
+  console.log('DB_NAME:', process.env.DB_NAME ? `Set (${process.env.DB_NAME})` : 'Not set');
+  console.log('DB_PASS:', process.env.DB_PASS ? 'Set (***MASKED***)' : 'Not set');
+  console.log('NODE_ENV:', process.env.NODE_ENV || 'Not set');
+  console.log('PORT:', process.env.PORT || 'Not set');
 }
+console.log('=== End Environment Debug ===');
 
 import express from "express";
 import session from 'express-session';
