@@ -54,7 +54,7 @@ async function graphPost(
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: form.toString(),
-    ...init,
+    ...(init || {}),
   });
 
   const json = await res.json().catch(() => ({}));

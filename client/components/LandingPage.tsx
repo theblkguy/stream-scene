@@ -61,43 +61,43 @@ const AnimatedFilmReel = () => {
           
           .cosmic-reel {
             animation: cosmicFloat 4s ease-in-out infinite;
-            filter: drop-shadow(0 10px 30px rgba(139, 92, 246, 0.3));
-          }
-          
-          .star-field {
-            animation: starTwinkle 2s ease-in-out infinite;
-          }
-          
-          .spinning-reel {
-            animation: reelSpin 8s linear infinite;
-            transform-origin: center;
-          }
-          
-          .film-perforation-flowing {
-            animation: filmPerforationFlow 2.5s ease-in-out infinite;
-          }
-          
-          .film-strip-glow {
-            animation: filmStripGlow 4s ease-in-out infinite;
-          }
-          
-          .film-edge-flow {
-            animation: filmEdgeFlow 3s ease-in-out infinite;
-          }
-          
-          .nebula-glow {
-            animation: nebulaGlow 6s ease-in-out infinite;
-          }
-          
-          .holo-surface {
-            background: linear-gradient(
-              90deg,
-              transparent,
-              rgba(255, 255, 255, 0.2),
-              transparent
-            );
-            background-size: 200px 100%;
-            animation: holoShimmer 3s ease-in-out infinite;
+const FEATURES: Feature[] = [
+  { 
+    icon: '📁', 
+    title: 'Project Center', 
+    desc: 'Organize all your creative projects in one place', 
+    destination: 'project-center' as CurrentView,
+    available: true 
+  },
+  { 
+    icon: '💰', 
+    title: 'Budget Tracker', 
+    desc: 'Keep your finances on track with smart tools',
+    destination: 'budget-tracker' as CurrentView,
+    available: true 
+  },
+  { 
+    icon: '▶️', 
+    title: 'Demos & Trailers', 
+    desc: 'Showcase your best work professionally',
+    destination: 'demos-trailers' as CurrentView,
+    available: true 
+  },
+  { 
+    icon: '📅', 
+    title: 'Content Scheduler', 
+    desc: 'Plan and schedule your content across platforms',
+    destination: 'content-scheduler' as CurrentView,
+    available: true 
+  },
+  { 
+    icon: '🤖', 
+    title: 'AI Weekly Planner', 
+    desc: 'Smart task scheduling with AI assistance', 
+    destination: 'planner' as CurrentView,
+    available: true 
+  }
+];
           }
           
           .cosmic-reel:hover .spinning-reel {
@@ -406,7 +406,7 @@ const FEATURES: Feature[] = [
     destination: 'planner' as CurrentView,
     available: true 
   }
-] as const satisfies Feature[];
+] ;
 
 // Feature Card Component - Using React Router navigation
 const FeatureCard: React.FC<{

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ReactSketchCanvas, ReactSketchCanvasRef } from "react-sketch-canvas";
+import { Canvas as ReactSketchCanvas } from "react-sketch-canvas";
+import type { ReactSketchCanvasRef } from "react-sketch-canvas";
 import { motion } from "framer-motion";
 
 const canvasStyles = {
@@ -157,8 +158,6 @@ const ProjectCenterCanvas: React.FC = () => {
               strokeWidth={strokeWidth}
               strokeColor={strokeColor}
               canvasColor="transparent"
-              backgroundImage=""
-              preserveBackgroundImageAspectRatio="none"
               allowOnlyPointerType="all"
             />
           </div>

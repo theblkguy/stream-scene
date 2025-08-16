@@ -1,7 +1,7 @@
 declare module 'react-sketch-canvas' {
-  import { ComponentType, CSSProperties } from 'react';
-  
-  interface ReactSketchCanvasProps {
+  import { CSSProperties, ForwardRefExoticComponent, RefAttributes } from 'react';
+
+  export interface ReactSketchCanvasProps {
     style?: CSSProperties;
     strokeWidth?: number;
     strokeColor?: string;
@@ -10,7 +10,16 @@ declare module 'react-sketch-canvas' {
     width?: string | number;
     height?: string | number;
   }
-  
-  const ReactSketchCanvas: ComponentType<ReactSketchCanvasProps>;
+
+  // Only export the type for ref, not as a named export
+  export type ReactSketchCanvasRef = {
+    clearCanvas: () => void;
+    eraseMode: (erase: boolean) => void;
+    // Add other methods as needed
+  };
+
+  const ReactSketchCanvas: ForwardRefExoticComponent<
+    ReactSketchCanvasProps & RefAttributes<ReactSketchCanvasRef>
+  >;
   export default ReactSketchCanvas;
 }

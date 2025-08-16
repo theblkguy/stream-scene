@@ -219,7 +219,9 @@ const BudgetTracker: React.FC = () => {
       if (ocrResult.amount) {
         setFormData(prev => ({
           ...prev,
-          amount: ocrResult.amount.toString(),
+          amount: ocrResult.amount !== undefined && ocrResult.amount !== null
+            ? ocrResult.amount.toString()
+            : "", // fallback to empty string or handle as needed
           ocrScanned: true,
           ocrConfidence: ocrResult.confidence,
           ocrVendor: ocrResult.vendor || '',
