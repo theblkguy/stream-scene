@@ -70,24 +70,6 @@ jobs:
         printf "DB_NAME=%s\n" "${{ secrets.DB_NAME }}" >> deploy/.env
         printf "DB_USER=%s\n" "${{ secrets.DB_USER }}" >> deploy/.env
         printf "DB_PASS=%s\n" "${{ secrets.DB_PASS }}" >> deploy/.env
-        
-        # Verify file was created properly
-        echo "=== .env file validation ==="
-        echo "File size: $(wc -l < deploy/.env) lines"
-        echo "File exists: $([ -f deploy/.env ] && echo 'yes' || echo 'no')"
-        
-        # Debug: Show the .env file contents (mask sensitive values)
-        echo "=== .env file created ==="
-        cat deploy/.env | sed 's/=.*$/=***MASKED***/'
-        echo "========================="
-        
-        # Debug: Check if secrets are actually populated
-        echo "=== Secrets Check ==="
-        echo "DB_HOST is set: ${{ secrets.DB_HOST != '' }}"
-        echo "DB_USER is set: ${{ secrets.DB_USER != '' }}"
-        echo "DB_PASS is set: ${{ secrets.DB_PASS != '' }}"
-        echo "SESSION_SECRET is set: ${{ secrets.SESSION_SECRET != '' }}"
-        echo "===================="
 
     - name: Setup server directory
       uses: appleboy/ssh-action@v1.0.3
@@ -125,58 +107,11 @@ jobs:
         script: |
           cd /var/www/stream-scene
           
-          # Check PM2 availability
-          echo "PM2 version: $(pm2 --version)"
-          
-          # Clear Node.js cache and PM2 cache
-          echo "Clearing caches..."
-          pm2 flush
-          npm cache clean --force
-          
           # Install production dependencies
           npm install --production
           
-          # Stop and remove existing PM2 process completely
-          echo "Stopping and removing existing stream-scene process..."
-          pm2 stop stream-scene 2>/dev/null || echo "No existing process to stop"
-          pm2 delete stream-scene 2>/dev/null || echo "No existing process to delete"
+          # Restart the application
+          pm2 restart stream-scene || pm2 start ecosystem.config.cjs --env production
           
-          # Clear any lingering PM2 processes with similar names
-          pm2 delete all 2>/dev/null || echo "No processes to clear"
-          
-          # Debug: Show what files are actually on the server
-          echo "=== Server Debug Info ==="
-          echo "Current directory: $(pwd)"
-          echo "Files in /var/www/stream-scene:"
-          ls -la /var/www/stream-scene/
-          echo "Contents of .env file (first 5 lines, masked):"
-          head -5 /var/www/stream-scene/.env | sed 's/=.*$/=***MASKED***/' 2>/dev/null || echo "No .env file found"
-          echo "========================="
-          
-          # Start fresh PM2 process using ecosystem config
-          echo "Starting new stream-scene process..."
-          
-          pm2 start ecosystem.config.cjs --env production
-          
-          # Wait for the process to start and show immediate logs
-          sleep 3
-          echo "=== Immediate startup logs ==="
-          pm2 logs stream-scene --lines 50 --nostream || echo "No logs available yet"
-          
-          # Save PM2 configuration for auto-restart on reboot
+          # Save PM2 configuration
           pm2 save
-          
-          # Show current PM2 status
-          echo "Current PM2 processes:"
-          pm2 status
-          
-          # Force a complete restart to ensure new code is loaded
-          echo "Force restarting to ensure new code is loaded..."
-          pm2 restart stream-scene --update-env || echo "Process restart failed"
-          
-          # Wait a moment for startup
-          sleep 3
-          
-          # Show logs for verification
-          echo "Recent logs:"
-          pm2 logs stream-scene --lines 20 --nostream || echo "No logs available yet"
