@@ -27,15 +27,17 @@ jobs:
     - name: Build application
       run: |
         npm run build:client:prod
-        npm run build:server
         
     - name: Create deployment package
       run: |
         # Create a deployment directory
         mkdir -p deploy
         
-        # Copy the entire built dist directory to deployment
+        # Copy the entire built dist directory to deployment (for frontend files)
         cp -r dist/ deploy/
+        
+        # Copy the entire server source code (we'll run TypeScript directly)
+        cp -r server/ deploy/server/
         
         # Copy configuration files
         cp ecosystem.config.cjs deploy/

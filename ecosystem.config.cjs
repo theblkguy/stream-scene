@@ -1,7 +1,9 @@
 module.exports = {
   apps: [{
     name: 'stream-scene',
-    script: 'dist/server/server.js',  // Server files are built to dist/server directory
+    script: 'server/server.ts',  // Run TypeScript directly with ts-node
+    interpreter: 'node',
+    interpreter_args: '--loader ts-node/esm',
     instances: 1,
     autorestart: true,
     watch: false,
