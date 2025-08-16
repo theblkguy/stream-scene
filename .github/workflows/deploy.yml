@@ -52,21 +52,25 @@ jobs:
         cp package-server.json deploy/package.json
         
         # Create environment file template (will be populated with secrets)
-        cat > deploy/.env << EOF
-        PORT=8000
-        SESSION_SECRET=${{ secrets.SESSION_SECRET }}
-        GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-        GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-        GOOGLE_CALLBACK_URL=http://${{ secrets.SERVER_HOST }}:8000/auth/google/callback
-        AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION=${{ secrets.AWS_REGION }}
-        AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
-        DB_HOST=${{ secrets.DB_HOST }}
-        DB_NAME=${{ secrets.DB_NAME }}
-        DB_USER=${{ secrets.DB_USER }}
-        DB_PASS=${{ secrets.DB_PASS }}
-        EOF
+        echo "PORT=8000" > deploy/.env
+        echo "NODE_ENV=production" >> deploy/.env
+        echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> deploy/.env
+        echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> deploy/.env
+        echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> deploy/.env
+        echo "GOOGLE_CALLBACK_URL=http://${{ secrets.SERVER_HOST }}:8000/auth/google/callback" >> deploy/.env
+        echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> deploy/.env
+        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> deploy/.env
+        echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> deploy/.env
+        echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> deploy/.env
+        echo "DB_HOST=${{ secrets.DB_HOST }}" >> deploy/.env
+        echo "DB_NAME=${{ secrets.DB_NAME }}" >> deploy/.env
+        echo "DB_USER=${{ secrets.DB_USER }}" >> deploy/.env
+        echo "DB_PASS=${{ secrets.DB_PASS }}" >> deploy/.env
+        
+        # Debug: Show the .env file contents (mask sensitive values)
+        echo "=== .env file created ==="
+        cat deploy/.env | sed 's/=.*$/=***MASKED***/'
+        echo "========================="
 
     - name: Setup server directory
       uses: appleboy/ssh-action@v1.0.3
