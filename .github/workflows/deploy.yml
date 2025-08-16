@@ -52,20 +52,29 @@ jobs:
         cp package-server.json deploy/package.json
         
         # Create environment file template (will be populated with secrets)
-        echo "PORT=8000" > deploy/.env
-        echo "NODE_ENV=production" >> deploy/.env
-        echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> deploy/.env
-        echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> deploy/.env
-        echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> deploy/.env
-        echo "GOOGLE_CALLBACK_URL=http://${{ secrets.SERVER_HOST }}:8000/auth/google/callback" >> deploy/.env
-        echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> deploy/.env
-        echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> deploy/.env
-        echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> deploy/.env
-        echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> deploy/.env
-        echo "DB_HOST=${{ secrets.DB_HOST }}" >> deploy/.env
-        echo "DB_NAME=${{ secrets.DB_NAME }}" >> deploy/.env
-        echo "DB_USER=${{ secrets.DB_USER }}" >> deploy/.env
-        echo "DB_PASS=${{ secrets.DB_PASS }}" >> deploy/.env
+        # Ensure clean file creation
+        rm -f deploy/.env
+        
+        # Create .env file with explicit line endings
+        printf "PORT=8000\n" > deploy/.env
+        printf "NODE_ENV=production\n" >> deploy/.env
+        printf "SESSION_SECRET=%s\n" "${{ secrets.SESSION_SECRET }}" >> deploy/.env
+        printf "GOOGLE_CLIENT_ID=%s\n" "${{ secrets.GOOGLE_CLIENT_ID }}" >> deploy/.env
+        printf "GOOGLE_CLIENT_SECRET=%s\n" "${{ secrets.GOOGLE_CLIENT_SECRET }}" >> deploy/.env
+        printf "GOOGLE_CALLBACK_URL=http://%s:8000/auth/google/callback\n" "${{ secrets.SERVER_HOST }}" >> deploy/.env
+        printf "AWS_ACCESS_KEY_ID=%s\n" "${{ secrets.AWS_ACCESS_KEY_ID }}" >> deploy/.env
+        printf "AWS_SECRET_ACCESS_KEY=%s\n" "${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> deploy/.env
+        printf "AWS_REGION=%s\n" "${{ secrets.AWS_REGION }}" >> deploy/.env
+        printf "AWS_S3_BUCKET=%s\n" "${{ secrets.AWS_S3_BUCKET }}" >> deploy/.env
+        printf "DB_HOST=%s\n" "${{ secrets.DB_HOST }}" >> deploy/.env
+        printf "DB_NAME=%s\n" "${{ secrets.DB_NAME }}" >> deploy/.env
+        printf "DB_USER=%s\n" "${{ secrets.DB_USER }}" >> deploy/.env
+        printf "DB_PASS=%s\n" "${{ secrets.DB_PASS }}" >> deploy/.env
+        
+        # Verify file was created properly
+        echo "=== .env file validation ==="
+        echo "File size: $(wc -l < deploy/.env) lines"
+        echo "File exists: $([ -f deploy/.env ] && echo 'yes' || echo 'no')"
         
         # Debug: Show the .env file contents (mask sensitive values)
         echo "=== .env file created ==="
