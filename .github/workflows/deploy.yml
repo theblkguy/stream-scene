@@ -26,26 +26,16 @@ jobs:
       
     - name: Build application
       run: |
-        npm run build
+        npm run build:client:prod
+        npm run build:server
         
     - name: Create deployment package
       run: |
         # Create a deployment directory
         mkdir -p deploy
         
-        # Copy built server files to the root of deploy (since server expects to run from root)
-        cp -r dist/server/* deploy/
-        
-        # Copy built frontend files to public directory (where server expects them)
-        mkdir -p deploy/public
-        cp dist/*.js deploy/public/ 2>/dev/null || true
-        cp dist/*.html deploy/public/ 2>/dev/null || true
-        cp dist/*.txt deploy/public/ 2>/dev/null || true
-        
-        # Copy any existing public assets
-        if [ -d "public" ]; then
-          cp -r public/* deploy/public/ 2>/dev/null || true
-        fi
+        # Copy the entire built dist directory to deployment
+        cp -r dist/ deploy/
         
         # Copy configuration files
         cp ecosystem.config.cjs deploy/

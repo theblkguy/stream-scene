@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'stream-scene',
-    script: 'server.js',  // Server files are now in the root of deploy directory
+    script: 'dist/server/src/server.js',  // Server files are built to dist directory
     instances: 1,
     autorestart: true,
     watch: false,
@@ -13,7 +13,9 @@ module.exports = {
     env_production: {
       NODE_ENV: 'production',
       PORT: 8000,
-      HOST: '0.0.0.0'
+      HOST: '0.0.0.0',
+      // Load environment variables from .env file
+      env_file: '.env'
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',

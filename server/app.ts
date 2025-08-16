@@ -138,12 +138,12 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Serve static files from public directory
+// Serve static files from dist directory (where webpack builds frontend)
 // Dynamically determine the correct path based on deployment structure
 const isDeployment = process.env.NODE_ENV === 'production';
 const publicPath = isDeployment 
-  ? path.join(__dirname, './public')      // For deployment: server files are in root, public is ./public
-  : path.join(__dirname, '../public');   // For local dev: server -> ../public
+  ? path.join(__dirname, '../../')        // For deployment: server at dist/server/src -> ../../ to reach dist/
+  : path.join(__dirname, '../../dist');   // For local dev: server/src -> ../../dist
 
 console.log('Static files path:', publicPath);
 console.log('Current __dirname:', __dirname);
