@@ -201,4 +201,9 @@ app.get('*', (req, res) => {
   res.sendFile(indexPath);
 });
 
+
+app.listen(Number(process.env.PORT), process.env.HOST || '0.0.0.0', () => {
+  console.log(`Server listening on ${process.env.HOST || '0.0.0.0'}:${process.env.PORT}`);
+});
+
 export default app;

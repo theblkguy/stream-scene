@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Canvas as ReactSketchCanvas } from "react-sketch-canvas";
+import { Canvas } from "react-sketch-canvas";
+
+// Diagnostic: Log which exports are available
 import type { ReactSketchCanvasRef } from "react-sketch-canvas";
 import { motion } from "framer-motion";
 
@@ -148,7 +150,7 @@ const ProjectCenterCanvas: React.FC = () => {
       >
         <div className="relative p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-purple-600/10 to-pink-600/10 border border-purple-500/20 backdrop-blur-sm shadow-2xl overflow-hidden">
           <div style={{ width: "100%", aspectRatio: "4/3" }}>
-            <ReactSketchCanvas
+            <Canvas
               ref={canvasRef}
               style={{
                 ...canvasStyles,
