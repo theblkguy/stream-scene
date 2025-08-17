@@ -177,17 +177,15 @@ app.get('/test-server', (req, res) => {
   res.json({ message: 'Server is working!' });
 });
 
+
 app.get('*', (req, res) => {
   // Only serve index.html for requests that do NOT contain a dot (i.e., not for static files)
   if (req.path.includes('.')) {
     return res.status(404).json({ error: 'Route not found' });
   }
 
-  // Serve index.html from correct directory based on environment
-  const isDeployment = process.env.NODE_ENV === 'production';
-  const indexPath = isDeployment
-    ? path.join(__dirname, '../../index.html')
-    : path.join(__dirname, '../../dist/index.html');
+  // Always serve index.html from the staticPath (dist directory)
+  const indexPath = path.join(staticPath, 'index.html');
   if (!fs.existsSync(indexPath)) {
     console.error('index.html file not found at:', indexPath);
     return res.status(404).send('index.html file not found');
