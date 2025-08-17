@@ -140,18 +140,23 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Serve static files from dist directory (where webpack builds frontend)
-// Dynamically determine the correct path based on deployment structure
-const isDeployment = process.env.NODE_ENV === 'production';
-const publicPath = isDeployment 
-  ? path.join(__dirname, '../../')        // For deployment: server at dist/server/src -> ../../ to reach dist/
-  : path.join(__dirname, '../../dist');   // For local dev: server/src -> ../../dist
+// Always serve static files from dist directory
+const staticPath = path.join(__dirname, '../../dist');
+console.log('Static files path:', staticPath);
 
-console.log('Static files path:', publicPath);
-console.log('Current __dirname:', __dirname);
-console.log('Is deployment:', isDeployment);
-console.log('Files in public directory:', fs.existsSync(publicPath) ? fs.readdirSync(publicPath) : 'Directory does not exist');
+// Debug: log all requests before static middleware
+app.use((req, res, next) => {
+  console.log(`[STATIC DEBUG] Incoming request: ${req.method} ${req.path}`);
+  next();
+});
 
-app.use(express.static(publicPath));
+app.use(express.static(staticPath));
+
+// Debug: log if static middleware did NOT handle the request
+app.use((req, res, next) => {
+  console.log(`[STATIC DEBUG] Not handled by static: ${req.method} ${req.path}`);
+  next();
+});
 
 // Routes
 app.use('/auth', authRoutes);
@@ -173,12 +178,16 @@ app.get('/test-server', (req, res) => {
 });
 
 app.get('*', (req, res) => {
-  if (req.path.startsWith('/api/') || req.path.startsWith('/auth/')) {
+  // Only serve index.html for requests that do NOT contain a dot (i.e., not for static files)
+  if (req.path.includes('.')) {
     return res.status(404).json({ error: 'Route not found' });
   }
 
-  // Serve index.html from dist directory
-  const indexPath = path.join(__dirname, '../../dist/index.html');
+  // Serve index.html from correct directory based on environment
+  const isDeployment = process.env.NODE_ENV === 'production';
+  const indexPath = isDeployment
+    ? path.join(__dirname, '../../index.html')
+    : path.join(__dirname, '../../dist/index.html');
   if (!fs.existsSync(indexPath)) {
     console.error('index.html file not found at:', indexPath);
     return res.status(404).send('index.html file not found');
