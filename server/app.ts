@@ -177,27 +177,12 @@ app.get('*', (req, res) => {
     return res.status(404).json({ error: 'Route not found' });
   }
 
-  // Serve index.html from the same directory as other static files
-  const isDeployment = process.env.NODE_ENV === 'production';
-  const indexPath = isDeployment 
-    ? path.join(__dirname, '../../index.html')      // For deployment: dist/server/src -> ../../index.html (in dist/)
-    : path.join(__dirname, '../../dist/index.html'); // For local dev: server/src -> ../../dist/index.html
-  
-  console.log('Looking for index.html at:', indexPath);
-  console.log('File exists:', fs.existsSync(indexPath));
-  
+  // Serve index.html from dist directory
+  const indexPath = path.join(__dirname, '../../dist/index.html');
   if (!fs.existsSync(indexPath)) {
     console.error('index.html file not found at:', indexPath);
-    // Let's also check alternative paths for debugging
-    const altPath1 = path.join(__dirname, './public/index.html');
-    const altPath2 = path.join(__dirname, '../public/index.html');
-    const altPath3 = path.join(__dirname, '../../index.html');
-    console.log('Alternative path 1 (./public/index.html):', fs.existsSync(altPath1));
-    console.log('Alternative path 2 (../public/index.html):', fs.existsSync(altPath2));
-    console.log('Alternative path 3 (../../index.html):', fs.existsSync(altPath3));
     return res.status(404).send('index.html file not found');
   }
-  
   res.sendFile(indexPath);
 });
 
