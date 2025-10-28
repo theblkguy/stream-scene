@@ -272,9 +272,9 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
     });
   };
 
-  const handlePostNow = async () => {
-    if (!postContent.trim()) {
-      toast.error('Please enter some content to post');
+  const handlePublishNow = async () => {
+    if (!postContent) {
+      toast.error('Please enter some content to publish');
       return;
     }
 
@@ -286,33 +286,94 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
     try {
       toast.loading('Publishing to Threads...');
       
-      const response = await fetch('/api/threads/post', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          text: postContent,
-          imageUrls: selectedFiles
-            .filter(f => f.type.startsWith('image/'))
-            .map(f => f.url)
-            .filter(Boolean)
-        })
-      });
+      const mediaFiles = selectedFiles.filter(f => 
+        f.type.startsWith('image/') || f.type.startsWith('video/')
+      );
       
-      if (!response.ok) {
-        throw new Error('Failed to post to Threads');
+      if (mediaFiles.length === 0) {
+        // Text-only post
+        const response = await fetch('/api/threads/posts/text', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            text: postContent
+          })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to post to Threads');
+        }
+        
+        const result = await response.json();
+        toast.success('Successfully published to Threads!');
+        
+      } else if (mediaFiles.length === 1) {
+        // Single media post - we need to upload the file first
+        const formData = new FormData();
+        
+        // Convert file URL to blob for upload
+        const file = mediaFiles[0];
+        const response = await fetch(file.url);
+        const blob = await response.blob();
+        const fileObj = new File([blob], file.name, { type: file.type });
+        
+        formData.append('media', fileObj);
+        formData.append('text', postContent);
+        if (file.alt) {
+          formData.append('alt_text', file.alt);
+        }
+        
+        const uploadResponse = await fetch('/api/threads/posts/media', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+        
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
+          throw new Error(errorData.message || 'Failed to post media to Threads');
+        }
+        
+        toast.success('Successfully published media post to Threads!');
+        
+      } else {
+        // Carousel post - multiple media items
+        const formData = new FormData();
+        
+        for (const file of mediaFiles) {
+          const response = await fetch(file.url);
+          const blob = await response.blob();
+          const fileObj = new File([blob], file.name, { type: file.type });
+          formData.append('media', fileObj);
+        }
+        formData.append('text', postContent);
+        
+        const uploadResponse = await fetch('/api/threads/posts/carousel', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+        
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
+          throw new Error(errorData.message || 'Failed to post carousel to Threads');
+        }
+        
+        toast.success('Successfully published carousel post to Threads!');
       }
-      
-      toast.success('Successfully published to Threads!');
       
       // Reset form
       setPostContent('');
       setSelectedFiles([]);
+      setSelectedTags([]);
+      
     } catch (error) {
-
-      toast.error('Failed to post to Threads');
+      console.error('Publish error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to post to Threads');
     }
   };
 
@@ -333,17 +394,55 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
     }
 
     try {
-      const post: ScheduledPost = {
-        id: Date.now().toString(),
+      // Determine media type based on selected files
+      const mediaFiles = selectedFiles.filter(f => 
+        f.type.startsWith('image/') || f.type.startsWith('video/')
+      );
+      
+      let mediaType: 'TEXT' | 'IMAGE' | 'VIDEO' | 'CAROUSEL' = 'TEXT';
+      if (mediaFiles.length === 1) {
+        mediaType = mediaFiles[0].type.startsWith('video/') ? 'VIDEO' : 'IMAGE';
+      } else if (mediaFiles.length > 1) {
+        mediaType = 'CAROUSEL';
+      }
+
+      // Save as draft using our new API
+      const draftData = {
         content: postContent,
-        scheduledDate: scheduledDate || '',
-        scheduledTime: scheduledTime || '',
-        platform: 'threads',
-        files: selectedFiles
+        media_urls: mediaFiles.map(f => f.url),
+        media_type: mediaType,
+        scheduled_time: scheduledDateTime?.toISOString(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       };
+
+      const response = await fetch('/api/threads/drafts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(draftData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save draft');
+      }
+
+      const savedDraft = await response.json();
 
       if (scheduledDateTime) {
         toast.success(`Post scheduled for ${scheduledDateTime.toLocaleDateString()} at ${scheduledDateTime.toLocaleTimeString()}`);
+        
+        // Create legacy format for backward compatibility
+        const post: ScheduledPost = {
+          id: savedDraft.draft.id.toString(),
+          content: postContent,
+          scheduledDate: scheduledDate || '',
+          scheduledTime: scheduledTime || '',
+          platform: 'threads',
+          files: selectedFiles
+        };
         onSchedulePost?.(post);
       } else {
         toast.success('Post saved as draft');
@@ -352,11 +451,13 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
       // Reset form
       setPostContent('');
       setSelectedFiles([]);
+      setSelectedTags([]);
       setScheduledDate('');
       setScheduledTime('');
+      
     } catch (error) {
-
-      toast.error('Failed to schedule post');
+      console.error('Schedule error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to schedule post');
     }
   };
 
@@ -364,7 +465,7 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
     try {
       toast.loading('Testing Threads connection...');
       
-      const response = await fetch('/api/threads/test', {
+      const response = await fetch('/api/threads/status', {
         credentials: 'include'
       });
       
@@ -373,9 +474,13 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
       }
       
       const data = await response.json();
-      toast.success(`Threads connection is working! Connected as: ${data.username || data.userId}`);
+      if (data.connected) {
+        toast.success(`Threads connection is working! Connected as: ${data.username || data.userId}`);
+      } else {
+        toast.error('Not connected to Threads. Please connect first.');
+      }
     } catch (error) {
-
+      console.error('Test error:', error);
       toast.error('Threads connection test failed');
     }
   };
@@ -575,7 +680,7 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
             </button>
 
             <button
-              onClick={handlePostNow}
+              onClick={handlePublishNow}
               disabled={!postContent.trim() || !threadsConnected}
               className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:opacity-50 text-white rounded-lg transition-all duration-200 font-medium shadow-lg shadow-blue-500/25"
             >
