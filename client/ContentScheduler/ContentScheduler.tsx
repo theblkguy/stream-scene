@@ -1,7 +1,7 @@
 // client/ContentScheduler/ContentScheduler.tsx
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { FaTag } from 'react-icons/fa';
+import { FaTag, FaCalendarAlt, FaBrain, FaFileAlt } from 'react-icons/fa';
 import DraftsManager from '../components/DraftsManager';
 import TagInput from '../components/TagInput';
 import CalendarWidget from '../components/CalendarWidget';
@@ -715,13 +715,12 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
                   onChange={(e) => setScheduledDate(e.target.value)}
                   className="flex-1 p-3 border border-slate-600 bg-slate-800/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-300 transition-all duration-200"
                 />
-                <button
-                  type="button"
+                <button 
                   onClick={() => setShowCalendarWidget(true)}
                   className="p-3 border border-slate-600 bg-slate-800/50 rounded-lg text-gray-300 hover:bg-slate-700/50 hover:border-purple-400/50 transition-all duration-200"
                   title="Open Calendar Widget"
                 >
-                  📅
+                  <FaCalendarAlt className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -752,14 +751,14 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
               onClick={() => setShowPlannerIntegration(true)}
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-blue-800/50 to-indigo-900/50 border border-blue-500/30 hover:bg-blue-700/50 hover:border-blue-400/50 text-gray-300 hover:text-blue-300 rounded-lg transition-all duration-200"
             >
-              🧠
+              <FaBrain className="w-4 h-4" />
               Import from Planner
             </button>
             <button
               onClick={() => setShowDraftsManager(true)}
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-green-800/50 to-emerald-900/50 border border-green-500/30 hover:bg-green-700/50 hover:border-green-400/50 text-gray-300 hover:text-green-300 rounded-lg transition-all duration-200"
             >
-              📄
+              <FaFileAlt className="w-4 h-4" />
               Manage Drafts
             </button>
 
