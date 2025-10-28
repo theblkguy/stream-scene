@@ -7,24 +7,96 @@ export interface ThreadsAuthResult {
   expiresAt: string;
 }
 
+interface ThreadsTokenResponse {
+  access_token: string;
+  user_id: string;
+  token_type?: string;
+}
+
+interface ThreadsProfileResponse {
+  id: string;
+  username?: string;
+  name?: string;
+}
+
 export const initiateThreadsAuth = async (): Promise<string> => {
-  // For now, return a placeholder URL - this would be replaced with actual Meta API integration
-  const clientId = process.env.THREADS_CLIENT_ID || 'placeholder';
-  const redirectUri = encodeURIComponent(`${process.env.BASE_URL}/auth/threads/callback`);
-  const scope = encodeURIComponent('threads_basic,threads_content_publish');
+  const clientId = process.env.THREADS_CLIENT_ID;
   
-  return `https://threads.net/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code`;
+  if (!clientId) {
+    throw new Error('THREADS_CLIENT_ID environment variable is not set. Please configure your Meta Threads app credentials.');
+  }
+  
+  const redirectUri = encodeURIComponent(`${process.env.BASE_URL}/auth/threads/callback`);
+  const scope = encodeURIComponent('threads_basic,threads_content_publish,threads_manage_insights');
+  const state = Math.random().toString(36).substring(2); // CSRF protection
+  
+  // Use the official Meta Threads API OAuth endpoint
+  return `https://www.threads.net/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&state=${state}`;
 };
 
 export const handleThreadsCallback = async (code: string): Promise<ThreadsAuthResult> => {
-  // For now, return mock data - this would be replaced with actual Meta API integration
-  // In production, this would exchange the code for an access token
-  console.log('Processing Threads callback with code:', code.substring(0, 10) + '...');
+  const clientId = process.env.THREADS_CLIENT_ID;
+  const clientSecret = process.env.THREADS_CLIENT_SECRET;
+  const redirectUri = `${process.env.BASE_URL}/auth/threads/callback`;
   
-  return {
-    accessToken: 'mock_access_token',
-    userId: 'mock_user_id',
-    username: 'mock_username',
-    expiresAt: new Date(Date.now() + 3600000).toISOString() // 1 hour from now
-  };
+  if (!clientId || !clientSecret) {
+    throw new Error('Threads OAuth credentials are not configured. Please set THREADS_CLIENT_ID and THREADS_CLIENT_SECRET environment variables.');
+  }
+  
+  try {
+    // Exchange authorization code for access token
+    const tokenResponse = await fetch('https://graph.threads.net/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri,
+        code: code
+      })
+    });
+    
+    if (!tokenResponse.ok) {
+      const error = await tokenResponse.text();
+      throw new Error(`Token exchange failed: ${error}`);
+    }
+    
+    const tokenData = await tokenResponse.json() as ThreadsTokenResponse;
+    const { access_token, user_id } = tokenData;
+    
+    // Get user profile information
+    const profileResponse = await fetch(`https://graph.threads.net/v1.0/${user_id}?fields=id,username,name&access_token=${access_token}`);
+    
+    if (!profileResponse.ok) {
+      const error = await profileResponse.text();
+      throw new Error(`Profile fetch failed: ${error}`);
+    }
+    
+    const profileData = await profileResponse.json() as ThreadsProfileResponse;
+    
+    return {
+      accessToken: access_token,
+      userId: user_id,
+      username: profileData.username || profileData.name || user_id,
+      expiresAt: new Date(Date.now() + 3600000).toISOString() // 1 hour from now
+    };
+  } catch (error) {
+    console.error('Threads OAuth callback error:', error);
+    
+    // Fallback to mock data for development if API fails
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Using mock Threads data for development');
+      return {
+        accessToken: 'dev_mock_access_token',
+        userId: 'dev_mock_user_id',
+        username: 'dev_user',
+        expiresAt: new Date(Date.now() + 3600000).toISOString()
+      };
+    }
+    
+    throw error;
+  }
 };

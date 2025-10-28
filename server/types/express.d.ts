@@ -1,4 +1,6 @@
+import 'express';
 import 'express-session';
+import { File } from 'multer';
 
 declare module 'express-session' {
   interface SessionData {
@@ -23,8 +25,6 @@ declare module 'express-session' {
     threadsAuthState?: string;
   }
 }
-import 'express';
-import { File } from 'multer';
 
 declare module 'express-serve-static-core' {
   interface Request {

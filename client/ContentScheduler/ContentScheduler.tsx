@@ -4,6 +4,9 @@ import toast from 'react-hot-toast';
 import { FaTag } from 'react-icons/fa';
 import DraftsManager from '../components/DraftsManager';
 import TagInput from '../components/TagInput';
+import CalendarWidget from '../components/CalendarWidget';
+import PlannerIntegration from '../components/PlannerIntegration';
+import { Task } from '../types/task';
 
 // Custom SVG Icon Components
 const SchedulerIcon = () => (
@@ -171,6 +174,12 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
   // Drafts manager state
   const [showDraftsManager, setShowDraftsManager] = useState(false);
 
+  // Calendar widget state
+  const [showCalendarWidget, setShowCalendarWidget] = useState(false);
+
+  // Planner integration state
+  const [showPlannerIntegration, setShowPlannerIntegration] = useState(false);
+
   // Load a draft into the editor
   const handleLoadDraft = (draft: Draft) => {
     setPostContent(draft.content);
@@ -181,6 +190,34 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
     }
     setShowDraftsManager(false);
     toast.success('Draft loaded!');
+  };
+
+  // Import task from planner into content editor
+  const handleImportTask = (task: Task) => {
+    // Convert task data into content
+    const importedContent = `# ${task.title}\n\n${task.description || ''}\n\n#plannedtask #${task.task_type}`;
+    
+    // Update content state
+    setPostContent(importedContent);
+    
+    // If task has a deadline, set it as scheduled date
+    if (task.deadline) {
+      const deadline = new Date(task.deadline);
+      setScheduledDate(deadline.toISOString().split('T')[0]);
+      // Set a default time if none exists
+      if (!scheduledTime) {
+        setScheduledTime('12:00');
+      }
+    }
+
+    // Add task tags as content tags
+    if (task.tags && task.tags.length > 0) {
+      const tagText = task.tags.map(tag => `#${tag}`).join(' ');
+      setPostContent(prev => prev + '\n\n' + tagText);
+    }
+
+    setShowPlannerIntegration(false);
+    toast.success('Task imported successfully!');
   };
 
   // Character limit for Threads
@@ -676,12 +713,22 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
                 <CalendarIcon />
                 Schedule Date (optional)
               </label>
-              <input
-                type="date"
-                value={scheduledDate}
-                onChange={(e) => setScheduledDate(e.target.value)}
-                className="w-full p-3 border border-slate-600 bg-slate-800/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-300 transition-all duration-200"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={scheduledDate}
+                  onChange={(e) => setScheduledDate(e.target.value)}
+                  className="flex-1 p-3 border border-slate-600 bg-slate-800/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-300 transition-all duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCalendarWidget(true)}
+                  className="p-3 border border-slate-600 bg-slate-800/50 rounded-lg text-gray-300 hover:bg-slate-700/50 hover:border-purple-400/50 transition-all duration-200"
+                  title="Open Calendar Widget"
+                >
+                  📅
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -704,15 +751,21 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-slate-800/50 to-gray-900/50 border border-purple-500/30 hover:bg-slate-700/50 hover:border-purple-400/50 text-gray-300 hover:text-purple-300 rounded-lg transition-all duration-200"
             >
               <AttachmentIcon />
-              Add Files
+              Attach Files
             </button>
-
+            <button
+              onClick={() => setShowPlannerIntegration(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-blue-800/50 to-indigo-900/50 border border-blue-500/30 hover:bg-blue-700/50 hover:border-blue-400/50 text-gray-300 hover:text-blue-300 rounded-lg transition-all duration-200"
+            >
+              🧠
+              Import from Planner
+            </button>
             <button
               onClick={() => setShowDraftsManager(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-slate-800/50 to-gray-900/50 border border-purple-500/30 hover:bg-slate-700/50 hover:border-purple-400/50 text-gray-300 hover:text-purple-300 rounded-lg transition-all duration-200"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-green-800/50 to-emerald-900/50 border border-green-500/30 hover:bg-green-700/50 hover:border-green-400/50 text-gray-300 hover:text-green-300 rounded-lg transition-all duration-200"
             >
-              <FolderIcon />
-              Load Drafts
+              📄
+              Manage Drafts
             </button>
 
             <button
@@ -897,6 +950,46 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
           isOpen={showDraftsManager}
           onClose={() => setShowDraftsManager(false)}
           onLoadDraft={handleLoadDraft}
+        />
+
+        {/* Calendar Widget */}
+        {showCalendarWidget && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full m-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Select Date & Time
+                </h3>
+                <button
+                  onClick={() => setShowCalendarWidget(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  ✕
+                </button>
+              </div>
+              <CalendarWidget
+                selectedDate={scheduledDate}
+                selectedTime={scheduledTime}
+                onDateSelect={(date: string) => {
+                  setScheduledDate(date);
+                  // If no time is set, set a default
+                  if (!scheduledTime) {
+                    setScheduledTime('12:00');
+                  }
+                }}
+                onTimeSelect={setScheduledTime}
+                onClose={() => setShowCalendarWidget(false)}
+                isOpen={showCalendarWidget}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Planner Integration */}
+        <PlannerIntegration
+          isOpen={showPlannerIntegration}
+          onClose={() => setShowPlannerIntegration(false)}
+          onImportTask={handleImportTask}
         />
       </div>
     </div>

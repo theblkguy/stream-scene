@@ -129,7 +129,7 @@ router.get(
           // Instead:
           // - In production, if you explicitly define CLIENT_URL in .env,
           //   we'll trust that.
-          // - In development, we ALWAYS send them back to localhost:8000
+          // - In development, we ALWAYS send them back to localhost:3001
           //   so that the browser stays on the same origin that issued
           //   the session cookie.
           //
@@ -140,7 +140,7 @@ router.get(
             process.env.NODE_ENV === 'production' ||
             process.env.NODE_ENV === 'prod';
 
-          const LOCAL_DEV_URL = 'http://localhost:8000';
+          const LOCAL_DEV_URL = 'http://localhost:3001';
           const envClient = process.env.CLIENT_URL; // e.g. real deployed frontend
 
           const redirectUrl =
