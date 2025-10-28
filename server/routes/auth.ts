@@ -519,11 +519,11 @@ router.get('/threads/callback', async (req: Request, res: Response) => {
     
     if (error) {
       console.error('Threads OAuth error:', error);
-      return res.redirect('/dashboard?error=threads_auth_failed');
+      return res.redirect('/content-scheduler?error=threads_auth_failed');
     }
     
     if (!code || typeof code !== 'string') {
-      return res.redirect('/dashboard?error=missing_auth_code');
+      return res.redirect('/content-scheduler?error=missing_auth_code');
     }
     
     const { handleThreadsCallback } = await import('../services/threadsOAuth.js');
@@ -537,10 +537,10 @@ router.get('/threads/callback', async (req: Request, res: Response) => {
       expiresAt: result.expiresAt
     };
     
-    res.redirect('/dashboard?threads_connected=true');
+    res.redirect('/content-scheduler?threads_connected=true');
   } catch (error) {
     console.error('Threads callback error:', error);
-    res.redirect('/dashboard?error=threads_callback_failed');
+    res.redirect('/content-scheduler?error=threads_callback_failed');
   }
 });
 
