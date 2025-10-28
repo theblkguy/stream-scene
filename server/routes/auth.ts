@@ -498,4 +498,62 @@ router.post('/logout', (req: Request, res: Response) => {
   });
 });
 
+// Threads OAuth Routes
+router.get('/threads', async (req: Request, res: Response) => {
+  try {
+    const { initiateThreadsAuth } = await import('../services/threadsOAuth.js');
+    const authUrl = await initiateThreadsAuth();
+    
+    // Store state in session for verification
+    req.session.threadsAuthState = 'initiated';
+    
+    res.redirect(authUrl);
+  } catch (error) {
+    console.error('Threads auth initiation error:', error);
+    res.status(500).json({ error: 'Failed to initiate Threads authentication' });
+  }
+});
+
+router.get('/threads/callback', async (req: Request, res: Response) => {
+  try {
+    const { code, error } = req.query;
+    
+    if (error) {
+      console.error('Threads OAuth error:', error);
+      return res.redirect('/dashboard?error=threads_auth_failed');
+    }
+    
+    if (!code || typeof code !== 'string') {
+      return res.redirect('/dashboard?error=missing_auth_code');
+    }
+    
+    const { handleThreadsCallback } = await import('../services/threadsOAuth.js');
+    const result = await handleThreadsCallback(code);
+    
+    // Store in session
+    req.session.threadsAuth = {
+      accessToken: result.accessToken,
+      userId: result.userId,
+      username: result.username,
+      expiresAt: result.expiresAt
+    };
+    
+    res.redirect('/dashboard?threads_connected=true');
+  } catch (error) {
+    console.error('Threads callback error:', error);
+    res.redirect('/dashboard?error=threads_callback_failed');
+  }
+});
+
+router.get('/threads/status', (req: Request, res: Response) => {
+  const isConnected = !!req.session?.threadsAuth;
+  const username = req.session?.threadsAuth?.username || null;
+  
+  res.json({
+    connected: isConnected,
+    username: username,
+    expiresAt: req.session?.threadsAuth?.expiresAt || null
+  });
+});
+
 export default router;
