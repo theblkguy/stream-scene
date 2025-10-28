@@ -2,19 +2,19 @@
 import { Router } from "express";
 
 // ESM imports
-import taskRouter from './tasks.js';
-console.log('✅ Tasks router imported');
-import contentSchedulerRouter from './contentScheduler.js';
-console.log('✅ Content scheduler router imported');
-import socialAuthRouter from './socialAuth.js';
-console.log('✅ Social auth router imported');
-import threadsApiRouter from './threadsApi.js'; 
-console.log('✅ Threads API router imported');
-import commentsRouter from './comments.js';
-console.log('✅ Comments router imported');
-import canvasRouter from './canvas.js'; 
-console.log('✅ Canvas router imported');
+import canvasRouter from './canvas.js';
 import canvasCalendarRouter from './canvasCalendar.js';
+import commentsRouter from './comments.js';
+import contentSchedulerRouter from './contentScheduler.js';
+import socialAuthRouter from './socialAuth.js';
+import taskRouter from './tasks.js';
+import threadsApiRouter from './threadsApi.js';
+console.log('✅ Tasks router imported');
+console.log('✅ Content scheduler router imported');
+console.log('✅ Social auth router imported');
+console.log('✅ Threads API router imported');
+console.log('✅ Comments router imported');
+console.log('✅ Canvas router imported');
 console.log('✅ Canvas calendar router imported');
 // Budget router now imported directly in app.ts 
 

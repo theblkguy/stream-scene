@@ -3,11 +3,11 @@
 // API routes for Threads content publishing and management
 
 import express, { Request, Response } from 'express';
-import { ThreadsPostingService, ThreadsPostData, ThreadsMediaUpload } from '../services/threadsPosting.js';
-import { ThreadsDraft } from '../models/ThreadsDraft.js';
+import fs from 'fs/promises';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs/promises';
+import { ThreadsDraft } from '../models/ThreadsDraft.js';
+import { ThreadsMediaUpload, ThreadsPostData, ThreadsPostingService } from '../services/threadsPosting.js';
 
 interface SessionWithThreads {
   threadsAuth?: {
@@ -438,6 +438,26 @@ router.delete('/drafts/:draftId', requireThreadsAuth, async (req: Request, res: 
     console.error('Delete draft error:', error);
     res.status(500).json({ 
       error: 'Failed to delete draft',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// 🧪 TEST ROUTE - Get drafts without auth (for development)
+router.get('/test-drafts', async (req: Request, res: Response) => {
+  try {
+    const drafts = await ThreadsDraft.findAll({
+      order: [['updated_at', 'DESC']]
+    });
+    
+    res.json({
+      success: true,
+      drafts: drafts
+    });
+  } catch (error) {
+    console.error('Error fetching test drafts:', error);
+    res.status(500).json({
+      error: 'Failed to fetch test drafts',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

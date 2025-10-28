@@ -1,7 +1,8 @@
 // client/ContentScheduler/ContentScheduler.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { FaTag } from 'react-icons/fa';
+import DraftsManager from '../components/DraftsManager';
 import TagInput from '../components/TagInput';
 
 // Custom SVG Icon Components
@@ -103,30 +104,42 @@ const RemoveIcon = () => (
 );
 
 // Types
-type ProjectFile = {
+interface ProjectFile {
   id: string;
   name: string;
   type: string;
   size?: number;
   url?: string;
-};
+}
 
-type ScheduledPost = {
+interface ScheduledPost {
   id: string;
   content: string;
   scheduledDate: string;
   scheduledTime: string;
   platform: string;
   files: ProjectFile[];
-};
+}
 
-type CalendarEvent = {
+interface CalendarEvent {
   id: string;
   title: string;
   date: string;
   time: string;
   description?: string;
-};
+}
+
+interface Draft {
+  id: number;
+  content: string;
+  media_urls?: string[];
+  media_type: 'TEXT' | 'IMAGE' | 'VIDEO' | 'CAROUSEL';
+  scheduled_time?: string;
+  timezone?: string;
+  status: 'DRAFT' | 'SCHEDULED' | 'PUBLISHED' | 'FAILED';
+  created_at: string;
+  updated_at: string;
+}
 
 interface ContentSchedulerProps {
   onSchedulePost?: (post: ScheduledPost) => void;
@@ -154,6 +167,21 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
   // Project files state
   const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
+
+  // Drafts manager state
+  const [showDraftsManager, setShowDraftsManager] = useState(false);
+
+  // Load a draft into the editor
+  const handleLoadDraft = (draft: Draft) => {
+    setPostContent(draft.content);
+    if (draft.scheduled_time) {
+      const date = new Date(draft.scheduled_time);
+      setScheduledDate(date.toISOString().split('T')[0]);
+      setScheduledTime(date.toTimeString().slice(0, 5));
+    }
+    setShowDraftsManager(false);
+    toast.success('Draft loaded!');
+  };
 
   // Character limit for Threads
   const charLimit = 500;
@@ -680,6 +708,14 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
             </button>
 
             <button
+              onClick={() => setShowDraftsManager(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-slate-800/50 to-gray-900/50 border border-purple-500/30 hover:bg-slate-700/50 hover:border-purple-400/50 text-gray-300 hover:text-purple-300 rounded-lg transition-all duration-200"
+            >
+              <FolderIcon />
+              Load Drafts
+            </button>
+
+            <button
               onClick={handlePublishNow}
               disabled={!postContent.trim() || !threadsConnected}
               className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:opacity-50 text-white rounded-lg transition-all duration-200 font-medium shadow-lg shadow-blue-500/25"
@@ -855,6 +891,13 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
             Built with React, TypeScript, and Tailwind CSS • Smart Content Scheduling
           </p>
         </div>
+
+        {/* Drafts Manager */}
+        <DraftsManager
+          isOpen={showDraftsManager}
+          onClose={() => setShowDraftsManager(false)}
+          onLoadDraft={handleLoadDraft}
+        />
       </div>
     </div>
   );
