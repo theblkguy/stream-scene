@@ -1,5 +1,5 @@
-import express, { Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import express, { Request, Response } from 'express';
 
 const router = express.Router();
 

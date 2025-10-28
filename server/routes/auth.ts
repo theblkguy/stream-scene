@@ -1,6 +1,5 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import passport from 'passport';
-import crypto from 'crypto';
 
 const router = express.Router();
 
