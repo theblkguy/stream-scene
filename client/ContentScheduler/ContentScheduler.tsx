@@ -292,15 +292,10 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
 
   const connectThreads = async () => {
     try {
-      toast.loading('Connecting to Threads...');
-      // Simulate connection process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setThreadsConnected(true);
-      setThreadsAccountId('threads_12345');
-      toast.success('Successfully connected to Threads!');
+      // Redirect to the real Threads OAuth endpoint
+      window.location.href = '/auth/threads';
     } catch (error) {
-
-      toast.error('Failed to connect to Threads');
+      toast.error('Failed to initiate Threads connection');
     }
   };
 
