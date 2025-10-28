@@ -16,9 +16,11 @@ declare module 'express-session' {
       accessToken?: string;
       tokenSecret?: string;
       connectedAt?: string;
+      expiresAt?: string;
     };
     oauthState?: string;
     threadsState?: string;
+    threadsAuthState?: string;
   }
 }
 import 'express';
