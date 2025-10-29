@@ -28,8 +28,8 @@ export const initiateThreadsAuth = async (): Promise<string> => {
   
   const state = Math.random().toString(36).substring(2); // CSRF protection
   
-  // Use the official Meta Threads API OAuth endpoint with additional parameters for CSP compatibility
-  const authUrl = new URL('https://www.threads.net/oauth/authorize');
+  // Use the correct Meta Threads OAuth endpoint (no www subdomain)
+  const authUrl = new URL('https://threads.net/oauth/authorize');
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', `${process.env.BASE_URL}/auth/threads/callback`);
   authUrl.searchParams.set('scope', 'threads_basic,threads_content_publish,threads_manage_insights');
