@@ -1688,7 +1688,7 @@ const AIWeeklyPlanner: React.FC = () => {
                     priority: taskData.priority,
                     task_type: taskData.task_type,
                     suggestedDate: taskData.deadline,
-                    estimatedHours: taskData.estimated_hours
+                    estimatedHours: taskData.estimated_hours || undefined
                   };
                   addTaskFromSuggestion(updatedSuggestion);
                   setEditingSuggestion(null);

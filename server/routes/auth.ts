@@ -425,6 +425,289 @@ router.post('/demo-login', async (req: Request, res: Response) => {
   }
 });
 
+// Custom Demo Login with User-Provided Information
+router.post('/custom-demo-login', async (req: Request, res: Response) => {
+  // Allow demo login in development OR if ALLOW_DEMO_LOGIN=true
+  const isDemoAllowed =
+    process.env.NODE_ENV === 'development' ||
+    process.env.ALLOW_DEMO_LOGIN === 'true';
+
+  if (!isDemoAllowed) {
+    return res.status(403).json({ error: 'Demo login disabled' });
+  }
+
+  try {
+    const { firstName, lastName, email, twitchUsername } = req.body;
+
+    // Basic validation
+    if (!firstName || !lastName || !email) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Lazy-import models
+    const { User } = await import('../models/User.js');
+
+    // Create a temporary demo user with the provided information
+    const demoUser = await User.findOrCreate({
+      where: { email: email },
+      defaults: {
+        name: `${firstName} ${lastName}`,
+        email: email,
+        google_id: `demo_${Date.now()}` // Unique demo ID
+      }
+    });
+
+    // Log in the user and set up demo data
+    req.logIn(demoUser[0], (err) => {
+      if (err) {
+        console.error('Custom demo login error:', err);
+        return res.status(500).json({ error: 'Demo login failed' });
+      }
+
+      // Set up streamer-focused demo data
+      (async () => {
+        try {
+          const { Task } = await import('../models/Task.js');
+          const { BudgetProject } = await import('../models/BudgetProject.js');
+          const { BudgetEntry } = await import('../models/BudgetEntry.js');
+
+          // Clear existing data for this user
+          await Task.destroy({ where: { user_id: demoUser[0].id } });
+          await BudgetEntry.destroy({ where: { user_id: demoUser[0].id } });
+          await BudgetProject.destroy({ where: { user_id: demoUser[0].id } });
+
+          const now = Date.now();
+          const days = (n: number) => new Date(now + n * 24 * 60 * 60 * 1000);
+
+          // Streamer-focused demo tasks
+          const streamerTasks = [
+            {
+              user_id: demoUser[0].id,
+              title: 'Welcome to StreamScene!',
+              description: 'You\'re a Twitch Affiliate working towards Partner status. Use StreamScene to manage your streaming schedule, content creation, and collaborations. Start by exploring the Weekly Planner to organize your streaming sessions.',
+              dueDate: days(0),
+              priority: 'high',
+              status: 'pending',
+              tags: ['welcome', 'getting-started']
+            },
+            {
+              user_id: demoUser[0].id,
+              title: 'Plan This Week\'s Streaming Schedule',
+              description: 'Schedule your streaming sessions for the week. Aim for consistent times to build viewer expectations. Consider variety content, Just Chatting sessions, and your main game category.',
+              dueDate: days(1),
+              priority: 'high',
+              status: 'pending',
+              tags: ['streaming', 'schedule', 'consistency']
+            },
+            {
+              user_id: demoUser[0].id,
+              title: 'Brainstorm Content Ideas for Next Month',
+              description: 'Plan content themes, special events, collaborations, and community challenges. Consider trending games, seasonal events, and viewer suggestions for engaging content.',
+              dueDate: days(2),
+              priority: 'medium',
+              status: 'pending',
+              tags: ['content', 'brainstorming', 'planning']
+            },
+            {
+              user_id: demoUser[0].id,
+              title: 'Research New Background Frame Design',
+              description: 'Design a new stream overlay and background frame that matches your brand. Consider using the Project Center to collaborate with designers or get feedback from your community.',
+              dueDate: days(3),
+              priority: 'medium',
+              status: 'pending',
+              tags: ['design', 'branding', 'overlay']
+            },
+            {
+              user_id: demoUser[0].id,
+              title: 'Update Channel Panels and About Section',
+              description: 'Refresh your Twitch panels with current information, social links, and streaming schedule. Make sure your brand message is clear for new viewers.',
+              dueDate: days(4),
+              priority: 'low',
+              status: 'pending',
+              tags: ['twitch', 'panels', 'branding']
+            },
+            {
+              user_id: demoUser[0].id,
+              title: 'Plan Collaboration Stream with Other Creators',
+              description: 'Reach out to other streamers for collaboration opportunities. Use the Project Center to coordinate timing, games, and shared promotion strategies.',
+              dueDate: days(5),
+              priority: 'medium',
+              status: 'pending',
+              tags: ['collaboration', 'networking', 'community']
+            },
+            {
+              user_id: demoUser[0].id,
+              title: 'Track Streaming Equipment Budget',
+              description: 'Review your equipment needs and budget for upgrades. Consider webcam, microphone, lighting, or PC improvements to enhance stream quality.',
+              dueDate: days(6),
+              priority: 'low',
+              status: 'pending',
+              tags: ['equipment', 'budget', 'quality']
+            },
+            {
+              user_id: demoUser[0].id,
+              title: 'Analyze Last Month\'s Streaming Analytics',
+              description: 'Review your Twitch analytics, subscriber growth, and engagement metrics. Identify your best performing content and optimal streaming times.',
+              dueDate: days(7),
+              priority: 'medium',
+              status: 'pending',
+              tags: ['analytics', 'growth', 'metrics']
+            }
+          ];
+
+          await Task.bulkCreate(streamerTasks as any);
+
+          // Streamer-focused budget projects
+          const streamerProjects = [
+            {
+              user_id: demoUser[0].id,
+              name: 'Streaming Revenue',
+              description: 'Track income from Twitch subscriptions, donations, bits, and sponsorships',
+              color: '#9146ff',
+              is_active: true,
+              tags: ['income', 'twitch', 'revenue']
+            },
+            {
+              user_id: demoUser[0].id,
+              name: 'Equipment & Setup',
+              description: 'Camera, microphone, lighting, and PC hardware investments',
+              color: '#ff6b6b',
+              is_active: true,
+              tags: ['equipment', 'hardware', 'investment']
+            },
+            {
+              user_id: demoUser[0].id,
+              name: 'Content Creation',
+              description: 'Software, games, assets, and tools for content creation',
+              color: '#4ecdc4',
+              is_active: true,
+              tags: ['content', 'software', 'games']
+            },
+            {
+              user_id: demoUser[0].id,
+              name: 'Marketing & Growth',
+              description: 'Promotion, networking events, and community building expenses',
+              color: '#45b7d1',
+              is_active: true,
+              tags: ['marketing', 'growth', 'networking']
+            }
+          ];
+
+          const createdProjects = await BudgetProject.bulkCreate(streamerProjects);
+
+          // Realistic streamer budget entries
+          const streamerBudgetEntries = [
+            // Income entries
+            {
+              user_id: demoUser[0].id,
+              type: 'income',
+              amount: 450.0,
+              category: 'Twitch Subscriptions',
+              description: 'Monthly subscriber revenue (Tier 1, 2, 3)',
+              date: days(-5),
+              project_id: createdProjects[0].id,
+              tags: ['subscriptions', 'recurring', 'twitch']
+            },
+            {
+              user_id: demoUser[0].id,
+              type: 'income',
+              amount: 180.0,
+              category: 'Donations & Bits',
+              description: 'Viewer donations and bit contributions',
+              date: days(-3),
+              project_id: createdProjects[0].id,
+              tags: ['donations', 'bits', 'community']
+            },
+            {
+              user_id: demoUser[0].id,
+              type: 'income',
+              amount: 300.0,
+              category: 'Sponsorship',
+              description: 'Gaming peripheral brand partnership',
+              date: days(-10),
+              project_id: createdProjects[0].id,
+              tags: ['sponsorship', 'brand', 'gaming']
+            },
+            // Equipment expenses
+            {
+              user_id: demoUser[0].id,
+              type: 'expense',
+              amount: -250.0,
+              category: 'Webcam Upgrade',
+              description: 'Logitech Brio 4K webcam for better stream quality',
+              date: days(-15),
+              project_id: createdProjects[1].id,
+              tags: ['webcam', 'quality', 'upgrade']
+            },
+            {
+              user_id: demoUser[0].id,
+              type: 'expense',
+              amount: -180.0,
+              category: 'Microphone',
+              description: 'Audio-Technica AT2020USB+ for clearer audio',
+              date: days(-20),
+              project_id: createdProjects[1].id,
+              tags: ['microphone', 'audio', 'quality']
+            },
+            // Content creation expenses
+            {
+              user_id: demoUser[0].id,
+              type: 'expense',
+              amount: -60.0,
+              category: 'New Game Purchase',
+              description: 'Latest AAA game for variety content',
+              date: days(-7),
+              project_id: createdProjects[2].id,
+              tags: ['games', 'content', 'variety']
+            },
+            {
+              user_id: demoUser[0].id,
+              type: 'expense',
+              amount: -25.0,
+              category: 'Stream Assets',
+              description: 'Custom emotes and overlay graphics',
+              date: days(-12),
+              project_id: createdProjects[2].id,
+              tags: ['graphics', 'emotes', 'branding']
+            },
+            // Marketing expenses
+            {
+              user_id: demoUser[0].id,
+              type: 'expense',
+              amount: -40.0,
+              category: 'Networking Event',
+              description: 'Local gaming/content creator meetup',
+              date: days(-8),
+              project_id: createdProjects[3].id,
+              tags: ['networking', 'community', 'events']
+            }
+          ];
+
+          await BudgetEntry.bulkCreate(streamerBudgetEntries as any);
+
+        } catch (error) {
+          console.error('Demo data setup failed:', error);
+          // Continue with login even if data setup fails
+        } finally {
+          console.log('Custom demo login successful for:', demoUser[0].email);
+
+          res.json({
+            message: 'Demo login successful',
+            user: {
+              id: demoUser[0].id,
+              email: demoUser[0].email,
+              name: demoUser[0].name,
+            },
+          });
+        }
+      })();
+    });
+  } catch (error) {
+    console.error('Custom demo login error:', error);
+    res.status(500).json({ error: 'Demo login failed' });
+  }
+});
+
 // ──────────────────────────────────────────
 // CURRENT USER
 // ─────────────────────────────────────────-

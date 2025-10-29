@@ -26,6 +26,25 @@ export interface CreateFileRequest {
 
 const API_BASE = '/api/files';
 
+// Helper function to create file record
+async function createFileRecord(fileData: CreateFileRequest): Promise<FileRecord> {
+  const response = await fetch(API_BASE, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(fileData),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to create file record: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.file;
+}
+
 export const fileService = {
   // Get all files for the authenticated user
   async getFiles(tags?: string[]): Promise<FileRecord[]> {

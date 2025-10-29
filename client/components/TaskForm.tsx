@@ -6,20 +6,24 @@ interface TaskFormProps {
   onSubmit: (taskData: TaskFormData) => void;
   onCancel?: () => void;
   isLoading?: boolean;
+  initialData?: Partial<TaskFormData>;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, onCancel, isLoading = false }) => {
+const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, onCancel, isLoading = false, initialData }) => {
   const [formData, setFormData] = useState<TaskFormData>({
-    title: '',
-    description: '',
-    priority: 'medium',
-    task_type: 'creative',
-    deadline: '',
-    estimated_hours: '',
-    tags: []
+    title: initialData?.title || '',
+    description: initialData?.description || '',
+    priority: initialData?.priority || 'medium',
+    task_type: initialData?.task_type || 'creative',
+    deadline: initialData?.deadline || '',
+    estimated_hours: initialData?.estimated_hours || '',
+    tags: initialData?.tags || []
   });
 
-  const [errors, setErrors] = useState<Partial<TaskFormData>>({});
+  type TaskFormErrors = {
+    [K in keyof TaskFormData]?: string;
+  };
+  const [errors, setErrors] = useState<TaskFormErrors>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -29,7 +33,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, onCancel, isLoading = fal
     }));
     
     // Clear error when user starts typing
-    if (errors[name as keyof TaskFormData]) {
+    if (errors[name as keyof TaskFormErrors]) {
       setErrors(prev => ({
         ...prev,
         [name]: undefined
@@ -38,7 +42,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, onCancel, isLoading = fal
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<TaskFormData> = {};
+    const newErrors: TaskFormErrors = {};
 
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
@@ -57,7 +61,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onSubmit, onCancel, isLoading = fal
     }
 
     if (formData.estimated_hours !== '' && (formData.estimated_hours < 1 || formData.estimated_hours > 168)) {
-      newErrors.estimated_hours = 'Hours must be between 1 and 168' as any;
+      newErrors.estimated_hours = 'Hours must be between 1 and 168';
     }
 
     setErrors(newErrors);

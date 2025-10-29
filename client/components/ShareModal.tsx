@@ -51,7 +51,8 @@ const ShareModal: React.FC<ShareModalProps> = ({
     try {
       const shareData: CreateShareRequest = {
         fileId,
-        shareType
+        shareType,
+        resourceType: 'file',
       };
 
       // Add expiration date if specified

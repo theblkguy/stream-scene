@@ -148,7 +148,7 @@ const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
         cursorColor: '#FFFFFF',
         barWidth: 2,
         barRadius: 1,
-        responsive: true,
+        fillParent: true,
         height: 80,
         normalize: true,
         backend: 'WebAudio',

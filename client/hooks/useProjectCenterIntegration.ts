@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { ProjectFile } from '../types/contentScheduler';
+import { ProjectFile } from '../types/project';
 
 interface ProjectCenterIntegrationHook {
   files: ProjectFile[];
@@ -86,7 +86,7 @@ export const useProjectCenterIntegration = (): ProjectCenterIntegrationHook => {
   // Get file preview/content
   const getFilePreview = useCallback(async (fileId: string): Promise<string | null> => {
     try {
-      const file = files.find(f => f.id === fileId);
+      const file = files.find(f => f.id === parseInt(fileId));
       if (!file) return null;
 
       // For images, return the URL directly

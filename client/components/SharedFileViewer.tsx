@@ -71,6 +71,8 @@ const SharedFileViewer: React.FC = () => {
     if (!fileData) return null;
 
     const { file } = fileData;
+    if (!file || !file.type || !file.url || !file.name) return null;
+    
     const { type, url, name } = file;
 
     if (isVideoFile(type)) {
@@ -279,6 +281,20 @@ const SharedFileViewer: React.FC = () => {
   }
 
   const { file, share } = fileData;
+
+  if (!file) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen bg-gray-900">
+        <div className="text-red-400 text-xl mb-4">File data not found</div>
+        <button 
+          onClick={() => window.history.back()}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">

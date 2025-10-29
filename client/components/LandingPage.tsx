@@ -5,7 +5,7 @@ import FilmReelLogo from './FilmReelLogo';
 import useAuth from '../hooks/useAuth';
 import GoogleLoginButton from './GoogleLoginButton';
 
-type CurrentView = 'landing' | 'planner' | 'project-center' | 'budget-tracker' | 'content-scheduler';
+type CurrentView = 'landing' | 'planner' | 'project-center' | 'budget-tracker';
 
 interface LandingPageProps {
   onNavigate?: (destination: CurrentView) => void;
@@ -57,7 +57,7 @@ const FEATURES: Feature[] = [
     destination: 'project-center' as CurrentView,
     available: true 
   }
-] as const;
+];
 
 // Login Prompt Popup Component
 const LoginPromptPopup: React.FC<{
@@ -112,8 +112,7 @@ const FeatureCard: React.FC<{
       'landing': '/',
       'planner': '/planner',
       'project-center': '/project-center',
-      'budget-tracker': '/budget-tracker',
-      'content-scheduler': '/content-scheduler'
+      'budget-tracker': '/budget-tracker'
     };
 
     const route = routeMap[feature.destination];

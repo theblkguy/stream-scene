@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import useAuth from '../hooks/useAuth'; // Import your auth hook
+import CustomDemoLogin from './CustomDemoLogin';
 
 const GoogleLoginButton: React.FC = () => {
   const { user, loading } = useAuth(); // Get user state from your auth hook
   const isAuthenticated = !!user;
+  const [showDemoModal, setShowDemoModal] = useState(false);
 
   const handleGoogleLogin = (): void => {
     // Use the full URL to ensure we hit the server
@@ -13,28 +15,8 @@ const GoogleLoginButton: React.FC = () => {
     window.location.href = loginUrl;
   };
 
-  const handleDemoLogin = async (): Promise<void> => {
-    try {
-      const response = await fetch('/auth/demo-login', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        // Refresh the page to update auth state
-        window.location.href = '/';
-      } else {
-        const errorData = await response.json();
-
-        alert('Demo login failed: ' + errorData.error);
-      }
-    } catch (error) {
-
-      alert('Demo login failed');
-    }
+  const handleDemoLogin = (): void => {
+    setShowDemoModal(true);
   };
 
   const handleLogout = async (): Promise<void> => {
@@ -115,12 +97,19 @@ const GoogleLoginButton: React.FC = () => {
           onClick={handleDemoLogin}
           className="flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] border text-sm bg-purple-500 hover:bg-purple-600 text-white border-purple-600"
           type="button"
-          title="Demo login as Bradley Williams for presentation"
+          title="Try StreamScene with your own information"
         >
-          <span className="hidden sm:inline">Demo Login</span>
+          <span className="hidden sm:inline">Try Demo</span>
           <span className="sm:hidden">Demo</span>
         </button>
       )}
+
+      {/* Custom Demo Login Modal */}
+      <CustomDemoLogin
+        isVisible={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+        onSuccess={() => setShowDemoModal(false)}
+      />
     </div>
   );
 };
