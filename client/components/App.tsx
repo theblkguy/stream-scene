@@ -5,14 +5,13 @@ import AIWeeklyPlanner from './AIWeeklyPlanner';
 import ProjectCenter from './ProjectCenter/ProjectCenter';
 import SharedFileViewer from './SharedFileViewer';
 import Navbar from './NavBar';
-import ContentScheduler from '../ContentScheduler/ContentScheduler';
 import BudgetTracker from './BudgetTracker';
 import PrivacyPolicyPage from './PrivacyPolicyPage';
 import TermsOfServicePage from './TermsOfServicePage';
 import MobileOptimizations from './MobileOptimizations';
 import SharedCanvas from './SharedCanvas';
 
-export type CurrentView = 'landing' | 'planner' | 'project-center' | 'budget-tracker' | 'content-scheduler';
+export type CurrentView = 'landing' | 'planner' | 'project-center' | 'budget-tracker';
 
 const App: React.FC = () => {
   const navigate = useNavigate();
@@ -24,8 +23,7 @@ const App: React.FC = () => {
       '/': 'landing',
       '/planner': 'planner',
       '/project-center': 'project-center',
-      '/budget-tracker': 'budget-tracker',
-      '/content-scheduler': 'content-scheduler'
+      '/budget-tracker': 'budget-tracker'
     };
 
     const currentRoute = location.pathname;
@@ -41,8 +39,7 @@ const App: React.FC = () => {
       'landing': '/',
       'planner': '/planner',
       'project-center': '/project-center',
-      'budget-tracker': '/budget-tracker',
-      'content-scheduler': '/content-scheduler'
+      'budget-tracker': '/budget-tracker'
     };
 
     const route = viewToRouteMap[view];
@@ -72,7 +69,6 @@ const App: React.FC = () => {
           <Route path="/planner" element={<AIWeeklyPlanner />} />
           <Route path="/project-center" element={<ProjectCenter />} />
           <Route path="/budget-tracker" element={<BudgetTracker />} />
-          <Route path="/content-scheduler" element={<ContentScheduler />} />
           <Route path="/shared/:token" element={<SharedFileViewer />} />
           <Route path="/canvas/shared/:token" element={<SharedCanvas />} />
           {/* Legal pages */}

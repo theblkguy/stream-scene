@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { createServer } from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -18,22 +18,21 @@ dotenv.config({ path: envPath });
 // Fallback to main .env if specific env file doesn't exist
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
+import cors from 'cors';
 import express from "express";
 import session from 'express-session';
 import passport from 'passport';
-import cors from 'cors';
 import "./config/passport.js";
-import authRoutes from "./routes/auth.js";
-import routes from "./routes/index.js";
-import budgetRoutes from "./routes/budget.js";
-import aiRoutes from "./routes/ai.js";
-import scheduleRoutes from "./routes/schedule.js";
-import s3ProxyRoutes from "./routes/s3Proxy.js";
-import filesRoutes from "./routes/files.js";
-import sharesRoutes from "./routes/shares.js";
-import socialAuthRoutes from './routes/socialAuth.js';
 import { syncDB } from "./db/index.js";
+import aiRoutes from "./routes/ai.js";
+import authRoutes from "./routes/auth.js";
+import budgetRoutes from "./routes/budget.js";
 import captionRouter from './routes/caption.js';
+import filesRoutes from "./routes/files.js";
+import routes from "./routes/index.js";
+import s3ProxyRoutes from "./routes/s3Proxy.js";
+import scheduleRoutes from "./routes/schedule.js";
+import sharesRoutes from "./routes/shares.js";
 import { initializeWebSocket } from './services/WebSocketService.js';
 
 const app = express();
@@ -143,10 +142,17 @@ app.use((req, res, next) => {
 
 // Security headers middleware - add CSP to handle dynamic script loading
 app.use((req, res, next) => {
+  // Skip CSP entirely for Threads OAuth routes to avoid conflicts with Meta's pages
+  if (req.path.includes('/auth/threads') || req.query.state || req.query.code) {
+    console.log('🔓 Skipping CSP for Threads OAuth route:', req.path);
+    return next();
+  }
+  
   // More permissive CSP that allows Facebook/Meta OAuth flows while maintaining security
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:",
+    "script-src-elem 'self' 'unsafe-inline' https: data:",
     "style-src 'self' 'unsafe-inline' https:",
     "font-src 'self' https: data:",
     "img-src 'self' data: https: blob:",
@@ -157,7 +163,8 @@ app.use((req, res, next) => {
     "frame-ancestors 'none'",
     "connect-src 'self' https: wss: ws: data: blob: https://streamscene.net wss://streamscene.net",
     "worker-src 'self' blob:",
-    "manifest-src 'self'"
+    "manifest-src 'self'",
+    "require-trusted-types-for 'script'"
   ].join('; ');
   
   res.setHeader('Content-Security-Policy', csp);
@@ -218,7 +225,6 @@ if (!isProd) {
 
 // API routes MUST come before static file serving
 app.use('/auth', authRoutes);
-app.use('/social', socialAuthRoutes);
 app.use('/api/budget', budgetRoutes);
 app.use('/', routes);
 app.use('/api/ai', aiRoutes);

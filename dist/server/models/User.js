@@ -21,7 +21,7 @@ export class User extends Model {
 const sequelize = getSequelize();
 User.init({
     id: {
-        type: DataTypes.INTEGER.UNSIGNED,
+        type: DataTypes.BIGINT,
         autoIncrement: true,
         primaryKey: true,
     },

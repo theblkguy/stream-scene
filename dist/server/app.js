@@ -19,17 +19,15 @@ import cors from 'cors';
 import "./config/passport.js";
 import authRoutes from "./routes/auth.js";
 import routes from "./routes/index.js";
+import budgetRoutes from "./routes/budget.js";
 import aiRoutes from "./routes/ai.js";
 import scheduleRoutes from "./routes/schedule.js";
 import s3ProxyRoutes from "./routes/s3Proxy.js";
 import filesRoutes from "./routes/files.js";
 import sharesRoutes from "./routes/shares.js";
-import budgetRoutes from './routes/budget.js';
 import socialAuthRoutes from './routes/socialAuth.js';
-import { syncDB, associate } from "./db/index.js";
+import { syncDB } from "./db/index.js";
 import captionRouter from './routes/caption.js';
-import taskRoutes from './routes/tasks.js';
-import contentSchedulerRoutes from './routes/contentScheduler.js';
 import { initializeWebSocket } from './services/WebSocketService.js';
 const app = express();
 // Trust proxy for secure cookies behind HTTPS load balancers (e.g., Render, Vercel, Cloudflare)
@@ -118,7 +116,8 @@ app.use((req, res, next) => {
         userAgent: ((_a = req.headers['user-agent']) === null || _a === void 0 ? void 0 : _a.substring(0, 50)) + '...',
         referer: req.headers.referer || 'NO_REFERER',
         host: req.headers.host,
-        user: req.user ? 'authenticated' : 'not authenticated'
+        user: req.user ? 'authenticated' : 'not authenticated',
+        sessionID: req.sessionID || 'NO_SESSION'
     });
     next();
 });
@@ -150,18 +149,32 @@ app.use((req, res, next) => {
 // Basic middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// Session middleware - environment-aware configuration
+// Session middleware - FIXED configuration for OAuth flows
 app.use(session({
     secret: process.env.SESSION_SECRET || 'fallback-secret-key-change-in-production',
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
+    name: 'streamscene.sid',
     cookie: {
         secure: isProd,
         httpOnly: true,
-        sameSite: isProd ? 'none' : 'lax',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000,
+        domain: isProd ? '.streamscene.net' : undefined // Allow subdomain cookies in production
     }
 }));
+// Session debugging middleware (remove in production later)
+app.use((req, res, next) => {
+    var _a;
+    console.log('📝 Session Debug:', {
+        sessionID: req.sessionID,
+        hasSession: !!req.session,
+        sessionData: req.session ? Object.keys(req.session) : [],
+        threadsOAuthState: ((_a = req.session) === null || _a === void 0 ? void 0 : _a.threadsState) ? 'present' : 'missing',
+        cookie: req.headers.cookie ? 'present' : 'missing'
+    });
+    next();
+});
 // Passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
@@ -178,17 +191,15 @@ if (!isProd) {
 // API routes MUST come before static file serving
 app.use('/auth', authRoutes);
 app.use('/social', socialAuthRoutes);
+app.use('/api/budget', budgetRoutes);
 app.use('/', routes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/schedule', scheduleRoutes);
-app.use('/api/content-scheduler', contentSchedulerRoutes);
-app.use('/api/tasks', taskRoutes);
 app.use('/api/s3', s3ProxyRoutes);
 app.use('/api/files', filesRoutes);
 app.use('/api/shares', sharesRoutes);
-app.use('/api/budget', budgetRoutes);
-// Note: threads routes are mounted in routes/index.ts at /api/threads
 app.use('/api/caption', captionRouter);
+// Note: All other API routes (tasks, content-scheduler, threads, budget, etc.) are mounted in routes/index.ts
 // Serve static files from public directory
 const publicPath = __dirname.includes('dist/server')
     ? path.join(__dirname, '../../public')
@@ -219,6 +230,36 @@ app.use(express.static(publicPath, {
 app.get('/test-server', (req, res) => {
     res.json({ message: 'Server is working!' });
 });
+// Debug route to test budget endpoints directly
+app.get('/debug-budget', (req, res) => {
+    res.json({
+        message: 'Budget debug route working from app.ts!',
+        timestamp: new Date().toISOString(),
+        routes_mounted: true,
+        path: req.path,
+        originalUrl: req.originalUrl,
+        method: req.method
+    });
+});
+// Debug route to show route mounting info
+app.get('/debug-routing', (req, res) => {
+    res.json({
+        message: 'Route debugging info',
+        mountOrder: [
+            '1. /auth -> authRoutes',
+            '2. /social -> socialAuthRoutes',
+            '3. / -> routes (from index.ts) - THIS CATCHES ALL!',
+            '4. /api/ai -> aiRoutes',
+            '5. /api/schedule -> scheduleRoutes',
+            '6. /api/s3 -> s3ProxyRoutes',
+            '7. /api/files -> filesRoutes',
+            '8. /api/shares -> sharesRoutes',
+            '9. /api/caption -> captionRouter'
+        ],
+        note: 'Budget routes should be in step 3 (routes/index.ts)',
+        timestamp: new Date().toISOString()
+    });
+});
 // Catch-all: serve frontend app unless it's an API route or static file
 app.get('*', (req, res) => {
     // Skip catch-all for API routes
@@ -246,7 +287,6 @@ const server = createServer(app);
 // Initialize WebSocket service
 const webSocketService = initializeWebSocket(server);
 // Initialize database and start server
-associate(); // Set up model associations
 syncDB().then(() => {
     server.listen(PORT, HOST, () => {
         const protocol = isProd ? 'https' : 'http';

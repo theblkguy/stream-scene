@@ -14,6 +14,8 @@ import Comment from '../models/Comment.js';
 import CommentReaction from '../models/CommentReaction.js';
 import Canvas from '../models/Canvas.js';
 import CanvasCollaborator from '../models/CanvasCollaborator.js';
+import BudgetEntry from '../models/BudgetEntry.js';
+import BudgetProject from '../models/BudgetProject.js';
 // Initialize models
 const File = initFileModel(sequelizeInstance);
 initSocialAccountTokenModel(sequelizeInstance);
@@ -21,8 +23,17 @@ initScheduledPostModel(sequelizeInstance);
 // Task model should already be initialized in its own file
 // Just make sure it's using the same sequelize instance
 export const associate = () => {
+    console.log('✅ Setting up database associations...');
+    // Budget model associations
+    BudgetEntry.belongsTo(BudgetProject, {
+        foreignKey: 'project_id',
+        as: 'project',
+    });
+    BudgetProject.hasMany(BudgetEntry, {
+        foreignKey: 'project_id',
+        as: 'entries',
+    });
     console.log('✅ Database associations ready');
-    // Associations can be added here as needed
 };
 // Sync EVERYTHING including new models
 export async function syncDB() {
@@ -62,7 +73,7 @@ export async function syncDB() {
             force: false,
             alter: false // Disabled alter to avoid schema conflicts
         });
-        console.log('Database sync complete (File, SocialAccountToken, ScheduledPost, Task, Comment, CommentReaction, Canvas, CanvasCollaborator)');
+        console.log('Database sync complete (File, SocialAccountToken, ScheduledPost, Task, Comment, CommentReaction, Canvas, CanvasCollaborator, BudgetProject, BudgetEntry)');
     }
     catch (error) {
         console.error('Database sync failed:', error);
@@ -70,7 +81,7 @@ export async function syncDB() {
         console.log('🔧 Continuing with existing database schema...');
     }
 }
-export { User, File, Share, SocialAccountToken, ScheduledPost, Task, Comment, CommentReaction, Canvas, CanvasCollaborator };
+export { User, File, Share, SocialAccountToken, ScheduledPost, Task, Comment, CommentReaction, Canvas, CanvasCollaborator, BudgetProject, BudgetEntry };
 export const db = {
     sequelize: sequelizeInstance,
     File,
@@ -79,6 +90,8 @@ export const db = {
     ScheduledPost,
     User,
     Task,
+    BudgetProject,
+    BudgetEntry,
     associate,
 };
 export default db;
