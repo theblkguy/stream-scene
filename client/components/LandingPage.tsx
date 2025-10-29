@@ -128,21 +128,21 @@ const FeatureCard: React.FC<{
 
   return (
     <div 
-      className="group p-4 sm:p-6 rounded-xl bg-gradient-to-br from-slate-800/50 to-gray-900/50 border border-purple-500/20 backdrop-blur-sm hover:border-purple-400/40 transition-all duration-300 hover:scale-[1.02] sm:hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20 cursor-pointer select-none touch-manipulation mobile-tap-target"
+      className="group h-full p-4 sm:p-6 rounded-xl bg-gradient-to-br from-slate-800/50 to-gray-900/50 border border-purple-500/20 backdrop-blur-sm hover:border-purple-400/40 transition-all duration-300 hover:scale-[1.02] sm:hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20 cursor-pointer select-none touch-manipulation flex flex-col justify-center"
       onClick={handleClick}
       style={{ 
         opacity: feature.available ? 1 : 0.75,
         WebkitTapHighlightColor: 'rgba(139, 92, 246, 0.1)',
-        minHeight: '120px'
+        minHeight: '160px'
       }}
     >
-      <div className="flex justify-center mb-3" style={{ pointerEvents: 'none' }}>
+      <div className="flex justify-center mb-3 sm:mb-4" style={{ pointerEvents: 'none' }}>
         {feature.icon}
       </div>
-      <h3 className="text-base sm:text-lg font-semibold text-purple-300 mb-2 text-center" style={{ pointerEvents: 'none' }}>
+      <h3 className="text-base sm:text-lg font-semibold text-purple-300 mb-2 sm:mb-3 text-center" style={{ pointerEvents: 'none' }}>
         {feature.title}
       </h3>
-      <p className="text-gray-400 text-sm sm:text-sm leading-relaxed text-center" style={{ pointerEvents: 'none' }}>
+      <p className="text-gray-400 text-sm leading-relaxed text-center" style={{ pointerEvents: 'none' }}>
         {feature.desc}
       </p>
     </div>
@@ -299,15 +299,16 @@ const StreamSceneLandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         </div>
 
         {/* Feature Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full max-w-5xl px-4 mb-12 sm:mb-16">
+        <div className="flex flex-col sm:flex-row justify-center items-center sm:items-stretch gap-4 sm:gap-6 lg:gap-8 w-full max-w-6xl px-4 mb-12 sm:mb-16">
           {FEATURES.map((feature, index) => (
-            <FeatureCard 
-              key={`feature-${index}`}
-              feature={feature} 
-              onNavigate={onNavigate}
-              isAuthenticated={!!user}
-              onShowLoginPrompt={handleShowLoginPrompt}
-            />
+            <div key={`feature-${index}`} className="w-full max-w-sm sm:w-80 lg:w-72 flex-shrink-0">
+              <FeatureCard 
+                feature={feature} 
+                onNavigate={onNavigate}
+                isAuthenticated={!!user}
+                onShowLoginPrompt={handleShowLoginPrompt}
+              />
+            </div>
           ))}
         </div>
 
