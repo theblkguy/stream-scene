@@ -1,7 +1,7 @@
 // client/components/CalendarWidget.tsx
 
+import { AnimatePresence, motion } from 'framer-motion';
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface CalendarWidgetProps {
   selectedDate?: string;

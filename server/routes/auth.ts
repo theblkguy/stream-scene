@@ -506,6 +506,11 @@ router.get('/threads', async (req: Request, res: Response) => {
     // Store state in session for verification
     req.session.threadsAuthState = 'initiated';
     
+    // Set CSP-friendly headers for Meta OAuth redirect
+    res.setHeader('Content-Security-Policy', "script-src 'self' 'unsafe-inline' *.facebook.com *.meta.com *.threads.net; object-src 'none'; base-uri 'self';");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    
     res.redirect(authUrl);
   } catch (error) {
     console.error('Threads auth initiation error:', error);
@@ -519,11 +524,33 @@ router.get('/threads/callback', async (req: Request, res: Response) => {
     
     if (error) {
       console.error('Threads OAuth error:', error);
-      return res.redirect('/content-scheduler?error=threads_auth_failed');
+      return res.send(`
+        <html>
+          <head><title>Threads Auth</title></head>
+          <body>
+            <script>
+              window.opener?.postMessage({ type: 'threads-auth-error', error: '${error}' }, '*');
+              window.close();
+            </script>
+            <p>Authentication failed. You can close this window.</p>
+          </body>
+        </html>
+      `);
     }
     
     if (!code || typeof code !== 'string') {
-      return res.redirect('/content-scheduler?error=missing_auth_code');
+      return res.send(`
+        <html>
+          <head><title>Threads Auth</title></head>
+          <body>
+            <script>
+              window.opener?.postMessage({ type: 'threads-auth-error', error: 'missing_auth_code' }, '*');
+              window.close();
+            </script>
+            <p>Missing authorization code. You can close this window.</p>
+          </body>
+        </html>
+      `);
     }
     
     const { handleThreadsCallback } = await import('../services/threadsOAuth.js');
@@ -537,10 +564,11 @@ router.get('/threads/callback', async (req: Request, res: Response) => {
       expiresAt: result.expiresAt
     };
     
-    res.redirect('/content-scheduler?threads_connected=true');
+    // Redirect back to content scheduler with success message
+    res.redirect('/content-scheduler?threads_connected=true&username=' + encodeURIComponent(result.username));
   } catch (error) {
     console.error('Threads callback error:', error);
-    res.redirect('/content-scheduler?error=threads_callback_failed');
+    res.redirect('/content-scheduler?error=threads_auth_failed');
   }
 });
 
@@ -552,6 +580,20 @@ router.get('/threads/status', (req: Request, res: Response) => {
     connected: isConnected,
     username: username,
     expiresAt: req.session?.threadsAuth?.expiresAt || null
+  });
+});
+
+// Disconnect Threads
+router.post('/threads/disconnect', (req: Request, res: Response) => {
+  if (req.session?.threadsAuth) {
+    delete req.session.threadsAuth;
+  }
+  
+  req.session.save((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to disconnect' });
+    }
+    res.json({ success: true });
   });
 });
 

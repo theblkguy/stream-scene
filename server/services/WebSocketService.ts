@@ -1,8 +1,7 @@
-import { Server as SocketIOServer } from 'socket.io';
 import { Server as HTTPServer } from 'http';
-import Comment from '../models/Comment.js';
+import { Server as SocketIOServer } from 'socket.io';
 import Canvas from '../models/Canvas.js';
-import CanvasCollaborator from '../models/CanvasCollaborator.js';
+import Comment from '../models/Comment.js';
 import { User } from '../models/User.js';
 
 interface SocketUserData {
@@ -190,7 +189,7 @@ export class WebSocketService {
         try {
           const userData = socket.data.user as SocketUserData;
           
-          let commentData: any = {
+          const commentData: any = {
             fileId: data.fileId,
             content: data.content.trim(),
             timestampSeconds: data.timestampSeconds || null,

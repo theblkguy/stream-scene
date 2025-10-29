@@ -26,12 +26,17 @@ export const initiateThreadsAuth = async (): Promise<string> => {
     throw new Error('THREADS_CLIENT_ID environment variable is not set. Please configure your Meta Threads app credentials.');
   }
   
-  const redirectUri = encodeURIComponent(`${process.env.BASE_URL}/auth/threads/callback`);
-  const scope = encodeURIComponent('threads_basic,threads_content_publish,threads_manage_insights');
   const state = Math.random().toString(36).substring(2); // CSRF protection
   
-  // Use the official Meta Threads API OAuth endpoint
-  return `https://www.threads.net/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code&state=${state}`;
+  // Use the official Meta Threads API OAuth endpoint with additional parameters for CSP compatibility
+  const authUrl = new URL('https://www.threads.net/oauth/authorize');
+  authUrl.searchParams.set('client_id', clientId);
+  authUrl.searchParams.set('redirect_uri', `${process.env.BASE_URL}/auth/threads/callback`);
+  authUrl.searchParams.set('scope', 'threads_basic,threads_content_publish,threads_manage_insights');
+  authUrl.searchParams.set('response_type', 'code');
+  authUrl.searchParams.set('state', state);
+  
+  return authUrl.toString();
 };
 
 export const handleThreadsCallback = async (code: string): Promise<ThreadsAuthResult> => {

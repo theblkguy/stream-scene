@@ -1,7 +1,7 @@
 // client/components/PlannerIntegration.tsx
 
-import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
 import { Task } from '../types/task';
 
 interface PlannerIntegrationProps {

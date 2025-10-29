@@ -1,11 +1,11 @@
 // client/ContentScheduler/ContentScheduler.tsx
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { FaTag, FaCalendarAlt, FaBrain, FaFileAlt } from 'react-icons/fa';
-import DraftsManager from '../components/DraftsManager';
-import TagInput from '../components/TagInput';
+import { FaBrain, FaCalendarAlt, FaFileAlt, FaTag } from 'react-icons/fa';
 import CalendarWidget from '../components/CalendarWidget';
+import DraftsManager from '../components/DraftsManager';
 import PlannerIntegration from '../components/PlannerIntegration';
+import TagInput from '../components/TagInput';
 import { Task } from '../types/task';
 
 // Custom SVG Icon Components
@@ -232,9 +232,18 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
   // Check URL params for OAuth callback
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    
     if (urlParams.get('threads_connected') === 'true') {
-      toast.success('Successfully connected to Threads!');
+      const username = urlParams.get('username');
+      const message = username 
+        ? `Successfully connected to Threads as @${username}!` 
+        : 'Successfully connected to Threads!';
+      toast.success(message);
       checkThreadsAuth();
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlParams.get('error') === 'threads_auth_failed') {
+      toast.error('Failed to connect to Threads. Please try again.');
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -292,9 +301,10 @@ const ContentScheduler: React.FC<ContentSchedulerProps> = ({
 
   const connectThreads = async () => {
     try {
-      // Redirect to the real Threads OAuth endpoint
+      // Use direct redirect - more reliable and avoids CSP issues with popups
       window.location.href = '/auth/threads';
     } catch (error) {
+      console.error('Failed to initiate Threads connection:', error);
       toast.error('Failed to initiate Threads connection');
     }
   };
