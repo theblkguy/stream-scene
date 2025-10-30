@@ -114,52 +114,29 @@ jobs:
           exit 1
         }
 
-    - name: Setup SSH for deployment
-      run: |
-        echo "🔑 Setting up SSH key for deployment..."
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
-        chmod 600 ~/.ssh/deploy_key
+    - name: Deploy to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT || 22 }}
+        source: "deploy.tar.gz"
+        target: "/tmp/"
         
-        # Test connection
-        ssh-keyscan -p ${{ secrets.SERVER_PORT || 22 }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts || echo "Host key scan failed, continuing..."
-        
-    - name: Deploy via rsync with timeout and fallback
-      run: |
-        echo "📦 Deploying via rsync..."
-        echo "Package size: $(ls -lh deploy.tar.gz | awk '{print $5}')"
-        
-        # Test SSH connectivity first
-        echo "🔍 Testing SSH connectivity..."
-        timeout 30 ssh -i ~/.ssh/deploy_key \
-          -p ${{ secrets.SERVER_PORT || 22 }} \
-          -o StrictHostKeyChecking=no \
-          -o ConnectTimeout=15 \
-          -o ServerAliveInterval=5 \
-          -o ServerAliveCountMax=3 \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-          "echo 'SSH connection successful'" || {
-            echo "❌ SSH connectivity test failed"
-            echo "Trying alternative connection methods..."
-          }
-        
-        # Try rsync with timeout and verbose output
-        echo "📦 Starting rsync transfer..."
-        timeout 300 rsync -avz --timeout=60 --progress \
-          -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT || 22 }} -o StrictHostKeyChecking=no -o ConnectTimeout=30" \
-          deploy.tar.gz \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/streamscene-deploy.tar.gz || {
-            echo "❌ Rsync failed, trying direct SCP with timeout..."
-            timeout 180 scp -i ~/.ssh/deploy_key \
-              -P ${{ secrets.SERVER_PORT || 22 }} \
-              -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=30 \
-              -o ServerAliveInterval=10 \
-              deploy.tar.gz \
-              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/streamscene-deploy.tar.gz
-          }
-          
-        echo "✅ File transfer completed"
+    - name: Extract and restart application
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT || 22 }}
+        script: |
+          cd /var/www/stream-scene
+          tar -xzf /tmp/deploy.tar.gz
+          rm /tmp/deploy.tar.gz
+          npm install --production
+          pm2 restart stream-scene || pm2 start ecosystem.config.cjs
         
     - name: Extract and restart application
       uses: appleboy/ssh-action@v1.0.3
