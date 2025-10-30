@@ -1,5 +1,4 @@
 // Share model for managing shareable file links
-import { randomBytes } from 'crypto';
 
 export interface ShareRecord {
   id: number;
@@ -41,9 +40,28 @@ export class Share {
     Object.assign(this, data);
   }
 
-  // Generate a secure share token
+  // Generate a 6-character alphanumeric share token with collision detection
   static generateShareToken(): string {
-    return randomBytes(32).toString('hex');
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let attempts = 0;
+    const maxAttempts = 100; // Prevent infinite loops
+    
+    while (attempts < maxAttempts) {
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      
+      // Check if token already exists
+      if (!tokenToShareMap.has(result)) {
+        return result;
+      }
+      
+      attempts++;
+    }
+    
+    // If we couldn't generate a unique token after maxAttempts, throw an error
+    throw new Error('Unable to generate unique share token after maximum attempts');
   }
 
   // Static method to create a new share

@@ -158,6 +158,43 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     expiresAt: ''
   });
   const [lastPoint, setLastPoint] = useState<Point | null>(null);
+  
+  // Zoom and pan state for mobile touch gestures
+  const [zoomState, setZoomState] = useState({
+    scale: 1,
+    offsetX: 0,
+    offsetY: 0,
+    minScale: 0.5,
+    maxScale: 5
+  });
+  const [gestureState, setGestureState] = useState({
+    isZooming: false,
+    isPanning: false,
+    lastTouchDistance: 0,
+    lastTouchCenter: { x: 0, y: 0 },
+    initialPinchDistance: 0,
+    initialScale: 1
+  });
+
+  // User type and permissions
+  const userType: 'owner' | 'collaborator' | 'visitor' = 
+    isOwner ? 'owner' : 
+    (user ? 'collaborator' : 'visitor');
+
+  const permissions = {
+    canClear: userType !== 'visitor',
+    canSave: userType !== 'visitor',
+    canLoad: userType !== 'visitor', 
+    canUndo: userType !== 'visitor',
+    canRedo: userType !== 'visitor',
+    canChangeBackground: userType !== 'visitor',
+    canSchedule: userType === 'owner',
+    canShare: userType === 'owner',
+    canChangePenColor: true, // All users can change pen color
+    canChangePenSize: true,  // All users can change pen size
+    canDraw: true,           // All users can draw
+    canExport: true          // All users can export
+  };
 
   // Effect to close modals when clicking outside or changing tools
   useEffect(() => {
@@ -361,6 +398,17 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     canvas.style.backgroundColor = backgroundColor;
   }, [backgroundColor]);
 
+  // Apply zoom and pan transforms
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Apply CSS transform for zoom and pan
+    const transform = `scale(${zoomState.scale}) translate(${zoomState.offsetX / zoomState.scale}px, ${zoomState.offsetY / zoomState.scale}px)`;
+    canvas.style.transform = transform;
+    canvas.style.transformOrigin = '0 0';
+  }, [zoomState]);
+
   // Adjust brush size when tool changes
   useEffect(() => {
     if (currentTool === 'pen') {
@@ -393,18 +441,24 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     };
   }, []);
 
-  // Touch support - convert touch coordinates to canvas coordinates
+  // Touch support - convert touch coordinates to canvas coordinates with zoom/pan
   const getTouchCanvasPoint = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas || e.touches.length === 0) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches[0]; // Use first touch point
+    
+    // Convert screen coordinates to canvas coordinates accounting for zoom and pan
+    const canvasX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+    const canvasY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+    
+    // Apply inverse transform to get actual drawing coordinates
     return {
-      x: (touch.clientX - rect.left) * (canvas.width / rect.width),
-      y: (touch.clientY - rect.top) * (canvas.height / rect.height)
+      x: (canvasX - zoomState.offsetX) / zoomState.scale,
+      y: (canvasY - zoomState.offsetY) / zoomState.scale
     };
-  }, []);
+  }, [zoomState]);
 
   const drawLine = useCallback((from: Point, to: Point, color: string, width: number, tool: string, erase = false) => {
     const canvas = canvasRef.current;
@@ -681,23 +735,156 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     setLastPoint(null);
   }, []);
 
-  // Touch event handlers for mobile support
+  // Multi-touch gesture detection
+  const getTouchDistance = useCallback((touches: React.TouchList) => {
+    if (touches.length < 2) return 0;
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    return Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    );
+  }, []);
+
+  const getTouchCenter = useCallback((touches: React.TouchList) => {
+    if (touches.length === 0) return { x: 0, y: 0 };
+    if (touches.length === 1) {
+      return { x: touches[0].clientX, y: touches[0].clientY };
+    }
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    return {
+      x: (touch1.clientX + touch2.clientX) / 2,
+      y: (touch1.clientY + touch2.clientY) / 2
+    };
+  }, []);
+
+  const handleZoom = useCallback((newScale: number, centerX: number, centerY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Clamp scale within bounds
+    const clampedScale = Math.max(zoomState.minScale, Math.min(zoomState.maxScale, newScale));
+    
+    // Calculate new offset to zoom towards the center point
+    const rect = canvas.getBoundingClientRect();
+    const canvasX = (centerX - rect.left) * (canvas.width / rect.width);
+    const canvasY = (centerY - rect.top) * (canvas.height / rect.height);
+    
+    const scaleChange = clampedScale / zoomState.scale;
+    const newOffsetX = canvasX - (canvasX - zoomState.offsetX) * scaleChange;
+    const newOffsetY = canvasY - (canvasY - zoomState.offsetY) * scaleChange;
+
+    setZoomState(prev => ({
+      ...prev,
+      scale: clampedScale,
+      offsetX: newOffsetX,
+      offsetY: newOffsetY
+    }));
+  }, [zoomState]);
+
+  const resetZoom = useCallback(() => {
+    setZoomState(prev => ({
+      ...prev,
+      scale: 1,
+      offsetX: 0,
+      offsetY: 0
+    }));
+  }, []);
+
+  // Touch event handlers for mobile support with gesture detection
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault(); // Prevent scrolling and zooming
-    const point = getTouchCanvasPoint(e);
     
-    if (currentTool === 'text') {
-      setTextInput({ x: point.x, y: point.y, text: '', active: true });
+    if (e.touches.length === 2) {
+      // Two finger gesture - start pinch zoom
+      const distance = getTouchDistance(e.touches);
+      const center = getTouchCenter(e.touches);
+      
+      setGestureState(prev => ({
+        ...prev,
+        isZooming: true,
+        isPanning: false,
+        initialPinchDistance: distance,
+        initialScale: zoomState.scale,
+        lastTouchDistance: distance,
+        lastTouchCenter: center
+      }));
+      
+      // Stop any drawing when starting zoom
+      setIsDrawing(false);
+      setLastPoint(null);
       return;
     }
     
-    setIsDrawing(true);
-    setLastPoint(point);
-    saveToHistory(); // Save state before drawing
-  }, [getTouchCanvasPoint, currentTool, saveToHistory]);
+    if (e.touches.length === 1) {
+      // Single finger gesture
+      if (zoomState.scale > 1 && !gestureState.isZooming) {
+        // If zoomed in, single finger is for panning
+        const touch = e.touches[0];
+        setGestureState(prev => ({
+          ...prev,
+          isPanning: true,
+          lastTouchCenter: { x: touch.clientX, y: touch.clientY }
+        }));
+      } else {
+        // Normal drawing mode
+        const point = getTouchCanvasPoint(e);
+        
+        if (currentTool === 'text') {
+          setTextInput({ x: point.x, y: point.y, text: '', active: true });
+          return;
+        }
+        
+        setIsDrawing(true);
+        setLastPoint(point);
+        saveToHistory(); // Save state before drawing
+      }
+    }
+  }, [getTouchCanvasPoint, getTouchDistance, getTouchCenter, currentTool, saveToHistory, zoomState.scale, gestureState.isZooming]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault(); // Prevent scrolling and zooming
+    
+    if (e.touches.length === 2 && gestureState.isZooming) {
+      // Handle pinch zoom
+      const currentDistance = getTouchDistance(e.touches);
+      const currentCenter = getTouchCenter(e.touches);
+      
+      if (gestureState.initialPinchDistance > 0) {
+        const scaleChange = currentDistance / gestureState.initialPinchDistance;
+        const newScale = gestureState.initialScale * scaleChange;
+        handleZoom(newScale, currentCenter.x, currentCenter.y);
+      }
+      
+      setGestureState(prev => ({
+        ...prev,
+        lastTouchDistance: currentDistance,
+        lastTouchCenter: currentCenter
+      }));
+      return;
+    }
+    
+    if (e.touches.length === 1 && gestureState.isPanning && zoomState.scale > 1) {
+      // Handle panning when zoomed in
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - gestureState.lastTouchCenter.x;
+      const deltaY = touch.clientY - gestureState.lastTouchCenter.y;
+      
+      setZoomState(prev => ({
+        ...prev,
+        offsetX: prev.offsetX + deltaX,
+        offsetY: prev.offsetY + deltaY
+      }));
+      
+      setGestureState(prev => ({
+        ...prev,
+        lastTouchCenter: { x: touch.clientX, y: touch.clientY }
+      }));
+      return;
+    }
+    
+    // Normal drawing mode
     const point = getTouchCanvasPoint(e);
     
     // Emit cursor position to collaborators
@@ -722,10 +909,20 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     
     saveStroke(strokeEvent);
     setLastPoint(point);
-  }, [isDrawing, lastPoint, getTouchCanvasPoint, drawLine, brushColor, brushWidth, currentTool, saveStroke, socket, canvasId]);
+  }, [isDrawing, lastPoint, getTouchCanvasPoint, getTouchDistance, getTouchCenter, handleZoom, drawLine, brushColor, brushWidth, currentTool, saveStroke, socket, canvasId, gestureState, zoomState.scale]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault(); // Prevent scrolling and zooming
+    
+    // Reset gesture states
+    setGestureState(prev => ({
+      ...prev,
+      isZooming: false,
+      isPanning: false,
+      initialPinchDistance: 0,
+      initialScale: 1
+    }));
+    
     setIsDrawing(false);
     setLastPoint(null);
   }, []);
@@ -1074,28 +1271,40 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
             </div>
           </div>
 
-          {/* Share and Calendar Actions */}
+          {/* Share and Calendar Actions - Only for owners/collaborators */}
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setShowShareModal(true)}
-              className="p-2 bg-indigo-600 hover:bg-indigo-700 rounded flex items-center space-x-1"
-              title="Share Canvas"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-              </svg>
-              <span className="text-sm hidden md:inline">Share</span>
-            </button>
-            <button
-              onClick={() => setShowCalendarModal(true)}
-              className="p-2 bg-yellow-600 hover:bg-yellow-700 rounded flex items-center space-x-1"
-              title="Schedule Session"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm hidden md:inline">Schedule</span>
-            </button>
+            {/* User type indicator for visitors */}
+            {userType === 'visitor' && (
+              <span className="text-xs text-orange-400 bg-orange-900/30 px-2 py-1 rounded">
+                Visitor Mode
+              </span>
+            )}
+            
+            {permissions.canShare && (
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="p-2 bg-indigo-600 hover:bg-indigo-700 rounded flex items-center space-x-1"
+                title="Share Canvas"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                </svg>
+                <span className="text-sm hidden md:inline">Share</span>
+              </button>
+            )}
+            
+            {permissions.canSchedule && (
+              <button
+                onClick={() => setShowCalendarModal(true)}
+                className="p-2 bg-yellow-600 hover:bg-yellow-700 rounded flex items-center space-x-1"
+                title="Schedule Session"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm hidden md:inline">Schedule</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1162,27 +1371,29 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
             </button>
           </div>
 
-          {/* Background Color */}
-          <div className="flex items-center space-x-2">
-            <span className="text-xs">BG:</span>
-            <input
-              type="color"
-              value={backgroundColor}
-              onChange={(e) => {
-                setBackgroundColor(e.target.value);
-                redrawCanvas();
-              }}
-              className="w-6 h-6 rounded cursor-pointer"
-              title="Background Color"
-            />
-            <button
-              onClick={() => setShowBackgroundPicker(!showBackgroundPicker)}
-              className="p-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
-              title="Background Presets"
-            >
-              ▼
-            </button>
-          </div>
+          {/* Background Color - Hidden for visitors */}
+          {permissions.canChangeBackground && (
+            <div className="flex items-center space-x-2">
+              <span className="text-xs">BG:</span>
+              <input
+                type="color"
+                value={backgroundColor}
+                onChange={(e) => {
+                  setBackgroundColor(e.target.value);
+                  redrawCanvas();
+                }}
+                className="w-6 h-6 rounded cursor-pointer"
+                title="Background Color"
+              />
+              <button
+                onClick={() => setShowBackgroundPicker(!showBackgroundPicker)}
+                className="p-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
+                title="Background Presets"
+              >
+                ▼
+              </button>
+            </div>
+          )}
 
           {/* Size controls */}
           <div className="flex items-center space-x-2">
@@ -1198,75 +1409,122 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
             <span className="text-xs w-6">{brushWidth}</span>
           </div>
 
-          {/* Clear button */}
-          <button
-            onClick={clearCanvas}
-            className="p-2 bg-red-600 hover:bg-red-700 rounded"
-            title="Clear Canvas"
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd" />
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-          </button>
-
-          {/* Undo/Redo buttons */}
-          <div className="flex items-center space-x-1">
+          {/* Zoom controls */}
+          <div className="flex items-center space-x-1 border-l border-gray-600 pl-2 ml-2">
             <button
-              onClick={undo}
-              disabled={historyStep <= 0}
-              className="p-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:opacity-50 rounded"
-              title="Undo"
+              onClick={() => handleZoom(zoomState.scale * 1.2, 400, 300)}
+              className="p-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
+              title="Zoom In"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <span className="text-xs">{Math.round(zoomState.scale * 100)}%</span>
+            <button
+              onClick={() => handleZoom(zoomState.scale / 1.2, 400, 300)}
+              className="p-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
+              title="Zoom Out"
+            >
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
               </svg>
             </button>
             <button
-              onClick={redo}
-              disabled={historyStep >= drawingHistory.length}
-              className="p-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:opacity-50 rounded"
-              title="Redo"
+              onClick={resetZoom}
+              className="p-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
+              title="Reset Zoom"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M4 2a2 2 0 00-2 2v8a2 2 0 002 2V4h8a2 2 0 00-2-2H4z"/>
+                <path d="M8 6a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2h-6a2 2 0 01-2-2V6z"/>
               </svg>
             </button>
           </div>
 
+          {/* Clear button - Hidden for visitors */}
+          {permissions.canClear && (
+            <button
+              onClick={clearCanvas}
+              className="p-2 bg-red-600 hover:bg-red-700 rounded"
+              title="Clear Canvas"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
+
+          {/* Undo/Redo buttons - Hidden for visitors */}
+          {(permissions.canUndo || permissions.canRedo) && (
+            <div className="flex items-center space-x-1">
+              {permissions.canUndo && (
+                <button
+                  onClick={undo}
+                  disabled={historyStep <= 0}
+                  className="p-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:opacity-50 rounded"
+                  title="Undo"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              )}
+              {permissions.canRedo && (
+                <button
+                  onClick={redo}
+                  disabled={historyStep >= drawingHistory.length}
+                  className="p-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:opacity-50 rounded"
+                  title="Redo"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Save/Load/Export buttons */}
           <div className="flex items-center space-x-1">
-            <button
-              onClick={() => setShowSaveDialog(true)}
-              disabled={isSaving}
-              className="p-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:opacity-50 rounded"
-              title="Save Drawing"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586l-1.293-1.293z" />
-                <path d="M5 3a2 2 0 00-2 2v1a1 1 0 002 0V5a1 1 0 011-1h8a1 1 0 011 1v1a1 1 0 102 0V5a2 2 0 00-2-2H5z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setShowLoadDialog(true)}
-              disabled={isLoading}
-              className="p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:opacity-50 rounded"
-              title="Load Drawing"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-              </svg>
-            </button>
-            <button
-              onClick={exportAsImage}
-              disabled={isExporting}
-              className="p-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:opacity-50 rounded"
-              title="Export as Image"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 011 1v1a1 1 0 01-1 1H4a1 1 0 01-1-1v-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-              </svg>
-            </button>
+            {permissions.canSave && (
+              <button
+                onClick={() => setShowSaveDialog(true)}
+                disabled={isSaving}
+                className="p-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:opacity-50 rounded"
+                title="Save Drawing"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6a1 1 0 10-2 0v5.586l-1.293-1.293z" />
+                  <path d="M5 3a2 2 0 00-2 2v1a1 1 0 002 0V5a1 1 0 011-1h8a1 1 0 011 1v1a1 1 0 102 0V5a2 2 0 00-2-2H5z" />
+                </svg>
+              </button>
+            )}
+            {permissions.canLoad && (
+              <button
+                onClick={() => setShowLoadDialog(true)}
+                disabled={isLoading}
+                className="p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:opacity-50 rounded"
+                title="Load Drawing"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                </svg>
+              </button>
+            )}
+            {permissions.canExport && (
+              <button
+                onClick={exportAsImage}
+                disabled={isExporting}
+                className="p-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:opacity-50 rounded"
+                title="Export as Image"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 011 1v1a1 1 0 01-1 1H4a1 1 0 01-1-1v-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </div>
