@@ -124,8 +124,10 @@ const AIWeeklyPlanner: React.FC = () => {
     return [...tasks].sort((a, b) => {
       switch (sortBy) {
         case 'priority':
-          const priorityOrder = { high: 3, medium: 2, low: 1 };
-          return priorityOrder[b.priority] - priorityOrder[a.priority];
+          const priorityOrder: { [key: string]: number } = { high: 3, medium: 2, low: 1 };
+          const aPriority = priorityOrder[a.priority] || 0;
+          const bPriority = priorityOrder[b.priority] || 0;
+          return bPriority - aPriority;
         case 'deadline':
           if (!a.deadline && !b.deadline) return 0;
           if (!a.deadline) return 1;
@@ -190,7 +192,7 @@ const AIWeeklyPlanner: React.FC = () => {
     return filtered;
   };
 
-  const filteredTasks = getFilteredTasks();
+  const filteredTasks = sortTasks(getFilteredTasks(), taskSort);
 
   // Notification helper function
   const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
