@@ -503,22 +503,25 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     const canvas = canvasRef.current;
     if (!canvas || e.touches.length === 0) return { x: 0, y: 0, pressure: 1.0 };
 
-    const touch = e.touches[0]; // Use first touch point
+    // Create a synthetic mouse event with touch coordinates to use existing mouse logic
+    const touch = e.touches[0];
+    const syntheticMouseEvent = {
+      clientX: touch.clientX,
+      clientY: touch.clientY
+    } as React.MouseEvent<HTMLCanvasElement>;
     
-    // Use the same method as mouse events - this should work identically
-    const rect = canvas.getBoundingClientRect();
-    const canvasX = (touch.clientX - rect.left) * (canvas.width / rect.width);
-    const canvasY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+    // Use the exact same coordinate calculation as mouse events
+    const mousePoint = getCanvasPoint(syntheticMouseEvent);
     
     // Get pressure (if available, otherwise default to 1.0)
     const pressure = (touch as any).force || (touch as any).pressure || 1.0;
 
     return {
-      x: canvasX,
-      y: canvasY,
+      x: mousePoint.x,
+      y: mousePoint.y,
       pressure: Math.max(0.1, Math.min(1.0, pressure)) // Clamp between 0.1 and 1.0
     };
-  }, []); // No dependencies - using same approach as mouse events  // Add haptic feedback for tool changes (mobile only)
+  }, [getCanvasPoint]); // Depends on getCanvasPoint since we're reusing mouse logic  // Add haptic feedback for tool changes (mobile only)
   const triggerHapticFeedback = useCallback((type: 'light' | 'medium' | 'heavy' = 'light') => {
     if ('vibrate' in navigator) {
       const patterns = {
