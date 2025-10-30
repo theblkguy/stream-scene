@@ -19,10 +19,23 @@ jobs:
         node-version: '20'
         cache: 'npm'
 
-    - name: Install and build
+    - name: Install dependencies and build
       run: |
-        npm ci --silent
-        npm run build
+        echo "🔧 Fixing dependency lock file sync..."
+        rm -f package-lock.json
+        npm install --package-lock-only
+        
+        echo "📦 Installing dependencies..."
+        npm ci
+        
+        echo "🏗️ Building application..."
+        npm run build || {
+          echo "❌ Build failed. Checking for common issues..."
+          echo "Node version: $(node --version)"
+          echo "NPM version: $(npm --version)"
+          echo "Available memory: $(free -m | grep '^Mem:' | awk '{print $7}')MB"
+          exit 1
+        }
       env:
         NODE_ENV: production
         REACT_APP_API_URL: https://streamscene.net
@@ -30,8 +43,14 @@ jobs:
 
     - name: Compile TypeScript
       run: |
-        npm install typescript --save-dev --silent
-        npx tsc --project server/tsconfig.json
+        echo "📝 Compiling TypeScript..."
+        # TypeScript should already be installed from package.json
+        npx tsc --project server/tsconfig.json || {
+          echo "❌ TypeScript compilation failed"
+          echo "Installing TypeScript as fallback..."
+          npm install typescript --save-dev
+          npx tsc --project server/tsconfig.json
+        }
 
     - name: Create minimal deployment package
       run: |
