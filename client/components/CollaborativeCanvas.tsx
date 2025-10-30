@@ -170,6 +170,9 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     lastTouchPos: { x: 0, y: 0 }
   });
   
+  // Mobile toolbar collapse state
+  const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
+  
   // Removed zoom functionality - users can rely on browser zoom
 
   // User type and permissions
@@ -495,7 +498,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     };
   }, []);
 
-  // Enhanced touch support with pressure sensitivity (simplified - no zoom transforms)
+  // Enhanced touch support with pressure sensitivity (accounts for pan transforms)
   const getTouchCanvasPoint = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas || e.touches.length === 0) return { x: 0, y: 0, pressure: 1.0 };
@@ -503,9 +506,13 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches[0]; // Use first touch point
     
-    // Convert screen coordinates to canvas coordinates (simple mapping)
-    const canvasX = (touch.clientX - rect.left) * (canvas.width / rect.width);
-    const canvasY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+    // Convert screen coordinates to canvas coordinates accounting for pan offset
+    const rawCanvasX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+    const rawCanvasY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+    
+    // Adjust for pan offset (subtract the pan translation to get actual canvas coordinates)
+    const canvasX = rawCanvasX - (panState.x * (canvas.width / rect.width));
+    const canvasY = rawCanvasY - (panState.y * (canvas.height / rect.height));
     
     // Get pressure (if available, otherwise default to 1.0)
     const pressure = (touch as any).force || (touch as any).pressure || 1.0;
@@ -515,7 +522,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
       y: canvasY,
       pressure: Math.max(0.1, Math.min(1.0, pressure)) // Clamp between 0.1 and 1.0
     };
-  }, []);
+  }, [panState.x, panState.y]);
 
   // Add haptic feedback for tool changes (mobile only)
   const triggerHapticFeedback = useCallback((type: 'light' | 'medium' | 'heavy' = 'light') => {
@@ -1368,8 +1375,26 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white">
+      {/* Mobile Toolbar Toggle Button */}
+      <div className="md:hidden bg-gray-800 border-b border-gray-700 p-2 flex justify-between items-center">
+        <span className="text-sm font-medium">Canvas Tools</span>
+        <button
+          onClick={() => setIsToolbarCollapsed(!isToolbarCollapsed)}
+          className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+          title={isToolbarCollapsed ? "Show Toolbar" : "Hide Toolbar"}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {isToolbarCollapsed ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+            )}
+          </svg>
+        </button>
+      </div>
+      
       {/* Toolbar */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className={`bg-gray-800 border-b border-gray-700 ${isToolbarCollapsed ? 'md:block hidden' : 'block'}`}>
         {/* Top Row - Connection Status and Actions */}
         <div className="flex items-center justify-between p-2 border-b border-gray-700">
           <div className="flex items-center space-x-4">
@@ -1958,6 +1983,64 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Floating Mobile Toolbar (when main toolbar is collapsed) */}
+      {isToolbarCollapsed && (
+        <div className="md:hidden fixed bottom-4 right-4 z-40">
+          <div className="flex flex-col space-y-2">
+            {/* Tool Selection */}
+            <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-600 rounded-lg p-2 flex space-x-2">
+              <button
+                onClick={() => handleToolChange('pen')}
+                className={`p-2 rounded ${currentTool === 'pen' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                title="Pen"
+              >
+                ✏️
+              </button>
+              <button
+                onClick={() => handleToolChange('brush')}
+                className={`p-2 rounded ${currentTool === 'brush' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                title="Brush"
+              >
+                🖌️
+              </button>
+              <button
+                onClick={() => handleToolChange('eraser')}
+                className={`p-2 rounded ${currentTool === 'eraser' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                title="Eraser"
+              >
+                🧹
+              </button>
+            </div>
+            
+            {/* Color and Size */}
+            <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-600 rounded-lg p-2 flex items-center space-x-2">
+              <input
+                type="color"
+                value={brushColor}
+                onChange={(e) => setBrushColor(e.target.value)}
+                className="w-8 h-8 rounded cursor-pointer"
+                title="Color"
+              />
+              <div className="flex items-center space-x-1">
+                <span className="text-xs text-gray-300">Size:</span>
+                <span className="text-xs w-6 text-center">{brushWidth}</span>
+              </div>
+            </div>
+            
+            {/* Expand Toolbar Button */}
+            <button
+              onClick={() => setIsToolbarCollapsed(false)}
+              className="bg-gray-800/90 backdrop-blur-sm border border-gray-600 rounded-lg p-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
+              title="Show Full Toolbar"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Save Dialog */}
       {showSaveDialog && (
