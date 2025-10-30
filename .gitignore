@@ -40,3 +40,8 @@ test-ios-scroll-fix.html
 test-*.js
 test-*.ts
 debug-*.js
+
+# Markdown files (except README.md and ENVIRONMENT_SETUP.md)
+*.md
+!README.md
+!ENVIRONMENT_SETUP.md
