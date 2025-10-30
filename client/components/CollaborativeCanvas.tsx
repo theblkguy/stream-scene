@@ -162,6 +162,14 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
   const [lastPoint, setLastPoint] = useState<Point | null>(null);
   const [brushPath, setBrushPath] = useState<Point[]>([]); // For smooth brush strokes
   
+  // Pan state for mobile navigation (canvas viewport positioning)
+  const [panState, setPanState] = useState({
+    x: 0,
+    y: 0,
+    isDragging: false,
+    lastTouchPos: { x: 0, y: 0 }
+  });
+  
   // Removed zoom functionality - users can rely on browser zoom
 
   // User type and permissions
@@ -941,57 +949,98 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     }
   }, [socket, canvasId]);
 
-  // Simplified touch handlers for drawing (no zoom - use browser zoom)
+  // Touch handlers for drawing and panning navigation
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    // Only handle single finger touches for drawing
-    if (e.touches.length !== 1) return;
-    
-    const point = getTouchCanvasPoint(e);
-    
-    if (currentTool === 'text') {
-      setTextInput({ x: point.x, y: point.y, text: '', active: true });
-      return;
+    if (e.touches.length === 1) {
+      // Single finger - drawing mode
+      const point = getTouchCanvasPoint(e);
+      
+      if (currentTool === 'text') {
+        setTextInput({ x: point.x, y: point.y, text: '', active: true });
+        return;
+      }
+      
+      setIsDrawing(true);
+      setLastPoint(point);
+      saveToHistory(); // Save state before drawing
+    } else if (e.touches.length === 2) {
+      // Two fingers - pan mode
+      e.preventDefault(); // Prevent default browser behavior
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const midX = (touch1.clientX + touch2.clientX) / 2;
+      const midY = (touch1.clientY + touch2.clientY) / 2;
+      
+      setPanState(prev => ({
+        ...prev,
+        isDragging: true,
+        lastTouchPos: { x: midX, y: midY }
+      }));
+      
+      // Stop drawing when starting pan
+      setIsDrawing(false);
+      setLastPoint(null);
     }
-    
-    setIsDrawing(true);
-    setLastPoint(point);
-    saveToHistory(); // Save state before drawing
   }, [getTouchCanvasPoint, currentTool, saveToHistory]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    // Only handle single finger touches for drawing
-    if (e.touches.length !== 1) return;
-    
-    const pointData = getTouchCanvasPoint(e);
-    const point = { x: pointData.x, y: pointData.y };
-    
-    // Emit cursor position to collaborators
-    if (socket && socket.connected) {
-      socket.emit('cursor-move', { x: point.x, y: point.y, canvasId });
+    if (e.touches.length === 1 && isDrawing && !panState.isDragging) {
+      // Single finger - drawing mode
+      const pointData = getTouchCanvasPoint(e);
+      const point = { x: pointData.x, y: pointData.y };
+      
+      // Emit cursor position to collaborators
+      if (socket && socket.connected) {
+        socket.emit('cursor-move', { x: point.x, y: point.y, canvasId });
+      }
+      
+      if (!lastPoint) return;
+      
+      // Draw immediately for visual feedback with pressure sensitivity
+      drawLine(lastPoint, point, brushColor, brushWidth, currentTool, currentTool === 'eraser', pointData.pressure);
+      
+      // Save stroke data
+      const strokeEvent: DrawingEvent = {
+        type: currentTool === 'eraser' ? 'erase' : 'draw',
+        points: [lastPoint, point],
+        color: brushColor,
+        width: brushWidth,
+        tool: currentTool,
+        timestamp: Date.now()
+      };
+      
+      saveStroke(strokeEvent);
+      setLastPoint(point);
+    } else if (e.touches.length === 2 && panState.isDragging) {
+      // Two fingers - pan mode
+      e.preventDefault();
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const midX = (touch1.clientX + touch2.clientX) / 2;
+      const midY = (touch1.clientY + touch2.clientY) / 2;
+      
+      const deltaX = midX - panState.lastTouchPos.x;
+      const deltaY = midY - panState.lastTouchPos.y;
+      
+      // Update pan position
+      setPanState(prev => ({
+        ...prev,
+        x: prev.x + deltaX,
+        y: prev.y + deltaY,
+        lastTouchPos: { x: midX, y: midY }
+      }));
     }
-    
-    if (!isDrawing || !lastPoint) return;
-    
-    // Draw immediately for visual feedback with pressure sensitivity
-    drawLine(lastPoint, point, brushColor, brushWidth, currentTool, currentTool === 'eraser', pointData.pressure);
-    
-    // Save stroke data
-    const strokeEvent: DrawingEvent = {
-      type: currentTool === 'eraser' ? 'erase' : 'draw',
-      points: [lastPoint, point],
-      color: brushColor,
-      width: brushWidth,
-      tool: currentTool,
-      timestamp: Date.now()
-    };
-    
-    saveStroke(strokeEvent);
-    setLastPoint(point);
-  }, [isDrawing, lastPoint, getTouchCanvasPoint, drawLine, brushColor, brushWidth, currentTool, saveStroke, socket, canvasId]);
+  }, [isDrawing, lastPoint, getTouchCanvasPoint, drawLine, brushColor, brushWidth, currentTool, saveStroke, socket, canvasId, panState]);
 
   const handleTouchEnd = useCallback(() => {
     setIsDrawing(false);
     setLastPoint(null);
+    
+    // Reset pan dragging state
+    setPanState(prev => ({
+      ...prev,
+      isDragging: false
+    }));
   }, []);
 
   const clearCanvas = useCallback(() => {
@@ -1864,21 +1913,29 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
       </AnimatePresence>
 
       {/* Canvas */}
-      <div className="flex-1 flex items-center justify-center p-4 bg-gray-900">
-        <div className="relative border border-gray-600 rounded-lg overflow-hidden shadow-lg">
-          <canvas
-            ref={canvasRef}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            onTouchCancel={handleTouchEnd}
-            className="cursor-crosshair"
-            style={{ display: 'block', touchAction: 'none' }}
-          />
+      <div className="flex-1 flex items-center justify-center p-4 bg-gray-900 overflow-hidden">
+        <div className="relative border border-gray-600 rounded-lg shadow-lg">
+          <div 
+            className="overflow-hidden"
+            style={{
+              transform: `translate(${panState.x}px, ${panState.y}px)`,
+              transition: panState.isDragging ? 'none' : 'transform 0.2s ease-out'
+            }}
+          >
+            <canvas
+              ref={canvasRef}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={handleTouchEnd}
+              className="cursor-crosshair"
+              style={{ display: 'block', touchAction: 'none' }}
+            />
+          </div>
           
           {/* Collaborative Cursors */}
           {Array.from(collaborators.entries()).map(([id, collaborator]) => (

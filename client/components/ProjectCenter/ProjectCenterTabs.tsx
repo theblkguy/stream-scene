@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import useAuth from '../../hooks/useAuth';
 import CollaborativeCanvas from '../CollaborativeCanvas';
 import FileUpload from './FileUpload';
+import LoginPromptPopup from '../LoginPromptPopup';
 
 // Custom SVG Icon Components (matching your navbar and landing page)
 const ProjectIcon = () => (
@@ -27,20 +28,22 @@ interface Tab {
 const ProjectCenterTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState('canvas');
   const [canvasId, setCanvasId] = useState<string>('');
-  const { user } = useAuth();
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const { user, loading } = useAuth();
 
-  // Generate unique canvas ID for each user session
+  // Check authentication and show login prompt if needed
+  useEffect(() => {
+    if (!loading && !user) {
+      setShowLoginPrompt(true);
+    }
+  }, [user, loading]);
+
+  // Generate unique canvas ID for authenticated users only
   useEffect(() => {
     if (user?.id) {
       // Use user ID + timestamp for unique canvas per user session
       const uniqueId = `user-${user.id}-canvas-${Date.now()}`;
       setCanvasId(uniqueId);
-    } else {
-      // For anonymous users, create a session-based canvas
-      const sessionId = sessionStorage.getItem('canvas-session-id') || 
-        `anonymous-${Math.random().toString(36).substring(2, 15)}`;
-      sessionStorage.setItem('canvas-session-id', sessionId);
-      setCanvasId(`${sessionId}-canvas`);
     }
   }, [user]);
 
@@ -48,8 +51,17 @@ const ProjectCenterTabs: React.FC = () => {
     console.log(`Collaborator ${collaboratorId} ${action} the canvas`);
   };
 
-  // Don't render until we have a canvas ID
-  if (!canvasId) {
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-400">Loading...</div>
+      </div>
+    );
+  }
+
+  // Don't render until we have a canvas ID (for authenticated users)
+  if (user && !canvasId) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-400">Initializing canvas...</div>
@@ -117,6 +129,12 @@ const ProjectCenterTabs: React.FC = () => {
       >
         {activeTabData?.component}
       </motion.div>
+
+      {/* Login Prompt Popup */}
+      <LoginPromptPopup 
+        isVisible={showLoginPrompt} 
+        onClose={() => setShowLoginPrompt(false)} 
+      />
     </div>
   );
 };

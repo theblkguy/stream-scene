@@ -26,6 +26,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import Tesseract from 'tesseract.js';
 import { budgetApi } from '../services/budgetApi';
 import TagInput from './TagInput';
+import useAuth from '../hooks/useAuth';
+import LoginPromptPopup from './LoginPromptPopup';
 
 // Types - Updated to match API format
 interface Project {
@@ -123,6 +125,10 @@ const extractVendorFromText = (text: string): string | null => {
 };
 
 const BudgetTracker: React.FC = () => {
+  // === Authentication ===
+  const { user, loading } = useAuth();
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
   // === Config for confirm step ===
   const OCR_CONFIRM_THRESHOLD = 0.92;
 
@@ -132,6 +138,13 @@ const BudgetTracker: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
+
+  // Check authentication and show login prompt if needed
+  useEffect(() => {
+    if (!loading && !user) {
+      setShowLoginPrompt(true);
+    }
+  }, [user, loading]);
 
   // Load data from API on component mount
   useEffect(() => {
@@ -708,6 +721,15 @@ const BudgetTracker: React.FC = () => {
             Retry
           </button>
         </div>
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-gray-900 to-black flex items-center justify-center">
+        <div className="text-gray-400">Loading...</div>
       </div>
     );
   }
@@ -1691,6 +1713,12 @@ const BudgetTracker: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Login Prompt Popup */}
+      <LoginPromptPopup 
+        isVisible={showLoginPrompt} 
+        onClose={() => setShowLoginPrompt(false)} 
+      />
     </div>
   );
 };

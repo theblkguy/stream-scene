@@ -25,6 +25,8 @@ import {
 } from 'react-icons/hi2';
 import { Task, TaskFormData } from '../types/task';
 import TaskForm from './TaskForm';
+import useAuth from '../hooks/useAuth';
+import LoginPromptPopup from './LoginPromptPopup';
 
 // Replace the problematic custom SVG components with React Icons
 const AIIcon = () => <FaRobot className="w-8 h-8 text-purple-400" />;
@@ -69,6 +71,10 @@ type CalendarView = 'monthly' | 'weekly' | 'daily';
 type TaskSortOption = 'priority' | 'deadline' | 'created' | 'type';
 
 const AIWeeklyPlanner: React.FC = () => {
+  // Authentication
+  const { user, loading } = useAuth();
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [taskFilter, setTaskFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed' | 'creative' | 'admin'>('all');
@@ -137,6 +143,13 @@ const AIWeeklyPlanner: React.FC = () => {
       }
     });
   };
+
+  // Check authentication and show login prompt if needed
+  useEffect(() => {
+    if (!loading && !user) {
+      setShowLoginPrompt(true);
+    }
+  }, [user, loading]);
 
   useEffect(() => {
     loadTasks();
@@ -1491,6 +1504,15 @@ const AIWeeklyPlanner: React.FC = () => {
 
   const stats = getTaskStats();
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-gray-900 to-black flex items-center justify-center">
+        <div className="text-gray-400">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden">
       {/* Background Effects */}
@@ -2278,6 +2300,12 @@ const AIWeeklyPlanner: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Login Prompt Popup */}
+      <LoginPromptPopup 
+        isVisible={showLoginPrompt} 
+        onClose={() => setShowLoginPrompt(false)} 
+      />
     </div>
   );
 };
