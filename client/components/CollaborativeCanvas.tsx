@@ -505,32 +505,20 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
 
     const touch = e.touches[0]; // Use first touch point
     
-    // Get canvas position in viewport (this includes all transforms)
+    // Use the same method as mouse events - this should work identically
     const rect = canvas.getBoundingClientRect();
-    
-    // Calculate raw coordinates relative to the canvas as displayed
-    const rawX = touch.clientX - rect.left;
-    const rawY = touch.clientY - rect.top;
-    
-    // Convert display coordinates to actual canvas coordinates
-    // (accounting for canvas internal size vs displayed size)
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const canvasX = rawX * scaleX;
-    const canvasY = rawY * scaleY;
+    const canvasX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+    const canvasY = (touch.clientY - rect.top) * (canvas.height / rect.height);
     
     // Get pressure (if available, otherwise default to 1.0)
     const pressure = (touch as any).force || (touch as any).pressure || 1.0;
-    
+
     return {
       x: canvasX,
       y: canvasY,
       pressure: Math.max(0.1, Math.min(1.0, pressure)) // Clamp between 0.1 and 1.0
     };
-  }, []); // No dependencies - getBoundingClientRect() accounts for all transforms
-
-  // Add haptic feedback for tool changes (mobile only)
+  }, []); // No dependencies - using same approach as mouse events  // Add haptic feedback for tool changes (mobile only)
   const triggerHapticFeedback = useCallback((type: 'light' | 'medium' | 'heavy' = 'light') => {
     if ('vibrate' in navigator) {
       const patterns = {
