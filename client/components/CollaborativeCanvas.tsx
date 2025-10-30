@@ -162,22 +162,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
   const [lastPoint, setLastPoint] = useState<Point | null>(null);
   const [brushPath, setBrushPath] = useState<Point[]>([]); // For smooth brush strokes
   
-  // Zoom and pan state for mobile touch gestures
-  const [zoomState, setZoomState] = useState({
-    scale: 1,
-    offsetX: 0,
-    offsetY: 0,
-    minScale: 0.5,
-    maxScale: 5
-  });
-  const [gestureState, setGestureState] = useState({
-    isZooming: false,
-    isPanning: false,
-    lastTouchDistance: 0,
-    lastTouchCenter: { x: 0, y: 0 },
-    initialPinchDistance: 0,
-    initialScale: 1
-  });
+  // Removed zoom functionality - users can rely on browser zoom
 
   // User type and permissions
   const userType: 'owner' | 'collaborator' | 'visitor' = 
@@ -185,18 +170,18 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     (user ? 'collaborator' : 'visitor');
 
   const permissions = {
-    canClear: userType !== 'visitor',
-    canSave: userType !== 'visitor',
-    canLoad: userType !== 'visitor', 
-    canUndo: userType !== 'visitor',
-    canRedo: userType !== 'visitor',
+    canClear: userType === 'owner',          // Only host can delete whole canvas
+    canSave: userType === 'owner',           // Only host can save to site
+    canLoad: userType === 'owner',           // Only host can load other drawings
+    canUndo: userType === 'owner',           // Only host can undo others' changes
+    canRedo: userType === 'owner',           // Only host can redo others' changes
     canChangeBackground: userType !== 'visitor',
-    canSchedule: userType === 'owner',
-    canShare: userType === 'owner',
-    canChangePenColor: true, // All users can change pen color
-    canChangePenSize: true,  // All users can change pen size
-    canDraw: true,           // All users can draw
-    canExport: true          // All users can export
+    canSchedule: userType === 'owner',       // Only host can schedule drawing sessions
+    canShare: userType === 'owner',          // Only host can generate canvas links
+    canChangePenColor: true,                 // All users can change pen color
+    canChangePenSize: true,                  // All users can change pen size
+    canDraw: true,                           // All users can draw
+    canExport: true                          // All users can export
   };
 
   // Effect to close modals when clicking outside or changing tools
@@ -247,16 +232,20 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
           setIsConnected(true);
           setSocket(socketInstance);
           
-          // Identify as guest user
-          const guestName = `Guest_${Math.random().toString(36).substring(2, 8)}`;
-          socketInstance?.emit('user-identify', {
-            guestName,
-            guestIdentifier: socketInstance.id,
-            canvasId
-          });
-          
-          // Join canvas room
-          socketInstance?.emit('join-canvas', canvasId);
+          // For non-authenticated users, show username dialog
+          if (!user) {
+            setShowGuestDialog(true);
+          } else {
+            // Authenticated users use their email
+            socketInstance?.emit('user-identify', {
+              guestName: user.email,
+              guestIdentifier: socketInstance.id,
+              canvasId,
+              isAuthenticated: true
+            });
+            // Join canvas room
+            socketInstance?.emit('join-canvas', canvasId);
+          }
         });
 
         socketInstance.on('disconnect', () => {
@@ -343,19 +332,55 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
               ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
             setStrokes([]);
+          } else if (updateData.operation === 'background-color') {
+            // Update background color from host
+            if (updateData.canvasData && updateData.canvasData.backgroundColor) {
+              setBackgroundColor(updateData.canvasData.backgroundColor);
+            }
           }
         });
 
         socketInstance.on('collaborator-joined', (data: any) => {
+          let displayName: string;
+          
+          if (data.user?.isAuthenticated && data.user?.guestName) {
+            // Authenticated user - show their email
+            displayName = data.user.guestName;
+          } else if (data.user?.guestName && data.user.guestName.trim()) {
+            // Guest user with custom name
+            displayName = data.user.guestName.trim();
+          } else if (data.visitorNumber) {
+            // Guest user without custom name - use visitor number from server
+            displayName = `visitor_${data.visitorNumber}`;
+          } else {
+            // Fallback
+            displayName = `visitor_${data.socketId.slice(-2)}`;
+          }
+          
           const collaborator: Collaborator = {
             id: data.socketId,
-            name: data.user?.guestName || `User ${data.socketId.slice(0, 6)}`,
+            name: displayName,
             cursor: { x: 0, y: 0 },
             lastSeen: Date.now(),
-            isGuest: !data.user?.userId
+            isGuest: !data.user?.isAuthenticated
           };
           setCollaborators(prev => new Map(prev.set(collaborator.id, collaborator)));
           onCollaboratorChange?.(collaborator.id, 'joined');
+          
+          // If this user is the host, send current background color to the new collaborator
+          if (isOwner && socketInstance.connected) {
+            const backgroundEvent: DrawingEvent = {
+              type: 'background-color',
+              backgroundColor,
+              timestamp: Date.now()
+            };
+            socketInstance.emit('canvas-update', { 
+              canvasData: backgroundEvent, 
+              canvasId,
+              operation: 'background-color',
+              targetSocketId: data.socketId // Send only to the new user
+            });
+          }
         });
 
         socketInstance.on('collaborator-left', (data: any) => {
@@ -427,16 +452,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     }
   }, [backgroundColor]);
 
-  // Apply zoom and pan transforms
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Apply CSS transform for zoom and pan
-    const transform = `scale(${zoomState.scale}) translate(${zoomState.offsetX / zoomState.scale}px, ${zoomState.offsetY / zoomState.scale}px)`;
-    canvas.style.transform = transform;
-    canvas.style.transformOrigin = '0 0';
-  }, [zoomState]);
+  // Removed zoom transforms - users rely on browser zoom
 
   // Adjust brush size when tool changes
   useEffect(() => {
@@ -470,7 +486,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     };
   }, []);
 
-  // Enhanced touch support with pressure sensitivity
+  // Enhanced touch support with pressure sensitivity (simplified - no zoom transforms)
   const getTouchCanvasPoint = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas || e.touches.length === 0) return { x: 0, y: 0, pressure: 1.0 };
@@ -478,20 +494,19 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches[0]; // Use first touch point
     
-    // Convert screen coordinates to canvas coordinates accounting for zoom and pan
+    // Convert screen coordinates to canvas coordinates (simple mapping)
     const canvasX = (touch.clientX - rect.left) * (canvas.width / rect.width);
     const canvasY = (touch.clientY - rect.top) * (canvas.height / rect.height);
     
     // Get pressure (if available, otherwise default to 1.0)
     const pressure = (touch as any).force || (touch as any).pressure || 1.0;
     
-    // Apply inverse transform to get actual drawing coordinates
     return {
-      x: (canvasX - zoomState.offsetX) / zoomState.scale,
-      y: (canvasY - zoomState.offsetY) / zoomState.scale,
+      x: canvasX,
+      y: canvasY,
       pressure: Math.max(0.1, Math.min(1.0, pressure)) // Clamp between 0.1 and 1.0
     };
-  }, [zoomState]);
+  }, []);
 
   // Add haptic feedback for tool changes (mobile only)
   const triggerHapticFeedback = useCallback((type: 'light' | 'medium' | 'heavy' = 'light') => {
@@ -905,156 +920,47 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     setLastPoint(null);
   }, []);
 
-  // Multi-touch gesture detection
-  const getTouchDistance = useCallback((touches: React.TouchList) => {
-    if (touches.length < 2) return 0;
-    const touch1 = touches[0];
-    const touch2 = touches[1];
-    return Math.hypot(
-      touch2.clientX - touch1.clientX,
-      touch2.clientY - touch1.clientY
-    );
-  }, []);
-
-  const getTouchCenter = useCallback((touches: React.TouchList) => {
-    if (touches.length === 0) return { x: 0, y: 0 };
-    if (touches.length === 1) {
-      return { x: touches[0].clientX, y: touches[0].clientY };
+  // Handle username submission for guest users
+  const handleUsernameSubmit = useCallback((username: string) => {
+    const trimmedName = username.trim();
+    const finalName = trimmedName.length > 0 && trimmedName.length <= 9 ? trimmedName : '';
+    
+    setGuestName(finalName);
+    setShowGuestDialog(false);
+    
+    if (socket) {
+      socket.emit('user-identify', {
+        guestName: finalName,
+        guestIdentifier: socket.id,
+        canvasId,
+        isAuthenticated: false
+      });
+      // Join canvas room after identifying
+      socket.emit('join-canvas', canvasId);
     }
-    const touch1 = touches[0];
-    const touch2 = touches[1];
-    return {
-      x: (touch1.clientX + touch2.clientX) / 2,
-      y: (touch1.clientY + touch2.clientY) / 2
-    };
-  }, []);
+  }, [socket, canvasId]);
 
-  const handleZoom = useCallback((newScale: number, centerX: number, centerY: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Clamp scale within bounds
-    const clampedScale = Math.max(zoomState.minScale, Math.min(zoomState.maxScale, newScale));
-    
-    // Calculate new offset to zoom towards the center point
-    const rect = canvas.getBoundingClientRect();
-    const canvasX = (centerX - rect.left) * (canvas.width / rect.width);
-    const canvasY = (centerY - rect.top) * (canvas.height / rect.height);
-    
-    const scaleChange = clampedScale / zoomState.scale;
-    const newOffsetX = canvasX - (canvasX - zoomState.offsetX) * scaleChange;
-    const newOffsetY = canvasY - (canvasY - zoomState.offsetY) * scaleChange;
-
-    setZoomState(prev => ({
-      ...prev,
-      scale: clampedScale,
-      offsetX: newOffsetX,
-      offsetY: newOffsetY
-    }));
-  }, [zoomState]);
-
-  const resetZoom = useCallback(() => {
-    setZoomState(prev => ({
-      ...prev,
-      scale: 1,
-      offsetX: 0,
-      offsetY: 0
-    }));
-  }, []);
-
-  // Touch event handlers for mobile support with gesture detection
+  // Simplified touch handlers for drawing (no zoom - use browser zoom)
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault(); // Prevent scrolling and zooming
+    // Only handle single finger touches for drawing
+    if (e.touches.length !== 1) return;
     
-    if (e.touches.length === 2) {
-      // Two finger gesture - start pinch zoom
-      const distance = getTouchDistance(e.touches);
-      const center = getTouchCenter(e.touches);
-      
-      setGestureState(prev => ({
-        ...prev,
-        isZooming: true,
-        isPanning: false,
-        initialPinchDistance: distance,
-        initialScale: zoomState.scale,
-        lastTouchDistance: distance,
-        lastTouchCenter: center
-      }));
-      
-      // Stop any drawing when starting zoom
-      setIsDrawing(false);
-      setLastPoint(null);
+    const point = getTouchCanvasPoint(e);
+    
+    if (currentTool === 'text') {
+      setTextInput({ x: point.x, y: point.y, text: '', active: true });
       return;
     }
     
-    if (e.touches.length === 1) {
-      // Single finger gesture
-      if (zoomState.scale > 1 && !gestureState.isZooming) {
-        // If zoomed in, single finger is for panning
-        const touch = e.touches[0];
-        setGestureState(prev => ({
-          ...prev,
-          isPanning: true,
-          lastTouchCenter: { x: touch.clientX, y: touch.clientY }
-        }));
-      } else {
-        // Normal drawing mode
-        const point = getTouchCanvasPoint(e);
-        
-        if (currentTool === 'text') {
-          setTextInput({ x: point.x, y: point.y, text: '', active: true });
-          return;
-        }
-        
-        setIsDrawing(true);
-        setLastPoint(point);
-        saveToHistory(); // Save state before drawing
-      }
-    }
-  }, [getTouchCanvasPoint, getTouchDistance, getTouchCenter, currentTool, saveToHistory, zoomState.scale, gestureState.isZooming]);
+    setIsDrawing(true);
+    setLastPoint(point);
+    saveToHistory(); // Save state before drawing
+  }, [getTouchCanvasPoint, currentTool, saveToHistory]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault(); // Prevent scrolling and zooming
+    // Only handle single finger touches for drawing
+    if (e.touches.length !== 1) return;
     
-    if (e.touches.length === 2 && gestureState.isZooming) {
-      // Handle pinch zoom
-      const currentDistance = getTouchDistance(e.touches);
-      const currentCenter = getTouchCenter(e.touches);
-      
-      if (gestureState.initialPinchDistance > 0) {
-        const scaleChange = currentDistance / gestureState.initialPinchDistance;
-        const newScale = gestureState.initialScale * scaleChange;
-        handleZoom(newScale, currentCenter.x, currentCenter.y);
-      }
-      
-      setGestureState(prev => ({
-        ...prev,
-        lastTouchDistance: currentDistance,
-        lastTouchCenter: currentCenter
-      }));
-      return;
-    }
-    
-    if (e.touches.length === 1 && gestureState.isPanning && zoomState.scale > 1) {
-      // Handle panning when zoomed in
-      const touch = e.touches[0];
-      const deltaX = touch.clientX - gestureState.lastTouchCenter.x;
-      const deltaY = touch.clientY - gestureState.lastTouchCenter.y;
-      
-      setZoomState(prev => ({
-        ...prev,
-        offsetX: prev.offsetX + deltaX,
-        offsetY: prev.offsetY + deltaY
-      }));
-      
-      setGestureState(prev => ({
-        ...prev,
-        lastTouchCenter: { x: touch.clientX, y: touch.clientY }
-      }));
-      return;
-    }
-    
-    // Normal drawing mode
     const pointData = getTouchCanvasPoint(e);
     const point = { x: pointData.x, y: pointData.y };
     
@@ -1080,20 +986,9 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     
     saveStroke(strokeEvent);
     setLastPoint(point);
-  }, [isDrawing, lastPoint, getTouchCanvasPoint, getTouchDistance, getTouchCenter, handleZoom, drawLine, brushColor, brushWidth, currentTool, saveStroke, socket, canvasId, gestureState, zoomState.scale]);
+  }, [isDrawing, lastPoint, getTouchCanvasPoint, drawLine, brushColor, brushWidth, currentTool, saveStroke, socket, canvasId]);
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault(); // Prevent scrolling and zooming
-    
-    // Reset gesture states
-    setGestureState(prev => ({
-      ...prev,
-      isZooming: false,
-      isPanning: false,
-      initialPinchDistance: 0,
-      initialScale: 1
-    }));
-    
+  const handleTouchEnd = useCallback(() => {
     setIsDrawing(false);
     setLastPoint(null);
   }, []);
@@ -1550,8 +1445,23 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
                 type="color"
                 value={backgroundColor}
                 onChange={(e) => {
-                  setBackgroundColor(e.target.value);
+                  const newColor = e.target.value;
+                  setBackgroundColor(newColor);
                   redrawCanvas();
+                  
+                  // Broadcast background color change to all collaborators
+                  if (socket && socket.connected) {
+                    const backgroundEvent: DrawingEvent = {
+                      type: 'background-color',
+                      backgroundColor: newColor,
+                      timestamp: Date.now()
+                    };
+                    socket.emit('canvas-update', { 
+                      canvasData: backgroundEvent, 
+                      canvasId,
+                      operation: 'background-color' 
+                    });
+                  }
                 }}
                 className="w-6 h-6 rounded cursor-pointer"
                 title="Background Color"
@@ -1580,38 +1490,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
             <span className="text-xs w-6">{brushWidth}</span>
           </div>
 
-          {/* Zoom controls */}
-          <div className="flex items-center space-x-1 border-l border-gray-600 pl-2 ml-2">
-            <button
-              onClick={() => handleZoom(zoomState.scale * 1.2, 400, 300)}
-              className="p-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
-              title="Zoom In"
-            >
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-            </button>
-            <span className="text-xs">{Math.round(zoomState.scale * 100)}%</span>
-            <button
-              onClick={() => handleZoom(zoomState.scale / 1.2, 400, 300)}
-              className="p-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
-              title="Zoom Out"
-            >
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-              </svg>
-            </button>
-            <button
-              onClick={resetZoom}
-              className="p-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
-              title="Reset Zoom"
-            >
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M4 2a2 2 0 00-2 2v8a2 2 0 002 2V4h8a2 2 0 00-2-2H4z"/>
-                <path d="M8 6a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2h-6a2 2 0 01-2-2V6z"/>
-              </svg>
-            </button>
-          </div>
+          {/* Zoom controls removed - users can use browser zoom (Ctrl+scroll or pinch) */}
 
           {/* Clear button - Hidden for visitors */}
           {permissions.canClear && (
@@ -1748,6 +1627,20 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
                     setBackgroundColor(color);
                     setShowBackgroundPicker(false);
                     redrawCanvas();
+                    
+                    // Broadcast background color change to all collaborators
+                    if (socket && socket.connected) {
+                      const backgroundEvent: DrawingEvent = {
+                        type: 'background-color',
+                        backgroundColor: color,
+                        timestamp: Date.now()
+                      };
+                      socket.emit('canvas-update', { 
+                        canvasData: backgroundEvent, 
+                        canvasId,
+                        operation: 'background-color' 
+                      });
+                    }
                   }}
                   className={`w-8 h-8 rounded border-2 ${
                     backgroundColor === color ? 'border-white' : 'border-gray-500'
@@ -2226,6 +2119,54 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
                 </div>
               )}
             </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Username Dialog for Guest Users */}
+      {showGuestDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gray-800 rounded-lg p-6 shadow-xl max-w-md w-full mx-4"
+          >
+            <h2 className="text-lg font-semibold text-white mb-4">Join Canvas</h2>
+            <p className="text-gray-300 text-sm mb-4">
+              Enter your name to join this collaborative canvas (optional, max 9 characters):
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const username = (formData.get('username') as string) || '';
+                handleUsernameSubmit(username);
+              }}
+            >
+              <input
+                type="text"
+                name="username"
+                placeholder="Your name (optional)"
+                maxLength={9}
+                className="w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none mb-4"
+                autoFocus
+              />
+              <div className="flex space-x-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleUsernameSubmit('')}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
+                >
+                  Join as Visitor
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                >
+                  Join
+                </button>
+              </div>
+            </form>
           </motion.div>
         </div>
       )}
