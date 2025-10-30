@@ -19,21 +19,31 @@ jobs:
         node-version: '20'
         cache: 'npm'
 
-    - name: Install dependencies and build
+    - name: Install dependencies 
       run: |
         echo "🔧 Fixing dependency lock file sync..."
         rm -f package-lock.json
         npm install --package-lock-only
         
-        echo "📦 Installing dependencies..."
+        echo "📦 Installing ALL dependencies (including devDependencies for build)..."
+        # Install with devDependencies for webpack build tools
         npm ci
+      env:
+        # Don't set NODE_ENV=production during install to get devDependencies
+        REACT_APP_API_URL: https://streamscene.net
+        REACT_APP_SERVER_URL: https://streamscene.net
         
-        echo "🏗️ Building application..."
+    - name: Build application
+      run: |
+        echo "🏗️ Building application for production..."
         npm run build || {
-          echo "❌ Build failed. Checking for common issues..."
+          echo "❌ Build failed. Debugging information:"
           echo "Node version: $(node --version)"
           echo "NPM version: $(npm --version)"
           echo "Available memory: $(free -m | grep '^Mem:' | awk '{print $7}')MB"
+          echo "Webpack config exists: $(test -f webpack.config.mjs && echo 'Yes' || echo 'No')"
+          echo "html-webpack-plugin installed: $(npm list html-webpack-plugin --depth=0 | grep html-webpack-plugin || echo 'Not found')"
+          echo "DevDependencies installed: $(npm list --depth=0 | grep -E '(webpack|html-webpack-plugin)' || echo 'None found')"
           exit 1
         }
       env:
