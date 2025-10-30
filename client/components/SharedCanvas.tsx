@@ -68,32 +68,36 @@ const SharedCanvas: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Minimal visitor header */}
-      <div className="bg-gray-800 border-b border-gray-700 px-4 py-3">
+      <div className="bg-gray-800 border-b border-gray-700 px-4 py-2">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <div className="flex items-center space-x-2">
+            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
               </svg>
             </div>
-            <div>
-              <h1 className="font-semibold">StreamScene Canvas</h1>
-              <p className="text-xs text-gray-400">Shared Canvas: {token}</p>
-            </div>
+            {user ? (
+              <div>
+                <h1 className="text-sm font-medium">Canvas</h1>
+                <p className="text-xs text-gray-400">ID: {token}</p>
+              </div>
+            ) : (
+              <h1 className="text-sm font-medium">Canvas</h1>
+            )}
           </div>
           
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2 text-sm">
-              <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 text-xs">
+              <span className="inline-block w-1.5 h-1.5 bg-green-500 rounded-full"></span>
               <span className="text-gray-300">Live</span>
             </div>
             
             {!user && (
               <button
                 onClick={() => navigate('/')}
-                className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+                className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded transition-colors"
               >
-                Join StreamScene
+                Join
               </button>
             )}
           </div>

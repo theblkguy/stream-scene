@@ -2,8 +2,8 @@ import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import useAuth from '../../hooks/useAuth';
 import CollaborativeCanvas from '../CollaborativeCanvas';
-import FileUpload from './FileUpload';
 import LoginPromptPopup from '../LoginPromptPopup';
+import FileUpload from './FileUpload';
 
 // Custom SVG Icon Components (matching your navbar and landing page)
 const ProjectIcon = () => (

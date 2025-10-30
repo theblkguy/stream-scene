@@ -6,8 +6,6 @@ const sequelizeInstance = getSequelize();
 // import model initializers **after** sequelizeInstance exists
 import { initFileModel } from '../models/initFileModel.js';
 import { Share } from '../models/Share.js';
-import { initSocialAccountTokenModel, SocialAccountToken } from '../models/initSocialAccountToken.js';
-import { initScheduledPostModel, ScheduledPost } from '../models/initScheduledPost.js';
 import { Task } from '../models/Task.js';
 import { User } from '../models/User.js';
 import Comment from '../models/Comment.js';
@@ -18,8 +16,6 @@ import BudgetEntry from '../models/BudgetEntry.js';
 import BudgetProject from '../models/BudgetProject.js';
 // Initialize models
 const File = initFileModel(sequelizeInstance);
-initSocialAccountTokenModel(sequelizeInstance);
-initScheduledPostModel(sequelizeInstance);
 // Task model should already be initialized in its own file
 // Just make sure it's using the same sequelize instance
 export const associate = () => {
@@ -73,7 +69,7 @@ export async function syncDB() {
             force: false,
             alter: false // Disabled alter to avoid schema conflicts
         });
-        console.log('Database sync complete (File, SocialAccountToken, ScheduledPost, Task, Comment, CommentReaction, Canvas, CanvasCollaborator, BudgetProject, BudgetEntry)');
+        console.log('Database sync complete (File, Task, Comment, CommentReaction, Canvas, CanvasCollaborator, BudgetProject, BudgetEntry)');
     }
     catch (error) {
         console.error('Database sync failed:', error);
@@ -81,13 +77,11 @@ export async function syncDB() {
         console.log('🔧 Continuing with existing database schema...');
     }
 }
-export { User, File, Share, SocialAccountToken, ScheduledPost, Task, Comment, CommentReaction, Canvas, CanvasCollaborator, BudgetProject, BudgetEntry };
+export { User, File, Share, Task, Comment, CommentReaction, Canvas, CanvasCollaborator, BudgetProject, BudgetEntry };
 export const db = {
     sequelize: sequelizeInstance,
     File,
     Share,
-    SocialAccountToken,
-    ScheduledPost,
     User,
     Task,
     BudgetProject,

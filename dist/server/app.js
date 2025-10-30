@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { createServer } from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // Load environment-specific config
@@ -12,22 +12,23 @@ console.log(`🔧 Loading environment from: ${envFile}`);
 dotenv.config({ path: envPath });
 // Fallback to main .env if specific env file doesn't exist
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+import cors from 'cors';
 import express from "express";
 import session from 'express-session';
 import passport from 'passport';
-import cors from 'cors';
 import "./config/passport.js";
-import authRoutes from "./routes/auth.js";
-import routes from "./routes/index.js";
-import budgetRoutes from "./routes/budget.js";
-import aiRoutes from "./routes/ai.js";
-import scheduleRoutes from "./routes/schedule.js";
-import s3ProxyRoutes from "./routes/s3Proxy.js";
-import filesRoutes from "./routes/files.js";
-import sharesRoutes from "./routes/shares.js";
-import socialAuthRoutes from './routes/socialAuth.js';
 import { syncDB } from "./db/index.js";
+import aiRoutes from "./routes/ai.js";
+import authRoutes from "./routes/auth.js";
+import budgetRoutes from "./routes/budget.js";
 import captionRouter from './routes/caption.js';
+import filesRoutes from "./routes/files.js";
+import routes from "./routes/index.js";
+import ocrRoutes from "./routes/ocr.js";
+import s3ProxyRoutes from "./routes/s3Proxy.js";
+import scheduleRoutes from "./routes/schedule.js";
+import sharesRoutes from "./routes/shares.js";
+import shortLinksRoutes from "./routes/shortLinks.js";
 import { initializeWebSocket } from './services/WebSocketService.js';
 const app = express();
 // Trust proxy for secure cookies behind HTTPS load balancers (e.g., Render, Vercel, Cloudflare)
@@ -123,10 +124,16 @@ app.use((req, res, next) => {
 });
 // Security headers middleware - add CSP to handle dynamic script loading
 app.use((req, res, next) => {
+    // Skip CSP entirely for Threads OAuth routes to avoid conflicts with Meta's pages
+    if (req.path.includes('/auth/threads') || req.query.state || req.query.code) {
+        console.log('🔓 Skipping CSP for Threads OAuth route:', req.path);
+        return next();
+    }
     // More permissive CSP that allows Facebook/Meta OAuth flows while maintaining security
     const csp = [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:",
+        "script-src-elem 'self' 'unsafe-inline' https: data:",
         "style-src 'self' 'unsafe-inline' https:",
         "font-src 'self' https: data:",
         "img-src 'self' data: https: blob:",
@@ -137,7 +144,8 @@ app.use((req, res, next) => {
         "frame-ancestors 'none'",
         "connect-src 'self' https: wss: ws: data: blob: https://streamscene.net wss://streamscene.net",
         "worker-src 'self' blob:",
-        "manifest-src 'self'"
+        "manifest-src 'self'",
+        "require-trusted-types-for 'script'"
     ].join('; ');
     res.setHeader('Content-Security-Policy', csp);
     // Additional security headers
@@ -190,8 +198,8 @@ if (!isProd) {
 }
 // API routes MUST come before static file serving
 app.use('/auth', authRoutes);
-app.use('/social', socialAuthRoutes);
 app.use('/api/budget', budgetRoutes);
+app.use('/api/ocr', ocrRoutes);
 app.use('/', routes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/schedule', scheduleRoutes);
@@ -199,6 +207,7 @@ app.use('/api/s3', s3ProxyRoutes);
 app.use('/api/files', filesRoutes);
 app.use('/api/shares', sharesRoutes);
 app.use('/api/caption', captionRouter);
+app.use('/api/short-links', shortLinksRoutes);
 // Note: All other API routes (tasks, content-scheduler, threads, budget, etc.) are mounted in routes/index.ts
 // Serve static files from public directory
 const publicPath = __dirname.includes('dist/server')
@@ -226,6 +235,30 @@ app.use(express.static(publicPath, {
     // Add cache control for production
     maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0
 }));
+// Short link redirect handler
+app.get('/c/:shortCode', async (req, res) => {
+    try {
+        const { shortCode } = req.params;
+        // Make request to our own API to resolve the short code
+        const resolveResponse = await fetch(`${req.protocol}://${req.get('host')}/api/short-links/resolve/${shortCode}`);
+        if (!resolveResponse.ok) {
+            if (resolveResponse.status === 404) {
+                return res.status(404).send('Short link not found');
+            }
+            if (resolveResponse.status === 410) {
+                return res.status(410).send('Short link has expired');
+            }
+            throw new Error('Failed to resolve short link');
+        }
+        const linkData = await resolveResponse.json();
+        // Redirect to the full canvas URL
+        res.redirect(302, `/canvas/shared/${linkData.canvasId}`);
+    }
+    catch (error) {
+        console.error('Error redirecting short link:', error);
+        res.status(500).send('Error processing short link');
+    }
+});
 // API test route
 app.get('/test-server', (req, res) => {
     res.json({ message: 'Server is working!' });

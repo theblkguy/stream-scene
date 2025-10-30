@@ -23,10 +23,10 @@ import {
     HiPencilSquare,
     HiSparkles
 } from 'react-icons/hi2';
-import { Task, TaskFormData } from '../types/task';
-import TaskForm from './TaskForm';
 import useAuth from '../hooks/useAuth';
+import { Task, TaskFormData } from '../types/task';
 import LoginPromptPopup from './LoginPromptPopup';
+import TaskForm from './TaskForm';
 
 // Replace the problematic custom SVG components with React Icons
 const AIIcon = () => <FaRobot className="w-8 h-8 text-purple-400" />;

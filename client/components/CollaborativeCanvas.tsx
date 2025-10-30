@@ -506,13 +506,14 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches[0]; // Use first touch point
     
-    // Convert screen coordinates to canvas coordinates accounting for pan offset
+    // Convert screen coordinates to canvas coordinates
     const rawCanvasX = (touch.clientX - rect.left) * (canvas.width / rect.width);
     const rawCanvasY = (touch.clientY - rect.top) * (canvas.height / rect.height);
     
-    // Adjust for pan offset (subtract the pan translation to get actual canvas coordinates)
-    const canvasX = rawCanvasX - (panState.x * (canvas.width / rect.width));
-    const canvasY = rawCanvasY - (panState.y * (canvas.height / rect.height));
+    // Adjust for pan offset - since canvas is transformed with CSS translate, 
+    // we need to subtract the pan offset to get the correct canvas coordinates
+    const canvasX = rawCanvasX - panState.x;
+    const canvasY = rawCanvasY - panState.y;
     
     // Get pressure (if available, otherwise default to 1.0)
     const pressure = (touch as any).force || (touch as any).pressure || 1.0;
@@ -1995,21 +1996,29 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
                 className={`p-2 rounded ${currentTool === 'pen' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                 title="Pen"
               >
-                ✏️
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
+                </svg>
               </button>
               <button
                 onClick={() => handleToolChange('brush')}
                 className={`p-2 rounded ${currentTool === 'brush' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                 title="Brush"
               >
-                🖌️
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M4.5 12a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6 10.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM12 4a4 4 0 11-8 0 4 4 0 018 0zM16 14a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  <path d="M8.5 8.5L11 6 16 11l-2.5 2.5L8.5 8.5z"/>
+                </svg>
               </button>
               <button
                 onClick={() => handleToolChange('eraser')}
                 className={`p-2 rounded ${currentTool === 'eraser' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                 title="Eraser"
               >
-                🧹
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.707 3.293a1 1 0 010 1.414L5.414 8l3.293 3.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0zM11.293 3.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 8l-3.293-3.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
               </button>
             </div>
             

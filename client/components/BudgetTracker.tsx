@@ -1,33 +1,33 @@
 import {
-  Upload as HiArrowUpTray,
-  Calendar as HiCalendarDays,
-  Check as HiCheck,
-  CheckCircle as HiCheckCircle,
-  Clock as HiClock,
-  Cpu as HiCpuChip,
-  DollarSign as HiCurrencyDollar,
-  Smartphone as HiDevicePhoneMobile,
-  AlertCircle as HiExclamationCircle,
-  Eye as HiEye,
-  FolderPlus as HiFolderPlus,
-  Search as HiMagnifyingGlass,
-  Pencil as HiPencil,
-  Plus as HiPlus,
-  Save as HiSave,
-  Tag as HiTag,
-  Trash as HiTrash,
-  TrendingDown as HiTrendingDown,
-  TrendingUp as HiTrendingUp,
-  Wallet as HiWallet,
-  X as HiXMark,
-  Loader2,
+    Upload as HiArrowUpTray,
+    Calendar as HiCalendarDays,
+    Check as HiCheck,
+    CheckCircle as HiCheckCircle,
+    Clock as HiClock,
+    Cpu as HiCpuChip,
+    DollarSign as HiCurrencyDollar,
+    Smartphone as HiDevicePhoneMobile,
+    AlertCircle as HiExclamationCircle,
+    Eye as HiEye,
+    FolderPlus as HiFolderPlus,
+    Search as HiMagnifyingGlass,
+    Pencil as HiPencil,
+    Plus as HiPlus,
+    Save as HiSave,
+    Tag as HiTag,
+    Trash as HiTrash,
+    TrendingDown as HiTrendingDown,
+    TrendingUp as HiTrendingUp,
+    Wallet as HiWallet,
+    X as HiXMark,
+    Loader2,
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import Tesseract from 'tesseract.js';
-import { budgetApi } from '../services/budgetApi';
-import TagInput from './TagInput';
 import useAuth from '../hooks/useAuth';
+import { budgetApi } from '../services/budgetApi';
 import LoginPromptPopup from './LoginPromptPopup';
+import TagInput from './TagInput';
 
 // Types - Updated to match API format
 interface Project {
