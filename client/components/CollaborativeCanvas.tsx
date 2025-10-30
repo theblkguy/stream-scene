@@ -232,13 +232,14 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
           setIsConnected(true);
           setSocket(socketInstance);
           
-          // For non-authenticated users, show username dialog
+          // Handle user identification based on auth status and host role
           if (!user) {
             setShowGuestDialog(true);
           } else {
-            // Authenticated users use their email
+            // Authenticated users: hosts use firstName, collaborators use email
+            const displayName = isOwner ? user.firstName : user.email;
             socketInstance?.emit('user-identify', {
-              guestName: user.email,
+              guestName: displayName,
               guestIdentifier: socketInstance.id,
               canvasId,
               isAuthenticated: true
