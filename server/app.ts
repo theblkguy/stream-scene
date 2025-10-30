@@ -34,6 +34,7 @@ import ocrRoutes from "./routes/ocr.js";
 import s3ProxyRoutes from "./routes/s3Proxy.js";
 import scheduleRoutes from "./routes/schedule.js";
 import sharesRoutes from "./routes/shares.js";
+import shortLinksRoutes from "./routes/shortLinks.js";
 import { initializeWebSocket } from './services/WebSocketService.js';
 
 const app = express();
@@ -235,6 +236,7 @@ app.use('/api/s3', s3ProxyRoutes);
 app.use('/api/files', filesRoutes);
 app.use('/api/shares', sharesRoutes);
 app.use('/api/caption', captionRouter);
+app.use('/api/short-links', shortLinksRoutes);
 // Note: All other API routes (tasks, content-scheduler, threads, budget, etc.) are mounted in routes/index.ts
 
 
@@ -267,6 +269,35 @@ app.use(express.static(publicPath, {
   // Add cache control for production
   maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0
 }));
+
+// Short link redirect handler
+app.get('/c/:shortCode', async (req, res) => {
+  try {
+    const { shortCode } = req.params;
+    
+    // Make request to our own API to resolve the short code
+    const resolveResponse = await fetch(`${req.protocol}://${req.get('host')}/api/short-links/resolve/${shortCode}`);
+    
+    if (!resolveResponse.ok) {
+      if (resolveResponse.status === 404) {
+        return res.status(404).send('Short link not found');
+      }
+      if (resolveResponse.status === 410) {
+        return res.status(410).send('Short link has expired');
+      }
+      throw new Error('Failed to resolve short link');
+    }
+    
+    const linkData = await resolveResponse.json() as { canvasId: string };
+    
+    // Redirect to the full canvas URL
+    res.redirect(302, `/canvas/shared/${linkData.canvasId}`);
+    
+  } catch (error) {
+    console.error('Error redirecting short link:', error);
+    res.status(500).send('Error processing short link');
+  }
+});
 
 // API test route
 app.get('/test-server', (req, res) => {

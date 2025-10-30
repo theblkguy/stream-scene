@@ -62,6 +62,8 @@ interface ShareData {
   shareUrl: string;
   shareToken: string;
   expiresAt: string;
+  fullUrl?: string;
+  accessCount?: number;
 }
 
 // Color preset arrays
@@ -801,12 +803,37 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
   // Share functionality
   const generateShareLink = useCallback(async () => {
     try {
-      // Use the actual canvasId as the share token for simplicity
       const canvas = canvasRef.current;
       if (!canvas) return;
       
-      const shareToken = canvasId; // Use the canvas ID directly
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 days
+      // Call the short links API to generate a short code
+      const response = await fetch('/api/short-links/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ canvasId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create short link');
+      }
+      
+      const shortLinkData = await response.json();
+      
+      setShareData({
+        shareUrl: shortLinkData.shortUrl,
+        shareToken: shortLinkData.shortCode,
+        expiresAt: shortLinkData.expiresAt,
+        fullUrl: shortLinkData.fullUrl, // Keep the full URL as backup
+        accessCount: shortLinkData.accessCount
+      });
+      
+    } catch (error) {
+      console.error('Error generating short link:', error);
+      // Fallback to the old method if API fails
+      const shareToken = canvasId;
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
       const shareUrl = `${window.location.origin}/canvas/shared/${shareToken}`;
       
       setShareData({
@@ -814,8 +841,6 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
         shareToken,
         expiresAt
       });
-    } catch (error) {
-
     }
   }, [canvasId]);
 
