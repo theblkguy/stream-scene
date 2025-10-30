@@ -537,11 +537,16 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     if (!canvas) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
+    
+    // Account for pan offset (CSS transform)
+    const canvasX = e.clientX - rect.left - panState.x;
+    const canvasY = e.clientY - rect.top - panState.y;
+    
     return {
-      x: (e.clientX - rect.left) * (canvas.width / rect.width),
-      y: (e.clientY - rect.top) * (canvas.height / rect.height)
+      x: canvasX * (canvas.width / rect.width),
+      y: canvasY * (canvas.height / rect.height)
     };
-  }, []);
+  }, [panState]);
 
   // Enhanced touch support with pressure sensitivity (accounts for pan transforms)
   const getTouchCanvasPoint = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
@@ -549,24 +554,17 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     if (!canvas || e.touches.length === 0) return { x: 0, y: 0, pressure: 1.0 };
 
     const touch = e.touches[0];
-    
-    // Get the actual canvas element (not the transformed container)
     const canvasElement = e.currentTarget;
     
-    // Use offsetX/offsetY if available (more accurate for canvas)
-    let canvasX: number;
-    let canvasY: number;
+    // Get touch coordinates relative to the canvas element
+    const rect = canvasElement.getBoundingClientRect();
+    let canvasX = touch.clientX - rect.left;
+    let canvasY = touch.clientY - rect.top;
     
-    if ('offsetX' in touch && 'offsetY' in touch) {
-      // Use native offset coordinates if available
-      canvasX = (touch as any).offsetX;
-      canvasY = (touch as any).offsetY;
-    } else {
-      // Fallback to manual calculation
-      const rect = canvasElement.getBoundingClientRect();
-      canvasX = touch.clientX - rect.left;
-      canvasY = touch.clientY - rect.top;
-    }
+    // CRITICAL: Account for CSS transform (pan offset)
+    // When the canvas is translated, we need to subtract the pan offset
+    canvasX -= panState.x;
+    canvasY -= panState.y;
     
     // Scale from display size to canvas internal size
     const scaleX = canvas.width / canvasElement.clientWidth;
@@ -583,7 +581,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
       y: finalY,
       pressure: Math.max(0.1, Math.min(1.0, pressure)) // Clamp between 0.1 and 1.0
     };
-  }, []); // No dependencies needed for this direct calculation  // Add haptic feedback for tool changes (mobile only)
+  }, [panState]); // Include panState since we use panState.x and panState.y  // Add haptic feedback for tool changes (mobile only)
   const triggerHapticFeedback = useCallback((type: 'light' | 'medium' | 'heavy' = 'light') => {
     if ('vibrate' in navigator) {
       const patterns = {
