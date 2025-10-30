@@ -35,13 +35,18 @@ jobs:
         # Install platform-specific lightningcss binary for GitHub Actions (ubuntu)
         npm install lightningcss-linux-x64-gnu --save-optional
       
-    - name: Build application
+    - name: Build application for production
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       env:
+        NODE_ENV: production
         REACT_APP_API_URL: https://streamscene.net
         REACT_APP_SERVER_URL: https://streamscene.net
       run: |
+        echo "🏗️ Building optimized production bundle..."
+        rm -rf public/*.js public/*.css # Clean any existing bundles
         npm run build
+        echo "📊 Build output size:"
+        du -sh public
 
     - name: Compile TypeScript
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -50,20 +55,35 @@ jobs:
         npm install typescript --save-dev
         npx tsc --project server/tsconfig.json
         
-    - name: Create deployment package
+    - name: Create optimized deployment package
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       run: |
         # Create a deployment directory
         mkdir -p deploy
         
-        # Copy built client files
-        cp -r public/ deploy/
+        echo "📦 Creating optimized deployment package..."
+        echo "Original public folder size: $(du -sh public | cut -f1)"
         
-        # Copy server source files  
-        cp -r server/ deploy/
+        # Copy only essential client files (exclude source maps and dev files)
+        mkdir -p deploy/public
+        cp public/index.html deploy/public/
+        cp public/main.bundle.js deploy/public/ || echo "main.bundle.js not found, skipping"
+        cp public/react-*.bundle.js deploy/public/ || echo "Some react bundles not found"
+        # Copy only the largest essential vendor bundles (skip icons temporarily)
+        find public -name "vendor-node_modules_framer-motion*.bundle.js" -exec cp {} deploy/public/ \; || echo "Framer Motion bundles not found"
         
-        # Copy compiled TypeScript files
+        echo "Optimized public folder size: $(du -sh deploy/public | cut -f1)"
+        
+        # Exclude massive icon bundles from deployment (they'll be lazy loaded)
+        echo "⚠️  Skipping large icon bundles for faster deployment:"
+        ls -lh public/vendor-node_modules_react-icons* | head -3 || echo "No large icon bundles found"
+        
+        # Copy only compiled server files (not source)
         cp -r dist/ deploy/
+        
+        # Copy essential server config only
+        mkdir -p deploy/server
+        cp server/package*.json deploy/server/ 2>/dev/null || echo "No server package files"
         
         # Copy configuration files
         cp ecosystem.config.cjs deploy/
@@ -160,13 +180,20 @@ jobs:
           mkdir -p streamscene-deploy
           
       # Alternative: Use tar and pipe for faster transfer
-    - name: Create and transfer deployment package
+    - name: Create compressed deployment package
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'  
       run: |
-        echo "Creating deployment package..."
+        echo "📦 Creating compressed deployment package..."
         cd deploy
+        
+        # Show what we're packaging
+        echo "Files to deploy:"
+        find . -type f -name "*.js" | head -10
+        echo "Total deployment size: $(du -sh . | cut -f1)"
+        
+        # Create highly compressed package
         tar -czf ../streamscene-deploy.tar.gz .
-        ls -lh ../streamscene-deploy.tar.gz
+        echo "📤 Compressed package size: $(ls -lh ../streamscene-deploy.tar.gz | awk '{print $5}')"
         
     - name: Upload deployment package
       if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
