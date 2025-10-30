@@ -30,6 +30,7 @@ import budgetRoutes from "./routes/budget.js";
 import captionRouter from './routes/caption.js';
 import filesRoutes from "./routes/files.js";
 import routes from "./routes/index.js";
+import ocrRoutes from "./routes/ocr.js";
 import s3ProxyRoutes from "./routes/s3Proxy.js";
 import scheduleRoutes from "./routes/schedule.js";
 import sharesRoutes from "./routes/shares.js";
@@ -226,6 +227,7 @@ if (!isProd) {
 // API routes MUST come before static file serving
 app.use('/auth', authRoutes);
 app.use('/api/budget', budgetRoutes);
+app.use('/api/ocr', ocrRoutes);
 app.use('/', routes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/schedule', scheduleRoutes);

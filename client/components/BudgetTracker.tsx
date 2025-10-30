@@ -1,31 +1,31 @@
-import React, { useState, useRef, useEffect } from 'react';
-import Tesseract from 'tesseract.js';
 import {
-  DollarSign as HiCurrencyDollar,
-  Plus as HiPlus,
-  Clock as HiClock,
-  Search as HiMagnifyingGlass,
   Upload as HiArrowUpTray,
-  Cpu as HiCpuChip,
-  CheckCircle as HiCheckCircle,
-  AlertCircle as HiExclamationCircle,
-  X as HiXMark,
-  Trash as HiTrash,
-  FolderPlus as HiFolderPlus,
-  Eye as HiEye,
-  TrendingUp as HiTrendingUp,
-  TrendingDown as HiTrendingDown,
-  Wallet as HiWallet,
   Calendar as HiCalendarDays,
-  Tag as HiTag,
-  Smartphone as HiDevicePhoneMobile,
-  Save as HiSave,
   Check as HiCheck,
+  CheckCircle as HiCheckCircle,
+  Clock as HiClock,
+  Cpu as HiCpuChip,
+  DollarSign as HiCurrencyDollar,
+  Smartphone as HiDevicePhoneMobile,
+  AlertCircle as HiExclamationCircle,
+  Eye as HiEye,
+  FolderPlus as HiFolderPlus,
+  Search as HiMagnifyingGlass,
   Pencil as HiPencil,
+  Plus as HiPlus,
+  Save as HiSave,
+  Tag as HiTag,
+  Trash as HiTrash,
+  TrendingDown as HiTrendingDown,
+  TrendingUp as HiTrendingUp,
+  Wallet as HiWallet,
+  X as HiXMark,
   Loader2,
 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import Tesseract from 'tesseract.js';
+import { budgetApi } from '../services/budgetApi';
 import TagInput from './TagInput';
-import { budgetApi, BudgetEntry as ApiBudgetEntry, BudgetProject as ApiBudgetProject } from '../services/budgetApi';
 
 // Types - Updated to match API format
 interface Project {
@@ -67,7 +67,7 @@ const extractAmountFromText = (text: string): { amount: number; confidence: numb
     /([0-9]+\.?[0-9]*)\s*(?:usd|dollar)/i,
   ];
 
-  const amounts: Array<{ amount: number; confidence: number }> = [];
+  const amounts: { amount: number; confidence: number }[] = [];
 
   patterns.forEach((pattern, index) => {
     const matches = [...text.matchAll(new RegExp(pattern, 'gi'))];
@@ -154,7 +154,30 @@ const BudgetTracker: React.FC = () => {
       }
     };
 
+    // Check OCR server status
+    const checkOCRStatus = async () => {
+      try {
+        const response = await fetch('/api/ocr/status', {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const status = await response.json();
+          setOcrStatus({
+            serverAvailable: status.available,
+            checkedServer: true
+          });
+        }
+      } catch (err) {
+        console.log('Server OCR not available:', err);
+        setOcrStatus({
+          serverAvailable: false,
+          checkedServer: true
+        });
+      }
+    };
+
     loadData();
+    checkOCRStatus();
   }, []);
 
   const [formData, setFormData] = useState({
@@ -198,7 +221,14 @@ const BudgetTracker: React.FC = () => {
 
   // Receipt Scanner State
   const [isProcessing, setIsProcessing] = useState(false);
-  const [scanResult, setScanResult] = useState<any>(null);
+  const [scanResult, setScanResult] = useState<{
+    amount?: number;
+    confidence?: number;
+    vendor?: string;
+    date?: string;
+    rawText?: string;
+    service?: string;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
@@ -207,6 +237,15 @@ const BudgetTracker: React.FC = () => {
   const [needsConfirm, setNeedsConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const amountInputRef = useRef<HTMLInputElement>(null);
+
+  // OCR Status state
+  const [ocrStatus, setOcrStatus] = useState<{
+    serverAvailable: boolean;
+    checkedServer: boolean;
+  }>({
+    serverAvailable: false,
+    checkedServer: false
+  });
 
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState<{
@@ -267,12 +306,17 @@ const BudgetTracker: React.FC = () => {
 
       const imageUrl = URL.createObjectURL(file);
 
+      // Configure Tesseract with explicit worker and core paths for better deployment compatibility
       const result = await Tesseract.recognize(imageUrl, 'eng', {
         logger: (m: { status?: string; progress?: number }) => {
           if (m.status === 'recognizing text' && typeof m.progress === 'number') {
             setProgress(Math.round(m.progress * 100));
           }
         },
+        // Add explicit worker configuration to handle deployment issues
+        workerPath: 'https://unpkg.com/tesseract.js@6.0.1/dist/worker.min.js',
+        langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+        corePath: 'https://unpkg.com/tesseract.js-core@6.0.1/tesseract-core.wasm.js',
       });
 
       const rawText: string = result.data?.text || '';
@@ -295,7 +339,20 @@ const BudgetTracker: React.FC = () => {
       };
     } catch (err: unknown) {
       const error = err as Error;
-      throw new Error(`OCR processing failed: ${error?.message || 'Unknown error'}`);
+      console.error('OCR Error Details:', error);
+      
+      // Provide more specific error messages for common issues
+      let errorMessage = `OCR processing failed: ${error?.message || 'Unknown error'}`;
+      
+      if (error?.message?.includes('NetworkError') || error?.message?.includes('Failed to fetch')) {
+        errorMessage = 'OCR failed to load required files. Please check your internet connection and try again.';
+      } else if (error?.message?.includes('WebAssembly')) {
+        errorMessage = 'OCR engine failed to initialize. Your browser may not support this feature.';
+      } else if (error?.message?.includes('Worker')) {
+        errorMessage = 'OCR worker failed to start. Please try refreshing the page.';
+      }
+      
+      throw new Error(errorMessage);
     }
   };
 
@@ -322,7 +379,46 @@ const BudgetTracker: React.FC = () => {
 
     try {
       const receiptUrlLocal = URL.createObjectURL(file);
-      const ocrResult = await processReceiptWithOCR(file);
+      let ocrResult;
+      try {
+        ocrResult = await processReceiptWithOCR(file);
+      } catch (clientError) {
+        console.warn('Client-side OCR failed, trying server-side:', clientError);
+        
+        // Try server-side OCR as fallback
+        try {
+          const formData = new FormData();
+          formData.append('receipt', file);
+          
+          const response = await fetch('/api/ocr/ocr', {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+          });
+          
+          if (response.ok) {
+            const serverResult = await response.json();
+            if (serverResult.success) {
+              ocrResult = {
+                amount: serverResult.data.amount,
+                confidence: serverResult.data.confidence,
+                vendor: serverResult.data.vendor,
+                date: serverResult.data.date,
+                rawText: serverResult.data.rawText,
+                service: serverResult.data.service || 'server-vision'
+              };
+            } else {
+              throw new Error(serverResult.message || 'Server OCR failed');
+            }
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Server OCR not available');
+          }
+        } catch (serverError) {
+          console.error('Server-side OCR also failed:', serverError);
+          throw new Error(`Both client and server OCR failed. Last error: ${clientError}`);
+        }
+      }
 
       setScanResult(ocrResult);
 
@@ -845,6 +941,15 @@ const BudgetTracker: React.FC = () => {
                                 AI will automatically extract amount, vendor, and date from your receipt
                                 <br />
                                 <span className="text-purple-400">⚡ AI-powered text extraction</span>
+                                {ocrStatus.checkedServer && (
+                                  <span className="ml-2">
+                                    {ocrStatus.serverAvailable ? (
+                                      <span className="text-green-400">• Server OCR available</span>
+                                    ) : (
+                                      <span className="text-yellow-400">• Client-side OCR only</span>
+                                    )}
+                                  </span>
+                                )}
                               </p>
                             </div>
                           )}

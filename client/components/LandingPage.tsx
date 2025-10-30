@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { FaRobot } from 'react-icons/fa';
-import FilmReelLogo from './FilmReelLogo';
+import { useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
+import FilmReelLogo from './FilmReelLogo';
 import GoogleLoginButton from './GoogleLoginButton';
 
 type CurrentView = 'landing' | 'planner' | 'project-center' | 'budget-tracker';

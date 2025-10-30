@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  HiHome,
-  HiBars3,
-  HiXMark
-} from 'react-icons/hi2';
 import { FaRobot } from 'react-icons/fa';
+import {
+    HiBars3,
+    HiHome,
+    HiXMark
+} from 'react-icons/hi2';
 import useAuth from '../hooks/useAuth';
 import GoogleLoginButton from './GoogleLoginButton';
 

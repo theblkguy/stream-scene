@@ -9,19 +9,19 @@
 import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import {
-  FaBrain,
-  FaCalendarAlt,
-  FaRobot
+    FaBrain,
+    FaCalendarAlt,
+    FaRobot
 } from 'react-icons/fa';
 import {
-  HiClock,
-  HiCog6Tooth,
-  HiDocumentText,
-  HiExclamationTriangle,
-  HiLightBulb,
-  HiMagnifyingGlass,
-  HiPencilSquare,
-  HiSparkles
+    HiClock,
+    HiCog6Tooth,
+    HiDocumentText,
+    HiExclamationTriangle,
+    HiLightBulb,
+    HiMagnifyingGlass,
+    HiPencilSquare,
+    HiSparkles
 } from 'react-icons/hi2';
 import { Task, TaskFormData } from '../types/task';
 import TaskForm from './TaskForm';
