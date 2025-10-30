@@ -55,10 +55,12 @@ jobs:
         cp ecosystem.config.cjs deploy-minimal/
         cp package-server.json deploy-minimal/package.json
         
-        # Copy client files
-        mkdir -p deploy-minimal/public
-        cp public/index.html deploy-minimal/public/
-        cp public/*.bundle.js deploy-minimal/public/ 2>/dev/null || echo "No bundles found"
+        # Copy ALL client files from public directory
+        echo "📋 Copying all client files..."
+        cp -r public/ deploy-minimal/
+        
+        echo "📋 Files being deployed:"
+        ls -la deploy-minimal/public/ | head -20
         
         # Create environment file
         cat > deploy-minimal/.env << EOF
