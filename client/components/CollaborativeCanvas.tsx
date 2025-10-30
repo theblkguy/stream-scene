@@ -167,6 +167,11 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
   // Mobile toolbar collapse state
   const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
   
+  // Mobile orientation detection
+  const [isMobile, setIsMobile] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(true);
+  const [showOrientationPrompt, setShowOrientationPrompt] = useState(false);
+  
   // Removed zoom functionality - users can rely on browser zoom
 
   // User type and permissions
@@ -476,21 +481,41 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
+      // Check if mobile device
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+        (navigator.userAgent || navigator.vendor || (window as any).opera).toLowerCase()
+      ) || (window.innerWidth <= 768 && 'ontouchstart' in window);
+      
       // Calculate available space (accounting for toolbars)
-      const availableWidth = viewportWidth - 40; // 20px padding on each side
-      const availableHeight = viewportHeight - 200; // Space for toolbars
+      let availableWidth, availableHeight;
+      
+      if (isMobileDevice) {
+        // Mobile: Use most of the screen space in landscape
+        const isCurrentlyLandscape = viewportWidth > viewportHeight;
+        if (isCurrentlyLandscape) {
+          availableWidth = viewportWidth - 20; // Minimal padding in landscape
+          availableHeight = viewportHeight - 120; // Space for compact toolbar
+        } else {
+          availableWidth = viewportWidth - 40; // More padding in portrait
+          availableHeight = viewportHeight - 200; // Space for larger toolbar
+        }
+      } else {
+        // Desktop: Standard padding
+        availableWidth = viewportWidth - 40; // 20px padding on each side
+        availableHeight = viewportHeight - 200; // Space for toolbars
+      }
       
       // Maintain aspect ratio but fit within screen
-      const aspectRatio = 4/3; // 800x600 aspect ratio
+      const aspectRatio = isMobileDevice && viewportWidth > viewportHeight ? 16/9 : 4/3; // Wider aspect ratio for mobile landscape
       let canvasWidth, canvasHeight;
       
       if (availableWidth / availableHeight > aspectRatio) {
         // Height is the limiting factor
-        canvasHeight = Math.max(400, availableHeight);
+        canvasHeight = Math.max(isMobileDevice ? 300 : 400, availableHeight);
         canvasWidth = canvasHeight * aspectRatio;
       } else {
         // Width is the limiting factor  
-        canvasWidth = Math.max(600, availableWidth);
+        canvasWidth = Math.max(isMobileDevice ? 400 : 600, availableWidth);
         canvasHeight = canvasWidth / aspectRatio;
       }
 
@@ -537,6 +562,58 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
       window.removeEventListener('resize', updateCanvasSize);
     };
   }, [backgroundColor]);
+
+  // Mobile orientation detection and management
+  useEffect(() => {
+    const checkDevice = () => {
+      // Detect if device is mobile
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase()) ||
+                           (window.innerWidth <= 768 && 'ontouchstart' in window);
+      
+      setIsMobile(isMobileDevice);
+      
+      if (isMobileDevice) {
+        // Check orientation
+        const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
+        setIsLandscape(isCurrentlyLandscape);
+        setShowOrientationPrompt(!isCurrentlyLandscape);
+      } else {
+        setShowOrientationPrompt(false);
+      }
+    };
+
+    // Initial check
+    checkDevice();
+
+    // Listen for orientation changes
+    const handleOrientationChange = () => {
+      // Small delay to ensure dimensions are updated
+      setTimeout(checkDevice, 100);
+    };
+
+    const handleResize = () => {
+      checkDevice();
+    };
+
+    // Add event listeners
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener('resize', handleResize);
+    
+    // Screen orientation API (modern browsers)
+    if (screen.orientation) {
+      screen.orientation.addEventListener('change', handleOrientationChange);
+    }
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      window.removeEventListener('resize', handleResize);
+      if (screen.orientation) {
+        screen.orientation.removeEventListener('change', handleOrientationChange);
+      }
+    };
+  }, []);
 
   // Removed zoom transforms - users rely on browser zoom
 
@@ -1416,9 +1493,52 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white">
+      {/* Mobile Landscape Orientation Prompt */}
+      {showOrientationPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-gray-800 rounded-lg p-6 m-4 text-center max-w-sm"
+          >
+            <div className="mb-4">
+              <motion.div
+                animate={{ rotate: 90 }}
+                transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+                className="w-16 h-16 mx-auto mb-4 bg-blue-600 rounded-lg flex items-center justify-center"
+              >
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </motion.div>
+              <h3 className="text-xl font-bold text-white mb-2">Rotate Your Device</h3>
+              <p className="text-gray-300 text-sm">
+                For the best canvas experience, please rotate your device to landscape mode.
+              </p>
+            </div>
+            <div className="text-xs text-gray-400">
+              Canvas works better with more screen space
+            </div>
+            <button
+              onClick={() => setShowOrientationPrompt(false)}
+              className="mt-4 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors"
+            >
+              Continue in Portrait (Not Recommended)
+            </button>
+          </motion.div>
+        </div>
+      )}
+
       {/* Mobile Toolbar Toggle Button */}
-      <div className="md:hidden bg-gray-800 border-b border-gray-700 p-2 flex justify-between items-center">
-        <span className="text-sm font-medium">Canvas Tools</span>
+      <div className={`md:hidden bg-gray-800 border-b border-gray-700 flex justify-between items-center ${isMobile && isLandscape ? 'p-1' : 'p-2'}`}>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium">Canvas Tools</span>
+          {isMobile && isLandscape && (
+            <span className="text-xs bg-green-600 text-green-100 px-2 py-1 rounded">
+              Landscape ✓
+            </span>
+          )}
+        </div>
         <button
           onClick={() => setIsToolbarCollapsed(!isToolbarCollapsed)}
           className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
@@ -1435,7 +1555,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
       </div>
       
       {/* Toolbar */}
-      <div className={`bg-gray-800 border-b border-gray-700 ${isToolbarCollapsed ? 'md:block hidden' : 'block'}`}>
+      <div className={`bg-gray-800 border-b border-gray-700 ${isToolbarCollapsed ? 'md:block hidden' : 'block'} ${isMobile && isLandscape ? 'py-1' : 'py-2'}`}>
         {/* Top Row - Connection Status and Actions */}
         <div className="flex items-center justify-between p-2 border-b border-gray-700">
           <div className="flex items-center space-x-4">

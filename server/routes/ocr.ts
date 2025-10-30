@@ -108,16 +108,22 @@ router.post('/ocr', requireAuth, upload.single('receipt'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // OCR service is currently disabled
+    console.log(`📄 OCR request received for file: ${req.file.originalname} (${req.file.size} bytes)`);
+
+    // OCR service is currently disabled - provide helpful fallback response
     if (!visionClient) {
+      console.log('⚠️ Server-side OCR not available, suggesting client-side fallback');
       return res.status(503).json({
-        error: 'OCR service not available',
-        message: 'Server-side OCR is temporarily disabled. Please use client-side processing.',
-        fallback: true
+        success: false,
+        error: 'Server OCR unavailable',
+        message: 'Server-side OCR is temporarily disabled. Client should handle OCR processing.',
+        fallback: true,
+        suggestion: 'Use client-side Tesseract.js processing'
       });
     }
 
     // This block won't execute since visionClient is null
+    // But left here for future Google Vision implementation
     const extractedData = {
       amount: null,
       merchant: null, 
@@ -133,8 +139,9 @@ router.post('/ocr', requireAuth, upload.single('receipt'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('OCR processing error:', error);
+    console.error('❌ OCR processing error:', error);
     res.status(500).json({
+      success: false,
       error: 'OCR processing failed',
       message: error instanceof Error ? error.message : 'Unknown error',
       fallback: true
