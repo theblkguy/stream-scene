@@ -507,13 +507,10 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     const touch = e.touches[0]; // Use first touch point
     
     // Convert screen coordinates to canvas coordinates
-    const rawCanvasX = (touch.clientX - rect.left) * (canvas.width / rect.width);
-    const rawCanvasY = (touch.clientY - rect.top) * (canvas.height / rect.height);
-    
-    // Adjust for pan offset - since canvas is transformed with CSS translate, 
-    // we need to subtract the pan offset to get the correct canvas coordinates
-    const canvasX = rawCanvasX - panState.x;
-    const canvasY = rawCanvasY - panState.y;
+    // Since getBoundingClientRect() already accounts for CSS transforms,
+    // we don't need to manually adjust for the pan offset
+    const canvasX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+    const canvasY = (touch.clientY - rect.top) * (canvas.height / rect.height);
     
     // Get pressure (if available, otherwise default to 1.0)
     const pressure = (touch as any).force || (touch as any).pressure || 1.0;
@@ -523,7 +520,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
       y: canvasY,
       pressure: Math.max(0.1, Math.min(1.0, pressure)) // Clamp between 0.1 and 1.0
     };
-  }, [panState.x, panState.y]);
+  }, []); // No dependencies since we're using getBoundingClientRect() which accounts for transforms
 
   // Add haptic feedback for tool changes (mobile only)
   const triggerHapticFeedback = useCallback((type: 'light' | 'medium' | 'heavy' = 'light') => {
