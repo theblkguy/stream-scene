@@ -162,13 +162,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
   const [lastPoint, setLastPoint] = useState<Point | null>(null);
   const [brushPath, setBrushPath] = useState<Point[]>([]); // For smooth brush strokes
   
-  // Pan state for mobile navigation (canvas viewport positioning)
-  const [panState, setPanState] = useState({
-    x: 0,
-    y: 0,
-    isDragging: false,
-    lastTouchPos: { x: 0, y: 0 }
-  });
+  // Pan functionality removed - users can rely on browser zoom instead
   
   // Mobile toolbar collapse state
   const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
@@ -472,27 +466,57 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     };
   }, [canvasId, shareToken, onCollaboratorChange]);
 
-  // Initialize canvas with high-quality rendering
+  // Initialize canvas with responsive sizing
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Set canvas size with high DPI support
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
+    const updateCanvasSize = () => {
+      // Set canvas size to fit viewport with some padding
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // Calculate available space (accounting for toolbars)
+      const availableWidth = viewportWidth - 40; // 20px padding on each side
+      const availableHeight = viewportHeight - 200; // Space for toolbars
+      
+      // Maintain aspect ratio but fit within screen
+      const aspectRatio = 4/3; // 800x600 aspect ratio
+      let canvasWidth, canvasHeight;
+      
+      if (availableWidth / availableHeight > aspectRatio) {
+        // Height is the limiting factor
+        canvasHeight = Math.max(400, availableHeight);
+        canvasWidth = canvasHeight * aspectRatio;
+      } else {
+        // Width is the limiting factor  
+        canvasWidth = Math.max(600, availableWidth);
+        canvasHeight = canvasWidth / aspectRatio;
+      }
+
+      // Set canvas size with high DPI support
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Set actual size in memory (scaled to account for extra pixel density)
+      canvas.width = canvasWidth * dpr;
+      canvas.height = canvasHeight * dpr;
+      
+      // Scale the canvas back down using CSS
+      canvas.style.width = `${canvasWidth}px`;
+      canvas.style.height = `${canvasHeight}px`;
+      canvas.style.backgroundColor = backgroundColor;
+    };
+
+    // Initial size
+    updateCanvasSize();
     
-    // Set actual size in memory (scaled to account for extra pixel density)
-    canvas.width = 800 * dpr;
-    canvas.height = 600 * dpr;
-    
-    // Scale the canvas back down using CSS
-    canvas.style.width = '800px';
-    canvas.style.height = '600px';
-    canvas.style.backgroundColor = backgroundColor;
+    // Update on resize
+    window.addEventListener('resize', updateCanvasSize);
     
     // Get context and scale it to account for device pixel ratio
     const ctx = canvas.getContext('2d');
     if (ctx) {
+      const dpr = window.devicePixelRatio || 1;
       ctx.scale(dpr, dpr);
       
       // Enable high-quality rendering
@@ -505,8 +529,13 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
       
       // Clear and set background
       ctx.fillStyle = backgroundColor;
-      ctx.fillRect(0, 0, 800, 600);
+      ctx.fillRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
     }
+
+    // Cleanup resize listener
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize);
+    };
   }, [backgroundColor]);
 
   // Removed zoom transforms - users rely on browser zoom
@@ -538,17 +567,17 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
 
     const rect = canvas.getBoundingClientRect();
     
-    // Account for pan offset (CSS transform)
-    const canvasX = e.clientX - rect.left - panState.x;
-    const canvasY = e.clientY - rect.top - panState.y;
+    // Simple coordinate calculation (no pan offset needed)
+    const canvasX = e.clientX - rect.left;
+    const canvasY = e.clientY - rect.top;
     
     return {
       x: canvasX * (canvas.width / rect.width),
       y: canvasY * (canvas.height / rect.height)
     };
-  }, [panState]);
+  }, []);
 
-  // Enhanced touch support with pressure sensitivity (accounts for pan transforms)
+  // Enhanced touch support with pressure sensitivity
   const getTouchCanvasPoint = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas || e.touches.length === 0) return { x: 0, y: 0, pressure: 1.0 };
@@ -556,15 +585,10 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     const touch = e.touches[0];
     const canvasElement = e.currentTarget;
     
-    // Get touch coordinates relative to the canvas element
+    // Get touch coordinates relative to the canvas element  
     const rect = canvasElement.getBoundingClientRect();
-    let canvasX = touch.clientX - rect.left;
-    let canvasY = touch.clientY - rect.top;
-    
-    // CRITICAL: Account for CSS transform (pan offset)
-    // When the canvas is translated, we need to subtract the pan offset
-    canvasX -= panState.x;
-    canvasY -= panState.y;
+    const canvasX = touch.clientX - rect.left;
+    const canvasY = touch.clientY - rect.top;
     
     // Scale from display size to canvas internal size
     const scaleX = canvas.width / canvasElement.clientWidth;
@@ -574,14 +598,15 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     const finalY = canvasY * scaleY;
     
     // Get pressure (if available, otherwise default to 1.0)
-    const pressure = (touch as any).force || (touch as any).pressure || 1.0;
+    const pressure = (touch as unknown as { force?: number; pressure?: number }).force || 
+                    (touch as unknown as { force?: number; pressure?: number }).pressure || 1.0;
 
     return {
       x: finalX,
       y: finalY,
       pressure: Math.max(0.1, Math.min(1.0, pressure)) // Clamp between 0.1 and 1.0
     };
-  }, [panState]); // Include panState since we use panState.x and panState.y  // Add haptic feedback for tool changes (mobile only)
+  }, []); // No dependencies needed  // Add haptic feedback for tool changes (mobile only)
   const triggerHapticFeedback = useCallback((type: 'light' | 'medium' | 'heavy' = 'light') => {
     if ('vibrate' in navigator) {
       const patterns = {
@@ -1013,10 +1038,10 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     }
   }, [socket, canvasId]);
 
-  // Touch handlers for drawing and panning navigation
+  // Touch handlers for drawing only (pan removed - use browser zoom instead)
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     if (e.touches.length === 1) {
-      // Single finger - drawing mode
+      // Single finger - drawing mode only
       const point = getTouchCanvasPoint(e);
       
       if (currentTool === 'text') {
@@ -1027,29 +1052,13 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
       setIsDrawing(true);
       setLastPoint(point);
       saveToHistory(); // Save state before drawing
-    } else if (e.touches.length === 2) {
-      // Two fingers - pan mode
-      e.preventDefault(); // Prevent default browser behavior
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const midX = (touch1.clientX + touch2.clientX) / 2;
-      const midY = (touch1.clientY + touch2.clientY) / 2;
-      
-      setPanState(prev => ({
-        ...prev,
-        isDragging: true,
-        lastTouchPos: { x: midX, y: midY }
-      }));
-      
-      // Stop drawing when starting pan
-      setIsDrawing(false);
-      setLastPoint(null);
     }
+    // Multi-touch is now handled by browser for zooming
   }, [getTouchCanvasPoint, currentTool, saveToHistory]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (e.touches.length === 1 && isDrawing && !panState.isDragging) {
-      // Single finger - drawing mode
+    if (e.touches.length === 1 && isDrawing) {
+      // Single finger - drawing mode only
       const pointData = getTouchCanvasPoint(e);
       const point = { x: pointData.x, y: pointData.y };
       
@@ -1075,36 +1084,13 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
       
       saveStroke(strokeEvent);
       setLastPoint(point);
-    } else if (e.touches.length === 2 && panState.isDragging) {
-      // Two fingers - pan mode
-      e.preventDefault();
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const midX = (touch1.clientX + touch2.clientX) / 2;
-      const midY = (touch1.clientY + touch2.clientY) / 2;
-      
-      const deltaX = midX - panState.lastTouchPos.x;
-      const deltaY = midY - panState.lastTouchPos.y;
-      
-      // Update pan position
-      setPanState(prev => ({
-        ...prev,
-        x: prev.x + deltaX,
-        y: prev.y + deltaY,
-        lastTouchPos: { x: midX, y: midY }
-      }));
     }
-  }, [isDrawing, lastPoint, getTouchCanvasPoint, drawLine, brushColor, brushWidth, currentTool, saveStroke, socket, canvasId, panState]);
+    // Multi-touch handled by browser for zooming
+  }, [isDrawing, lastPoint, getTouchCanvasPoint, drawLine, brushColor, brushWidth, currentTool, saveStroke, socket, canvasId]);
 
   const handleTouchEnd = useCallback(() => {
     setIsDrawing(false);
     setLastPoint(null);
-    
-    // Reset pan dragging state
-    setPanState(prev => ({
-      ...prev,
-      isDragging: false
-    }));
   }, []);
 
   const clearCanvas = useCallback(() => {
@@ -1997,13 +1983,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
       {/* Canvas */}
       <div className="flex-1 flex items-center justify-center p-4 bg-gray-900 overflow-hidden">
         <div className="relative border border-gray-600 rounded-lg shadow-lg">
-          <div 
-            className="overflow-hidden"
-            style={{
-              transform: `translate(${panState.x}px, ${panState.y}px)`,
-              transition: panState.isDragging ? 'none' : 'transform 0.2s ease-out'
-            }}
-          >
+          <div className="flex items-center justify-center">
             <canvas
               ref={canvasRef}
               onMouseDown={handleMouseDown}
@@ -2015,7 +1995,12 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
               onTouchEnd={handleTouchEnd}
               onTouchCancel={handleTouchEnd}
               className="cursor-crosshair"
-              style={{ display: 'block', touchAction: 'none' }}
+              style={{ 
+                display: 'block', 
+                touchAction: 'pinch-zoom',  // Allow browser zoom but prevent default pan
+                maxWidth: '100%',
+                maxHeight: '100%'
+              }}
             />
           </div>
           
