@@ -313,21 +313,21 @@ async function seed(forceRecreate = false) {
     // Create default canvases
     await sequelize.query(`
       INSERT IGNORE INTO \`canvases\` (\`id\`, \`userId\`, \`name\`, \`description\`, \`canvasData\`, \`isPublic\`, \`allowAnonymousEdit\`) 
-      VALUES ('project-center-main', 1, 'Project Center Main Canvas', 'Default canvas for project collaboration', '{"objects":[],"background":"#ffffff","version":"4.6.0"}', true, true);
+      VALUES ('project-center-main', 1, 'Project Center Main Canvas', 'Default canvas for project collaboration', '[]', true, true);
     `);
     console.log('✅ Default canvas created');
 
     // Create canvas for AllBlk user
     await sequelize.query(`
       INSERT IGNORE INTO \`canvases\` (\`id\`, \`userId\`, \`name\`, \`description\`, \`canvasData\`, \`isPublic\`, \`allowAnonymousEdit\`) 
-      VALUES ('allblk-creative-workspace', 2, 'AllBlk Creative Workspace', 'Creative collaboration space for content planning', '{"objects":[],"background":"#1a1a2e","version":"4.6.0"}', true, true);
+      VALUES ('allblk-creative-workspace', 2, 'AllBlk Creative Workspace', 'Creative collaboration space for content planning', '[{"type":"background-color","backgroundColor":"#1a1a2e","timestamp":1640995200000}]', true, true);
     `);
     console.log('✅ AllBlk canvas created');
 
     // Create canvas for Jasmine Hall
     await sequelize.query(`
       INSERT IGNORE INTO \`canvases\` (\`id\`, \`userId\`, \`name\`, \`description\`, \`canvasData\`, \`isPublic\`, \`allowAnonymousEdit\`) 
-      VALUES ('jasmine-design-studio', 3, 'Jasmine Design Studio', 'Digital design and creative planning workspace', '{"objects":[],"background":"#f8fafc","version":"4.6.0"}', true, true);
+      VALUES ('jasmine-design-studio', 3, 'Jasmine Design Studio', 'Digital design and creative planning workspace', '[{"type":"background-color","backgroundColor":"#f8fafc","timestamp":1640995200000}]', true, true);
     `);
     console.log('✅ Jasmine Hall canvas created');
 

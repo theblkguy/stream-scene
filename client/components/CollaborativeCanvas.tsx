@@ -415,6 +415,51 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
           });
         });
 
+        // Handle initial canvas state when joining
+        socketInstance.on('canvas-state', (data: { canvasData: DrawingEvent[] | { version?: number; objects?: unknown[]; background?: string; events?: DrawingEvent[] }; version?: number }) => {
+          if (data.canvasData) {
+            // Clear current state
+            setStrokes([]);
+            
+            let events: DrawingEvent[] = [];
+            
+            // Handle different canvas data formats
+            if (Array.isArray(data.canvasData)) {
+              // New format: array of DrawingEvent objects
+              events = data.canvasData;
+            } else if (data.canvasData && typeof data.canvasData === 'object') {
+              // Legacy format: object with events array or background
+              if ('events' in data.canvasData && Array.isArray(data.canvasData.events)) {
+                events = data.canvasData.events;
+              }
+              if ('background' in data.canvasData && data.canvasData.background) {
+                setBackgroundColor(data.canvasData.background);
+              }
+            }
+            
+            // Process each drawing event
+            const drawingEvents: DrawingEvent[] = [];
+            
+            events.forEach((event: DrawingEvent) => {
+              if (event.type === 'background-color' && event.backgroundColor) {
+                setBackgroundColor(event.backgroundColor);
+              } else if (event.type === 'draw' || event.type === 'erase' || event.type === 'text') {
+                // Add drawing events to the array
+                drawingEvents.push(event);
+              } else if (event.type === 'clear') {
+                // Clear all drawing events up to this point
+                drawingEvents.length = 0;
+              } else if (event.type === 'undo' && drawingEvents.length > 0) {
+                // Remove the last drawing event
+                drawingEvents.pop();
+              }
+            });
+            
+            // Apply all accumulated drawing events
+            setStrokes(drawingEvents);
+          }
+        });
+
       } catch (error) {
 
       }
@@ -503,25 +548,42 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     const canvas = canvasRef.current;
     if (!canvas || e.touches.length === 0) return { x: 0, y: 0, pressure: 1.0 };
 
-    // Create a synthetic mouse event with touch coordinates to use existing mouse logic
     const touch = e.touches[0];
-    const syntheticMouseEvent = {
-      clientX: touch.clientX,
-      clientY: touch.clientY
-    } as React.MouseEvent<HTMLCanvasElement>;
     
-    // Use the exact same coordinate calculation as mouse events
-    const mousePoint = getCanvasPoint(syntheticMouseEvent);
+    // Get the actual canvas element (not the transformed container)
+    const canvasElement = e.currentTarget;
+    
+    // Use offsetX/offsetY if available (more accurate for canvas)
+    let canvasX: number;
+    let canvasY: number;
+    
+    if ('offsetX' in touch && 'offsetY' in touch) {
+      // Use native offset coordinates if available
+      canvasX = (touch as any).offsetX;
+      canvasY = (touch as any).offsetY;
+    } else {
+      // Fallback to manual calculation
+      const rect = canvasElement.getBoundingClientRect();
+      canvasX = touch.clientX - rect.left;
+      canvasY = touch.clientY - rect.top;
+    }
+    
+    // Scale from display size to canvas internal size
+    const scaleX = canvas.width / canvasElement.clientWidth;
+    const scaleY = canvas.height / canvasElement.clientHeight;
+    
+    const finalX = canvasX * scaleX;
+    const finalY = canvasY * scaleY;
     
     // Get pressure (if available, otherwise default to 1.0)
     const pressure = (touch as any).force || (touch as any).pressure || 1.0;
 
     return {
-      x: mousePoint.x,
-      y: mousePoint.y,
+      x: finalX,
+      y: finalY,
       pressure: Math.max(0.1, Math.min(1.0, pressure)) // Clamp between 0.1 and 1.0
     };
-  }, [getCanvasPoint]); // Depends on getCanvasPoint since we're reusing mouse logic  // Add haptic feedback for tool changes (mobile only)
+  }, []); // No dependencies needed for this direct calculation  // Add haptic feedback for tool changes (mobile only)
   const triggerHapticFeedback = useCallback((type: 'light' | 'medium' | 'heavy' = 'light') => {
     if ('vibrate' in navigator) {
       const patterns = {

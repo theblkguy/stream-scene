@@ -63,11 +63,7 @@ export class WebSocketService {
 
           // Auto-create canvas if it doesn't exist
           if (!canvas) {
-            const defaultCanvasData = JSON.stringify({
-              version: 1,
-              objects: [],
-              background: '#ffffff'
-            });
+            const defaultCanvasData = JSON.stringify([]);
 
             canvas = await Canvas.create({
               id: canvasId,
@@ -148,11 +144,33 @@ export class WebSocketService {
           });
 
           // Update database periodically (not on every stroke for performance)
-          if (data.operation === 'draw' && Math.random() < 0.1) { // 10% chance to save
+          if (Math.random() < 0.1) { // 10% chance to save
             const canvas = await Canvas.findByPk(canvasId);
             if (canvas) {
+              // Parse existing canvas data
+              let canvasEvents: unknown[] = [];
+              try {
+                const existingData = JSON.parse(canvas.canvasData);
+                if (Array.isArray(existingData)) {
+                  canvasEvents = existingData;
+                } else if (existingData && existingData.events && Array.isArray(existingData.events)) {
+                  canvasEvents = existingData.events;
+                }
+              } catch (e) {
+                // If parsing fails, start with empty array
+                canvasEvents = [];
+              }
+
+              // Add the new event
+              canvasEvents.push(data.canvasData);
+
+              // Limit the history to prevent unlimited growth (keep last 1000 events)
+              if (canvasEvents.length > 1000) {
+                canvasEvents = canvasEvents.slice(-1000);
+              }
+
               await canvas.update({
-                canvasData: JSON.stringify(data.canvasData),
+                canvasData: JSON.stringify(canvasEvents),
                 version: canvas.version + 1,
                 lastActivity: new Date()
               });
