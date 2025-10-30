@@ -18,7 +18,9 @@
 
 **Your complete creative production platform for streamlined workflows**
 
-StreamScene is a modern, full-stack web application designed for content creators, streamers, and media professionals. It provides an integrated suite of tools for project management, file organization, content scheduling, and collaborative workflows.
+## 🌟 Features
+
+StreamScene is a modern, full-stack web application designed for content creators, streamers, and media professionals. It provides an integrated suite of tools for project management, file organization, and collaborative workflows.
 
 ## ✨ Features
 
@@ -44,12 +46,6 @@ StreamScene is a modern, full-stack web application designed for content creator
 - **AI Weekly Planner**: Generate content schedules with Google Gemini AI
 - **Task Generation**: AI-assisted task creation and planning
 - **Smart Suggestions**: AI-powered content recommendations
-
-### 📅 Content Scheduling
-- **Multi-platform Support**: Schedule content for YouTube, Twitch, Twitter, Instagram, TikTok
-- **Calendar Integration**: Visual scheduling interface
-- **Project Linking**: Connect files and drawings to scheduled content
-- **Status Tracking**: Monitor content from draft to published
 
 ### 🎯 Task Management
 - **Creative & Administrative Tasks**: Categorized task management
@@ -186,12 +182,7 @@ npm start
 ### AI Features
 - `POST /api/ai/generate-tasks` - Generate tasks with AI
 - `POST /api/ai/suggestions` - Get AI content suggestions
-
-### Content Scheduling
-- `GET /api/schedule` - Get scheduled content
-- `POST /api/schedule` - Create scheduled post
-- `PUT /api/schedule/:id` - Update scheduled post
-- `DELETE /api/schedule/:id` - Delete scheduled post
+- `POST /api/schedule/generate` - Generate AI-powered weekly schedules
 
 ## 📁 Project Structure
 
@@ -203,7 +194,6 @@ stream-scene/
 │   │   ├── GoogleLoginButton.tsx
 │   │   ├── NavBar.tsx
 │   │   └── ...
-│   ├── ContentScheduler/      # Content scheduling module
 │   ├── hooks/                 # Custom React hooks
 │   ├── services/              # API service layers
 │   ├── shared/               # Shared utilities and types

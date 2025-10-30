@@ -31,38 +31,7 @@ async function seed(forceRecreate = false) {
     `);
     console.log('✅ Users table created');
 
-    // 2. Create SocialAccountTokens table
-    await sequelize.query(`
-      CREATE TABLE IF NOT EXISTS \`SocialAccountTokens\` (
-        \`id\` INTEGER AUTO_INCREMENT,
-        \`accountId\` VARCHAR(255) NOT NULL UNIQUE,
-        \`accessToken\` TEXT NOT NULL,
-        \`expiresAt\` DATETIME NULL,
-        \`createdAt\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        \`updatedAt\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (\`id\`)
-      ) ENGINE=InnoDB;
-    `);
-    console.log('✅ SocialAccountTokens table created');
 
-    // 3. Create ScheduledPosts table
-    await sequelize.query(`
-      CREATE TABLE IF NOT EXISTS \`ScheduledPosts\` (
-        \`id\` INTEGER AUTO_INCREMENT,
-        \`socialAccountTokenId\` INTEGER NOT NULL,
-        \`text\` TEXT NOT NULL,
-        \`media\` JSON NULL,
-        \`scheduledFor\` DATETIME NOT NULL,
-        \`status\` VARCHAR(255) NOT NULL DEFAULT 'pending',
-        \`errorMessage\` TEXT NULL,
-        \`publishedPostId\` VARCHAR(255) NULL,
-        \`createdAt\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        \`updatedAt\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        PRIMARY KEY (\`id\`),
-        FOREIGN KEY (\`socialAccountTokenId\`) REFERENCES \`SocialAccountTokens\` (\`id\`) ON DELETE CASCADE
-      ) ENGINE=InnoDB;
-    `);
-    console.log('✅ ScheduledPosts table created');
 
     // 4. Create Files table
     await sequelize.query(`

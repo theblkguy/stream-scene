@@ -1,4 +1,4 @@
-// Essential types that don't depend on ContentScheduler
+// Project-related type definitions
 export interface ProjectFile {
   id: number;
   name: string;

@@ -847,11 +847,11 @@ router.get('/threads/callback', async (req: Request, res: Response) => {
       expiresAt: result.expiresAt
     };
     
-    // Redirect back to content scheduler with success message
-    res.redirect('/content-scheduler?threads_connected=true&username=' + encodeURIComponent(result.username));
+    // Redirect back to dashboard with success message
+    res.redirect('/?threads_connected=true&username=' + encodeURIComponent(result.username));
   } catch (error) {
     console.error('Threads callback error:', error);
-    res.redirect('/content-scheduler?error=threads_auth_failed');
+    res.redirect('/?error=threads_auth_failed');
   }
 });
 
