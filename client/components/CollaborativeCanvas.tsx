@@ -567,43 +567,41 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
 
     const rect = canvas.getBoundingClientRect();
     
-    // Simple coordinate calculation (no pan offset needed)
+    // Get coordinates relative to canvas display area
     const canvasX = e.clientX - rect.left;
     const canvasY = e.clientY - rect.top;
     
+    // Account for device pixel ratio - canvas internal size vs CSS size
+    const dpr = window.devicePixelRatio || 1;
+    
     return {
-      x: canvasX * (canvas.width / rect.width),
-      y: canvasY * (canvas.height / rect.height)
+      x: (canvasX * (canvas.width / rect.width)) / dpr,
+      y: (canvasY * (canvas.height / rect.height)) / dpr
     };
   }, []);
 
-  // Enhanced touch support with pressure sensitivity
+  // Enhanced touch support with pressure sensitivity - using same logic as mouse
   const getTouchCanvasPoint = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas || e.touches.length === 0) return { x: 0, y: 0, pressure: 1.0 };
 
     const touch = e.touches[0];
-    const canvasElement = e.currentTarget;
     
-    // Get touch coordinates relative to the canvas element  
-    const rect = canvasElement.getBoundingClientRect();
+    // Use exact same coordinate calculation as mouse for consistency
+    const rect = canvas.getBoundingClientRect();
     const canvasX = touch.clientX - rect.left;
     const canvasY = touch.clientY - rect.top;
     
-    // Scale from display size to canvas internal size
-    const scaleX = canvas.width / canvasElement.clientWidth;
-    const scaleY = canvas.height / canvasElement.clientHeight;
-    
-    const finalX = canvasX * scaleX;
-    const finalY = canvasY * scaleY;
+    // Account for device pixel ratio - canvas internal size vs CSS size
+    const dpr = window.devicePixelRatio || 1;
     
     // Get pressure (if available, otherwise default to 1.0)
     const pressure = (touch as unknown as { force?: number; pressure?: number }).force || 
                     (touch as unknown as { force?: number; pressure?: number }).pressure || 1.0;
 
     return {
-      x: finalX,
-      y: finalY,
+      x: (canvasX * (canvas.width / rect.width)) / dpr,
+      y: (canvasY * (canvas.height / rect.height)) / dpr,
       pressure: Math.max(0.1, Math.min(1.0, pressure)) // Clamp between 0.1 and 1.0
     };
   }, []); // No dependencies needed  // Add haptic feedback for tool changes (mobile only)
