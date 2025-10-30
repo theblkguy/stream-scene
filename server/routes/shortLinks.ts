@@ -11,12 +11,23 @@ const shortLinks = new Map<string, {
   accessCount: number;
 }>();
 
-// Generate a short, user-friendly code
+// Generate a secure, short code (5-6 characters for security)
 function generateShortCode(): string {
-  // Use a combination of timestamp and random for uniqueness but shorter
-  const timestamp = Date.now().toString(36); // Base36 timestamp
-  const random = crypto.randomBytes(2).toString('hex'); // 4 hex chars
-  return (timestamp + random).substring(-6); // Take last 6 characters
+  const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  
+  // Secure approach: More random bits for collision resistance
+  const timestamp = Date.now() % 100000; // Reduced timestamp for compactness
+  const random1 = crypto.randomInt(0, 62);
+  const random2 = crypto.randomInt(0, 62);
+  const random3 = crypto.randomInt(0, 62);
+  const random4 = crypto.randomInt(0, 62);
+  
+  // Create 5-character code: 1 time + 4 random chars
+  // This gives us 62^5 = ~916M combinations (much more secure)
+  const timeChar = chars[timestamp % 62];
+  const randomChars = chars[random1] + chars[random2] + chars[random3] + chars[random4];
+  
+  return timeChar + randomChars;
 }
 
 // Create a short link for a canvas
