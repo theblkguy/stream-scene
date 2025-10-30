@@ -1,4 +1,3 @@
-import * as vision from '@google-cloud/vision';
 import express from 'express';
 import multer from 'multer';
 import { requireAuth } from '../middleware/authMiddleWare.js';
@@ -22,15 +21,23 @@ const upload = multer({
 });
 
 // Initialize Google Cloud Vision client
-let visionClient: vision.ImageAnnotatorClient | null = null;
+const visionClient = null;
 
-try {
-  // Try to initialize Google Cloud Vision
-  visionClient = new vision.ImageAnnotatorClient();
-  console.log('✅ Google Cloud Vision initialized successfully');
-} catch (error) {
-  console.warn('⚠️ Google Cloud Vision not available:', error);
-}
+// Disable Google Cloud Vision for now to prevent deployment issues
+console.log('⚠️ Google Cloud Vision disabled - OCR functionality not available');
+
+// TODO: Re-enable when Google Cloud Vision credentials are properly configured
+// async function initializeVisionClient() {
+//   try {
+//     const vision = await import('@google-cloud/vision');
+//     visionClient = new vision.ImageAnnotatorClient();
+//     console.log('✅ Google Cloud Vision initialized successfully');
+//     return true;
+//   } catch (error: any) {
+//     console.warn('⚠️ Google Cloud Vision not available:', error?.message || error);
+//     return false;
+//   }
+// }
 
 // Helper function to extract data from OCR text
 const extractReceiptData = (text: string) => {
@@ -101,35 +108,24 @@ router.post('/ocr', requireAuth, upload.single('receipt'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    let extractedData;
-
-    if (visionClient) {
-      // Use Google Cloud Vision if available
-      try {
-        const [result] = await visionClient.textDetection({
-          image: {
-            content: req.file.buffer.toString('base64')
-          }
-        });
-
-        const detections = result.textAnnotations;
-        const text = detections && detections.length > 0 ? detections[0].description || '' : '';
-        
-        extractedData = extractReceiptData(text);
-        extractedData.service = 'google-vision';
-        
-      } catch (visionError) {
-        console.error('Google Vision API error:', visionError);
-        throw new Error('Google Vision processing failed');
-      }
-    } else {
-      // Fallback response when Google Vision is not available
+    // OCR service is currently disabled
+    if (!visionClient) {
       return res.status(503).json({
         error: 'OCR service not available',
-        message: 'Server-side OCR is not configured. Please use client-side processing.',
+        message: 'Server-side OCR is temporarily disabled. Please use client-side processing.',
         fallback: true
       });
     }
+
+    // This block won't execute since visionClient is null
+    const extractedData = {
+      amount: null,
+      merchant: null, 
+      date: null,
+      items: [],
+      fullText: 'OCR service not available',
+      service: 'disabled'
+    };
 
     res.json({
       success: true,
