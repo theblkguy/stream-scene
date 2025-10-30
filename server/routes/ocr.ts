@@ -150,11 +150,12 @@ router.post('/ocr', requireAuth, upload.single('receipt'), async (req, res) => {
 });
 
 // Test endpoint to check if OCR service is available
-router.get('/ocr/status', requireAuth, (req, res) => {
+router.get('/status', (req, res) => {
   res.json({
     available: !!visionClient,
     service: visionClient ? 'google-vision' : 'none',
-    message: visionClient ? 'OCR service is ready' : 'OCR service not configured'
+    message: visionClient ? 'OCR service is ready' : 'OCR service not configured',
+    clientSideRecommended: !visionClient
   });
 });
 

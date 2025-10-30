@@ -1,26 +1,26 @@
 import {
-    Upload as HiArrowUpTray,
-    Calendar as HiCalendarDays,
-    Check as HiCheck,
-    CheckCircle as HiCheckCircle,
-    Clock as HiClock,
-    Cpu as HiCpuChip,
-    DollarSign as HiCurrencyDollar,
-    Smartphone as HiDevicePhoneMobile,
-    AlertCircle as HiExclamationCircle,
-    Eye as HiEye,
-    FolderPlus as HiFolderPlus,
-    Search as HiMagnifyingGlass,
-    Pencil as HiPencil,
-    Plus as HiPlus,
-    Save as HiSave,
-    Tag as HiTag,
-    Trash as HiTrash,
-    TrendingDown as HiTrendingDown,
-    TrendingUp as HiTrendingUp,
-    Wallet as HiWallet,
-    X as HiXMark,
-    Loader2,
+  Upload as HiArrowUpTray,
+  Calendar as HiCalendarDays,
+  Check as HiCheck,
+  CheckCircle as HiCheckCircle,
+  Clock as HiClock,
+  Cpu as HiCpuChip,
+  DollarSign as HiCurrencyDollar,
+  Smartphone as HiDevicePhoneMobile,
+  AlertCircle as HiExclamationCircle,
+  Eye as HiEye,
+  FolderPlus as HiFolderPlus,
+  Search as HiMagnifyingGlass,
+  Pencil as HiPencil,
+  Plus as HiPlus,
+  Save as HiSave,
+  Tag as HiTag,
+  Trash as HiTrash,
+  TrendingDown as HiTrendingDown,
+  TrendingUp as HiTrendingUp,
+  Wallet as HiWallet,
+  X as HiXMark,
+  Loader2,
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import Tesseract from 'tesseract.js';
@@ -320,8 +320,7 @@ const BudgetTracker: React.FC = () => {
       console.log('🔍 Starting OCR processing for file:', file.name, 'Size:', file.size);
       const imageUrl = URL.createObjectURL(file);
 
-      // Use default Tesseract configuration for better reliability
-      // Remove explicit worker paths that might cause CORS issues
+      // Configure Tesseract with proper TrustedScriptURL handling
       const result = await Tesseract.recognize(imageUrl, 'eng', {
         logger: (m: { status?: string; progress?: number }) => {
           if (m.status === 'recognizing text' && typeof m.progress === 'number') {
@@ -329,8 +328,10 @@ const BudgetTracker: React.FC = () => {
             console.log(`📄 OCR Progress: ${Math.round(m.progress * 100)}%`);
           }
         },
-        // Use default paths for better compatibility
-        // workerPath and corePath will use the bundled versions
+        // Use local files to avoid TrustedScriptURL issues
+        workerPath: '/tesseract-worker.min.js',
+        langPath: '/tessdata',
+        corePath: '/tesseract-core.wasm.js',
       });
 
       const rawText: string = result.data?.text || '';
@@ -363,6 +364,54 @@ const BudgetTracker: React.FC = () => {
       const error = err as Error;
       console.error('❌ OCR Error Details:', error);
       
+      // Check if it's a TrustedScriptURL error and try fallback
+      if (error?.message?.includes('TrustedScriptURL') || error?.message?.includes('importScripts')) {
+        console.log('🔄 TrustedScriptURL error detected, trying fallback configuration...');
+        
+        try {
+          // Fallback: Try without explicit worker paths
+          const fallbackResult = await Tesseract.recognize(imageUrl, 'eng', {
+            logger: (m: { status?: string; progress?: number }) => {
+              if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+                setProgress(Math.round(m.progress * 100));
+                console.log(`📄 OCR Fallback Progress: ${Math.round(m.progress * 100)}%`);
+              }
+            }
+            // No explicit paths - let Tesseract use its defaults
+          });
+
+          const rawText: string = fallbackResult.data?.text || '';
+          const avgConfidence: number = (fallbackResult.data?.confidence || 70) / 100;
+
+          console.log('✅ Fallback OCR succeeded');
+          console.log('📝 OCR extracted text:', rawText.substring(0, 200) + (rawText.length > 200 ? '...' : ''));
+          console.log('🎯 OCR confidence:', avgConfidence);
+
+          URL.revokeObjectURL(imageUrl);
+
+          // Parse fields from text
+          const amountGuess = extractAmountFromText(rawText);
+          const vendor = extractVendorFromText(rawText) || undefined;
+          const date = extractDateFromText(rawText) || undefined;
+
+          console.log('💰 Extracted amount:', amountGuess);
+          console.log('🏪 Extracted vendor:', vendor);
+          console.log('📅 Extracted date:', date);
+
+          return {
+            amount: amountGuess?.amount,
+            confidence: amountGuess?.confidence ?? avgConfidence,
+            vendor,
+            date,
+            rawText,
+            service: 'tesseract-js-fallback'
+          };
+        } catch (fallbackError) {
+          console.error('❌ Fallback OCR also failed:', fallbackError);
+          // Continue to regular error handling
+        }
+      }
+      
       // Provide more specific error messages for common issues
       let errorMessage = `OCR processing failed: ${error?.message || 'Unknown error'}`;
       
@@ -370,13 +419,13 @@ const BudgetTracker: React.FC = () => {
         errorMessage = 'OCR failed to load required files. Please check your internet connection and try again.';
       } else if (error?.message?.includes('WebAssembly')) {
         errorMessage = 'OCR engine failed to initialize. Your browser may not support this feature.';
-      } else if (error?.message?.includes('Worker')) {
-        errorMessage = 'OCR worker failed to start. Please try refreshing the page.';
+      } else if (error?.message?.includes('Worker') || error?.message?.includes('importScripts') || error?.message?.includes('TrustedScriptURL')) {
+        errorMessage = 'Browser security settings are blocking OCR. Please try a different browser or disable strict security policies.';
       } else if (error?.message?.includes('CORS')) {
         errorMessage = 'OCR files blocked by browser security. Please try refreshing the page or use a different browser.';
       }
       
-      console.log('🔧 Suggested fix: Try refreshing the page or using a different image format.');
+      console.log('🔧 Suggested fix: Try refreshing the page, using a different browser, or upload the receipt manually.');
       throw new Error(errorMessage);
     }
   };
