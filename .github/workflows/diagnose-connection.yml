@@ -1,0 +1,101 @@
+name: Diagnose Server Connection
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_diagnostics:
+        description: 'Run connection diagnostics'
+        required: false
+        default: 'true'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check GitHub Actions environment
+      run: |
+        echo "🔍 GitHub Actions Environment Info"
+        echo "================================="
+        echo "Runner OS: $(uname -a)"
+        echo "Runner IP: $(curl -s ifconfig.me || echo 'Could not get IP')"
+        echo "DNS servers: $(cat /etc/resolv.conf | grep nameserver)"
+        echo ""
+        
+    - name: Test basic connectivity
+      run: |
+        echo "🌐 Testing Basic Network Connectivity"
+        echo "===================================="
+        
+        # Test DNS resolution
+        echo "DNS resolution test:"
+        nslookup ${{ secrets.SERVER_HOST }} || echo "❌ DNS resolution failed"
+        
+        # Test ping (if allowed)
+        echo "Ping test:"
+        timeout 10 ping -c 3 ${{ secrets.SERVER_HOST }} || echo "❌ Ping failed (may be blocked)"
+        
+        # Test port connectivity
+        echo "Port connectivity test:"
+        timeout 10 nc -zv ${{ secrets.SERVER_HOST }} ${{ secrets.SERVER_PORT || 22 }} || echo "❌ Port ${{ secrets.SERVER_PORT || 22 }} not reachable"
+        
+    - name: Test SSH connection stages
+      run: |
+        echo "🔑 Testing SSH Connection Stages"
+        echo "==============================="
+        
+        # Create a temporary SSH key for testing
+        echo "Creating temporary SSH key..."
+        echo "${{ secrets.SERVER_SSH_KEY }}" > /tmp/test_key
+        chmod 600 /tmp/test_key
+        
+        # Test SSH with maximum verbosity
+        echo "Testing SSH connection with verbose output:"
+        timeout 30 ssh -vvv -i /tmp/test_key \
+          -o StrictHostKeyChecking=no \
+          -o ConnectTimeout=10 \
+          -o BatchMode=yes \
+          -p ${{ secrets.SERVER_PORT || 22 }} \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+          "echo 'Connection successful'" 2>&1 || {
+            echo "❌ SSH connection failed"
+            echo ""
+            echo "This is the same error your deployment is experiencing."
+          }
+        
+        # Clean up
+        rm -f /tmp/test_key
+        
+    - name: GitHub Actions network info
+      run: |
+        echo "📡 GitHub Actions Network Information"
+        echo "===================================="
+        echo "Current IP ranges GitHub Actions might use:"
+        curl -s https://api.github.com/meta | jq -r '.actions[]' | head -10
+        echo ""
+        echo "Your server needs to allow connections from these IP ranges."
+        
+    - name: Recommendations
+      run: |
+        echo "💡 Diagnostic Results & Recommendations"
+        echo "======================================"
+        echo ""
+        echo "If the SSH test failed above, the issue is likely:"
+        echo ""
+        echo "1. 🔥 FIREWALL: Your server firewall is blocking GitHub Actions IPs"
+        echo "   Fix: Allow SSH from 0.0.0.0/0 or GitHub's IP ranges"
+        echo "   Command: sudo ufw allow ssh"
+        echo ""
+        echo "2. ☁️ CLOUD SECURITY GROUPS: Cloud provider blocking access"
+        echo "   Fix: Update security group to allow port ${{ secrets.SERVER_PORT || 22 }} from 0.0.0.0/0"
+        echo ""
+        echo "3. 🌐 NETWORK CHANGE: Server IP or network configuration changed"
+        echo "   Fix: Verify SERVER_HOST secret is correct"
+        echo ""
+        echo "4. 🔑 SSH SERVICE: SSH daemon not running or misconfigured"
+        echo "   Fix: sudo systemctl restart ssh"
+        echo ""
+        echo "🔧 Next steps:"
+        echo "1. Run the manual diagnostic script on your local machine"
+        echo "2. Check your server's firewall and SSH service"
+        echo "3. If still stuck, use the GitHub Release deployment method"
