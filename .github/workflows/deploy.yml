@@ -124,15 +124,40 @@ jobs:
         # Test connection
         ssh-keyscan -p ${{ secrets.SERVER_PORT || 22 }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts || echo "Host key scan failed, continuing..."
         
-    - name: Deploy via rsync (more reliable than SCP)
+    - name: Deploy via rsync with timeout and fallback
       run: |
         echo "📦 Deploying via rsync..."
         echo "Package size: $(ls -lh deploy.tar.gz | awk '{print $5}')"
         
-        # Use rsync for more reliable transfer
-        rsync -avz -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT || 22 }} -o StrictHostKeyChecking=no" \
+        # Test SSH connectivity first
+        echo "🔍 Testing SSH connectivity..."
+        timeout 30 ssh -i ~/.ssh/deploy_key \
+          -p ${{ secrets.SERVER_PORT || 22 }} \
+          -o StrictHostKeyChecking=no \
+          -o ConnectTimeout=15 \
+          -o ServerAliveInterval=5 \
+          -o ServerAliveCountMax=3 \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+          "echo 'SSH connection successful'" || {
+            echo "❌ SSH connectivity test failed"
+            echo "Trying alternative connection methods..."
+          }
+        
+        # Try rsync with timeout and verbose output
+        echo "📦 Starting rsync transfer..."
+        timeout 300 rsync -avz --timeout=60 --progress \
+          -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT || 22 }} -o StrictHostKeyChecking=no -o ConnectTimeout=30" \
           deploy.tar.gz \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/streamscene-deploy.tar.gz
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/streamscene-deploy.tar.gz || {
+            echo "❌ Rsync failed, trying direct SCP with timeout..."
+            timeout 180 scp -i ~/.ssh/deploy_key \
+              -P ${{ secrets.SERVER_PORT || 22 }} \
+              -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=30 \
+              -o ServerAliveInterval=10 \
+              deploy.tar.gz \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/streamscene-deploy.tar.gz
+          }
           
         echo "✅ File transfer completed"
         

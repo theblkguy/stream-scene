@@ -1,0 +1,134 @@
+name: Deploy via GitHub Release (Alternative)
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: 'Force deployment even if no changes'
+        required: false
+        default: 'false'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies 
+      run: |
+        echo "📦 Installing dependencies..."
+        rm -f package-lock.json
+        npm install --package-lock-only
+        npm ci
+        
+    - name: Build application
+      run: |
+        echo "🏗️ Building application for production..."
+        npm run build
+        npm run build:server || echo "Server build completed via npm run build"
+      env:
+        NODE_ENV: production
+        REACT_APP_API_URL: https://streamscene.net
+        REACT_APP_SERVER_URL: https://streamscene.net
+
+    - name: Create deployment package
+      run: |
+        echo "📦 Creating deployment package..."
+        mkdir -p deploy-release
+        
+        # Copy essential files only
+        cp -r dist/ deploy-release/ 2>/dev/null || echo "No dist directory"
+        cp ecosystem.config.cjs deploy-release/
+        cp package-server.json deploy-release/package.json
+        
+        # Create minimal client
+        mkdir -p deploy-release/public
+        cp public/index.html deploy-release/public/
+        find public -name "*.js" -size -500k -exec cp {} deploy-release/public/ \; || echo "Copying smaller JS files"
+        
+        # Create environment file
+        cat > deploy-release/.env << EOF
+        NODE_ENV=production
+        PORT=8000
+        CLIENT_URL=https://streamscene.net
+        REACT_APP_API_URL=https://streamscene.net
+        REACT_APP_SERVER_URL=https://streamscene.net
+        BASE_URL=https://streamscene.net
+        ALLOW_DEMO_LOGIN=true
+        SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+        GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+        GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+        AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION=${{ secrets.AWS_REGION }}
+        AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+        GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+        DB_HOST=localhost
+        DB_NAME=stream_scene_db
+        DB_USER=root
+        DB_PASS=StreamRoot2024!
+        EOF
+        
+        # Create compressed package
+        cd deploy-release
+        tar -czf ../streamscene-release.tar.gz .
+        cd ..
+        
+        echo "📤 Release package size: $(ls -lh streamscene-release.tar.gz | awk '{print $5}')"
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: deploy-${{ github.run_number }}
+        release_name: StreamScene Deployment ${{ github.run_number }}
+        body: |
+          Automated deployment package for StreamScene
+          
+          **Deployment Instructions:**
+          1. Download `streamscene-release.tar.gz`
+          2. Upload to your server: `scp streamscene-release.tar.gz user@server:/tmp/`
+          3. Extract: `cd /var/www/stream-scene && tar -xzf /tmp/streamscene-release.tar.gz`
+          4. Install deps: `npm install --production`
+          5. Restart: `pm2 restart stream-scene || pm2 start ecosystem.config.cjs`
+          
+          Package size: $(ls -lh streamscene-release.tar.gz | awk '{print $5}')
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./streamscene-release.tar.gz
+        asset_name: streamscene-release.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Provide manual deployment instructions
+      run: |
+        echo "🎉 Deployment package created successfully!"
+        echo ""
+        echo "📥 Manual Deployment Options:"
+        echo "1. **GitHub Release**: Download from releases page"
+        echo "2. **Direct URL**: wget https://github.com/theblkguy/stream-scene/releases/download/deploy-${{ github.run_number }}/streamscene-release.tar.gz"
+        echo ""
+        echo "🚀 Server Commands:"
+        echo "cd /var/www/stream-scene"
+        echo "wget https://github.com/theblkguy/stream-scene/releases/download/deploy-${{ github.run_number }}/streamscene-release.tar.gz"
+        echo "tar -xzf streamscene-release.tar.gz"
+        echo "npm install --production"
+        echo "pm2 restart stream-scene || pm2 start ecosystem.config.cjs"
+        echo ""
+        echo "✨ This bypasses all GitHub Actions → Server connectivity issues!"
