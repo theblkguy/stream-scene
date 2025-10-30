@@ -132,11 +132,31 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT || 22 }}
         script: |
-          cd /var/www/stream-scene
+          echo "🔍 Checking uploaded files..."
+          ls -la /tmp/deploy.tar.gz || { echo "File not found, listing /tmp/"; ls -la /tmp/ | grep -E '(deploy|tar)'; }
+          
+          echo "🔄 Extracting deployment package..."
+          cd /var/www/stream-scene || { echo "Creating directory..."; sudo mkdir -p /var/www/stream-scene; sudo chown $USER:$USER /var/www/stream-scene; cd /var/www/stream-scene; }
+          
+          # Create backup if exists
+          if [ -f "package.json" ]; then
+            echo "📋 Creating backup..."
+            sudo cp -r . ../stream-scene-backup-$(date +%s) 2>/dev/null || echo "Backup skipped"
+          fi
+          
+          # Extract deployment
           tar -xzf /tmp/deploy.tar.gz
-          rm /tmp/deploy.tar.gz
+          rm -f /tmp/deploy.tar.gz
+          
+          echo "📦 Installing production dependencies..."
           npm install --production
-          pm2 restart stream-scene || pm2 start ecosystem.config.cjs
+          
+          echo "🔄 Restarting application..."
+          pm2 restart stream-scene || pm2 start ecosystem.config.cjs --name stream-scene
+          pm2 save
+          
+          echo "✅ Deployment completed!"
+          pm2 list
         
     - name: Extract and restart application
       uses: appleboy/ssh-action@v1.0.3
