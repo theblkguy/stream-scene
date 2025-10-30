@@ -441,10 +441,10 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     };
   }, []);
 
-  // Touch support - convert touch coordinates to canvas coordinates with zoom/pan
+  // Enhanced touch support with pressure sensitivity
   const getTouchCanvasPoint = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
-    if (!canvas || e.touches.length === 0) return { x: 0, y: 0 };
+    if (!canvas || e.touches.length === 0) return { x: 0, y: 0, pressure: 1.0 };
 
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches[0]; // Use first touch point
@@ -453,51 +453,129 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     const canvasX = (touch.clientX - rect.left) * (canvas.width / rect.width);
     const canvasY = (touch.clientY - rect.top) * (canvas.height / rect.height);
     
+    // Get pressure (if available, otherwise default to 1.0)
+    const pressure = (touch as any).force || (touch as any).pressure || 1.0;
+    
     // Apply inverse transform to get actual drawing coordinates
     return {
       x: (canvasX - zoomState.offsetX) / zoomState.scale,
-      y: (canvasY - zoomState.offsetY) / zoomState.scale
+      y: (canvasY - zoomState.offsetY) / zoomState.scale,
+      pressure: Math.max(0.1, Math.min(1.0, pressure)) // Clamp between 0.1 and 1.0
     };
   }, [zoomState]);
 
-  const drawLine = useCallback((from: Point, to: Point, color: string, width: number, tool: string, erase = false) => {
+  // Add haptic feedback for tool changes (mobile only)
+  const triggerHapticFeedback = useCallback((type: 'light' | 'medium' | 'heavy' = 'light') => {
+    if ('vibrate' in navigator) {
+      const patterns = {
+        light: [10],
+        medium: [20],
+        heavy: [30]
+      };
+      navigator.vibrate(patterns[type]);
+    }
+  }, []);
+
+  // Enhanced tool change with haptic feedback
+  const handleToolChange = useCallback((newTool: 'pen' | 'brush' | 'eraser' | 'text') => {
+    setCurrentTool(newTool);
+    triggerHapticFeedback('light');
+    
+    // Update brush width based on tool
+    if (newTool === 'pen') {
+      setBrushWidth(penSize);
+    } else if (newTool === 'brush' || newTool === 'eraser') {
+      setBrushWidth(brushSize);
+    }
+  }, [penSize, brushSize, triggerHapticFeedback]);
+
+  // Enhanced brush drawing with better blending and texture
+  const drawBrushStroke = useCallback((from: Point, to: Point, color: string, width: number, pressure = 1.0) => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (!ctx) return;
 
-    // Different styling for pen vs brush
-    if (tool === 'pen') {
-      ctx.lineCap = 'butt';
-      ctx.lineJoin = 'miter';
-      ctx.lineWidth = Math.max(1, width * 0.7); // Pen is thinner
-    } else if (tool === 'brush') {
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.lineWidth = width;
-      ctx.globalAlpha = 0.8; // Brush has slight transparency for blending
-    } else {
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.lineWidth = width;
+    // Calculate distance for pressure variation
+    const distance = Math.hypot(to.x - from.x, to.y - from.y);
+    const steps = Math.max(1, Math.floor(distance / 2));
+    
+    // Enhanced brush with multiple layers for texture
+    for (let i = 0; i <= steps; i++) {
+      const t = steps === 0 ? 0 : i / steps;
+      const x = from.x + (to.x - from.x) * t;
+      const y = from.y + (to.y - from.y) * t;
+      
+      // Vary size based on pressure and position
+      const currentPressure = pressure * (0.8 + Math.random() * 0.4);
+      const brushSize = width * currentPressure;
+      
+      // Main brush stroke
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.globalAlpha = 0.15;
+      const gradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize / 2);
+      gradient.addColorStop(0, color);
+      gradient.addColorStop(0.7, color);
+      gradient.addColorStop(1, 'transparent');
+      
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Add texture with smaller dabs
+      for (let j = 0; j < 3; j++) {
+        const offsetX = (Math.random() - 0.5) * brushSize * 0.3;
+        const offsetY = (Math.random() - 0.5) * brushSize * 0.3;
+        const dabSize = brushSize * (0.3 + Math.random() * 0.4);
+        
+        ctx.globalAlpha = 0.08;
+        ctx.beginPath();
+        ctx.arc(x + offsetX, y + offsetY, dabSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     
+    // Reset context
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1.0;
+  }, []);
+
+  const drawLine = useCallback((from: Point, to: Point, color: string, width: number, tool: string, erase = false, pressure = 1.0) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!ctx) return;
+
     if (erase) {
       ctx.globalCompositeOperation = 'destination-out';
-    } else {
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
       ctx.globalCompositeOperation = 'source-over';
-      ctx.strokeStyle = color;
+      return;
     }
 
+    if (tool === 'brush') {
+      drawBrushStroke(from, to, color, width, pressure);
+      return;
+    }
+
+    // Pen tool - clean, precise lines
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = tool === 'pen' ? Math.max(1, width * 0.7) : width;
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = 1.0;
+    
     ctx.beginPath();
     ctx.moveTo(from.x, from.y);
     ctx.lineTo(to.x, to.y);
     ctx.stroke();
-    
-    // Reset alpha for other operations
-    if (tool === 'brush') {
-      ctx.globalAlpha = 1.0;
-    }
-  }, []);
+  }, [drawBrushStroke]);
 
   const saveStroke = useCallback((event: DrawingEvent) => {
     setStrokes(prev => {
@@ -713,8 +791,8 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     
     if (!isDrawing || !lastPoint) return;
     
-    // Draw immediately for visual feedback
-    drawLine(lastPoint, point, brushColor, brushWidth, currentTool, currentTool === 'eraser');
+    // Draw immediately for visual feedback (mouse has default pressure of 1.0)
+    drawLine(lastPoint, point, brushColor, brushWidth, currentTool, currentTool === 'eraser', 1.0);
     
     // Save stroke data
     const strokeEvent: DrawingEvent = {
@@ -885,7 +963,8 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     }
     
     // Normal drawing mode
-    const point = getTouchCanvasPoint(e);
+    const pointData = getTouchCanvasPoint(e);
+    const point = { x: pointData.x, y: pointData.y };
     
     // Emit cursor position to collaborators
     if (socket && socket.connected) {
@@ -894,8 +973,8 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
     
     if (!isDrawing || !lastPoint) return;
     
-    // Draw immediately for visual feedback
-    drawLine(lastPoint, point, brushColor, brushWidth, currentTool, currentTool === 'eraser');
+    // Draw immediately for visual feedback with pressure sensitivity
+    drawLine(lastPoint, point, brushColor, brushWidth, currentTool, currentTool === 'eraser', pointData.pressure);
     
     // Save stroke data
     const strokeEvent: DrawingEvent = {
@@ -1313,9 +1392,9 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
           {/* Tools */}
           <div className="flex items-center space-x-1">
             <button
-              onClick={() => setCurrentTool('pen')}
+              onClick={() => handleToolChange('pen')}
               className={`p-2 rounded ${currentTool === 'pen' ? 'bg-blue-600' : 'bg-gray-700'}`}
-              title="Pen"
+              title="Pen - Precise lines"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" clipRule="evenodd" />
@@ -1323,9 +1402,9 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
               </svg>
             </button>
             <button
-              onClick={() => setCurrentTool('brush')}
+              onClick={() => handleToolChange('brush')}
               className={`p-2 rounded ${currentTool === 'brush' ? 'bg-blue-600' : 'bg-gray-700'}`}
-              title="Brush"
+              title="Brush - Artistic strokes with pressure"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M4.5 12a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6 10.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM12 4a4 4 0 11-8 0 4 4 0 018 0zM16 14a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -1333,7 +1412,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
               </svg>
             </button>
             <button
-              onClick={() => setCurrentTool('eraser')}
+              onClick={() => handleToolChange('eraser')}
               className={`p-2 rounded ${currentTool === 'eraser' ? 'bg-blue-600' : 'bg-gray-700'}`}
               title="Eraser"
             >
@@ -1342,7 +1421,7 @@ const CollaborativeCanvas: React.FC<CanvasProps> = ({
               </svg>
             </button>
             <button
-              onClick={() => setCurrentTool('text')}
+              onClick={() => handleToolChange('text')}
               className={`p-2 rounded ${currentTool === 'text' ? 'bg-blue-600' : 'bg-gray-700'}`}
               title="Text"
             >
