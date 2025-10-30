@@ -114,39 +114,145 @@ jobs:
           exit 1
         }
 
-    - name: Deploy via SCP
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        port: ${{ secrets.SERVER_PORT || 22 }}
-        timeout: 5m
-        source: "deploy.tar.gz"
-        target: "/tmp/"
-
-    - name: Extract and restart
+    - name: Setup SSH for deployment
+      run: |
+        echo "🔑 Setting up SSH key for deployment..."
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        
+        # Test connection
+        ssh-keyscan -p ${{ secrets.SERVER_PORT || 22 }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts || echo "Host key scan failed, continuing..."
+        
+    - name: Deploy via rsync (more reliable than SCP)
+      run: |
+        echo "📦 Deploying via rsync..."
+        echo "Package size: $(ls -lh deploy.tar.gz | awk '{print $5}')"
+        
+        # Use rsync for more reliable transfer
+        rsync -avz -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT || 22 }} -o StrictHostKeyChecking=no" \
+          deploy.tar.gz \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/streamscene-deploy.tar.gz
+          
+        echo "✅ File transfer completed"
+        
+    - name: Extract and restart application
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT || 22 }}
-        timeout: 2m
+        timeout: 5m
+        command_timeout: 5m
         script: |
           set -e
           
-          echo "🔄 Extracting deployment..."
+          echo "� Extracting deployment package..."
           cd /var/www/stream-scene
-          tar -xzf /tmp/deploy.tar.gz
-          rm /tmp/deploy.tar.gz
           
-          echo "📦 Installing dependencies..."
+          # Backup current deployment
+          if [ -f "package.json" ]; then
+            echo "📋 Creating backup..."
+            cp -r . ../stream-scene-backup-$(date +%s) || echo "Backup failed, continuing..."
+          fi
+          
+          # Extract new deployment
+          tar -xzf /tmp/streamscene-deploy.tar.gz
+          rm -f /tmp/streamscene-deploy.tar.gz
+          
+          echo "� Installing production dependencies..."
           npm install --production --silent
           
-          echo "🔄 Restarting application..."
-          pm2 restart stream-scene || pm2 start ecosystem.config.cjs --env production
+          echo "🔄 Restarting application with PM2..."
+          pm2 stop stream-scene || echo "No existing process to stop"
+          pm2 start ecosystem.config.cjs --env production --name stream-scene
           pm2 save
           
-          echo "✅ Deployment complete!"
-          pm2 status
+          echo "✅ Deployment completed successfully!"
+          pm2 list
+          echo "🌐 Application should be available at: https://streamscene.net"
+    
+    - name: Transfer deployment file
+      run: |
+        echo "📦 Encoding deployment package for SSH transfer..."
+        base64 deploy.tar.gz > deploy.tar.gz.b64
+        echo "📤 Deployment package size: $(ls -lh deploy.tar.gz | awk '{print $5}')"
+        echo "📤 Encoded size: $(ls -lh deploy.tar.gz.b64 | awk '{print $5}')"
+        
+        # Split the base64 file into chunks for reliable transfer
+        split -b 1M deploy.tar.gz.b64 deploy_chunk_
+        echo "📦 Created $(ls deploy_chunk_* | wc -l) chunks for transfer"
+        
+    - name: Deploy via chunked SSH transfer
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT || 22 }}
+        timeout: 15m
+        command_timeout: 15m
+        script: |
+          set -e
+          
+          echo "� Preparing deployment directory..."
+          rm -rf /tmp/streamscene-deploy
+          mkdir -p /tmp/streamscene-deploy
+          cd /tmp/streamscene-deploy
+          
+          # This will be filled by the next step
+          echo "📥 Ready to receive deployment chunks..."
+          
+    - name: Transfer and deploy
+      run: |
+        echo "🔄 Transferring deployment via SSH..."
+        
+        # Create a deployment script that includes the base64 data
+        cat > deploy_script.sh << 'DEPLOY_SCRIPT_EOF'
+        #!/bin/bash
+        set -e
+        
+        echo "📥 Creating deployment package on server..."
+        cd /tmp/streamscene-deploy
+        
+        # Receive base64 encoded deployment
+        cat > deploy.tar.gz.b64 << 'B64_EOF'
+        $(cat deploy.tar.gz.b64)
+        B64_EOF
+        
+        echo "📦 Decoding deployment package..."
+        base64 -d deploy.tar.gz.b64 > deploy.tar.gz
+        rm deploy.tar.gz.b64
+        
+        echo "📤 Package size: $(ls -lh deploy.tar.gz | awk '{print $5}')"
+        
+        echo "🔄 Extracting to application directory..."
+        cd /var/www/stream-scene
+        tar -xzf /tmp/streamscene-deploy/deploy.tar.gz
+        rm -rf /tmp/streamscene-deploy
+        
+        echo "📦 Installing production dependencies..."
+        npm install --production --silent
+        
+        echo "🔄 Restarting application..."
+        pm2 restart stream-scene || pm2 start ecosystem.config.cjs --env production
+        pm2 save
+        
+        echo "✅ Deployment completed successfully!"
+        pm2 status
+        DEPLOY_SCRIPT_EOF
+        
+        # Transfer and execute the deployment script
+        scp -i <(echo "${{ secrets.SERVER_SSH_KEY }}") \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -P ${{ secrets.SERVER_PORT || 22 }} \
+            deploy_script.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/
+            
+        ssh -i <(echo "${{ secrets.SERVER_SSH_KEY }}") \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -p ${{ secrets.SERVER_PORT || 22 }} \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "bash /tmp/deploy_script.sh && rm /tmp/deploy_script.sh"
