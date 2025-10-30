@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { motion, AnimatePresence } from 'framer-motion';
 import useAuth from '../hooks/useAuth';
 import InlineLoading from './InlineLoading';
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import CollaborativeCanvas from './CollaborativeCanvas';
+import { useNavigate, useParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
+import CollaborativeCanvas from './CollaborativeCanvas';
 
 const SharedCanvas: React.FC = () => {
   const { token } = useParams<{ token: string }>();
