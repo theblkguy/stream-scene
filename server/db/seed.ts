@@ -303,6 +303,13 @@ async function seed(forceRecreate = false) {
     `);
     console.log('✅ AllBlk user created');
 
+    // Create Jasmine Hall user
+    await sequelize.query(`
+      INSERT IGNORE INTO \`users\` (\`id\`, \`email\`, \`name\`, \`google_id\`, \`created_at\`, \`updated_at\`) 
+      VALUES (3, 'jasminehall5935@gmail.com', 'Jasmine Hall', 'jasmine-hall-5935', NOW(), NOW());
+    `);
+    console.log('✅ Jasmine Hall user created');
+
     // Create default canvases
     await sequelize.query(`
       INSERT IGNORE INTO \`canvases\` (\`id\`, \`userId\`, \`name\`, \`description\`, \`canvasData\`, \`isPublic\`, \`allowAnonymousEdit\`) 
@@ -316,6 +323,13 @@ async function seed(forceRecreate = false) {
       VALUES ('allblk-creative-workspace', 2, 'AllBlk Creative Workspace', 'Creative collaboration space for content planning', '{"objects":[],"background":"#1a1a2e","version":"4.6.0"}', true, true);
     `);
     console.log('✅ AllBlk canvas created');
+
+    // Create canvas for Jasmine Hall
+    await sequelize.query(`
+      INSERT IGNORE INTO \`canvases\` (\`id\`, \`userId\`, \`name\`, \`description\`, \`canvasData\`, \`isPublic\`, \`allowAnonymousEdit\`) 
+      VALUES ('jasmine-design-studio', 3, 'Jasmine Design Studio', 'Digital design and creative planning workspace', '{"objects":[],"background":"#f8fafc","version":"4.6.0"}', true, true);
+    `);
+    console.log('✅ Jasmine Hall canvas created');
 
     // Create a welcome task using direct SQL for consistency
     await sequelize.query(`
@@ -376,16 +390,38 @@ async function seed(forceRecreate = false) {
 
     console.log('✅ Minimal AllBlk creator tasks created (5 total)');
 
+    // Add minimal seed data for Jasmine Hall (jasminehall5935@gmail.com)
+    console.log('🎨 Adding Jasmine Hall creative tasks...');
+    
+    // Essential tasks for Jasmine (5 total for third user)
+    await sequelize.query(`
+      INSERT IGNORE INTO \`tasks\` (\`title\`, \`description\`, \`priority\`, \`task_type\`, \`status\`, \`deadline\`, \`estimated_hours\`, \`user_id\`) VALUES
+      ('UI Design Mockups', 'Create mobile app interface designs for client project', 'high', 'creative', 'in_progress', '${getCurrentDate()}', 6, 3),
+      ('Logo Design Concepts', 'Design 3 logo variations for startup client', 'medium', 'creative', 'pending', '${getDateOffset(2)}', 4, 3),
+      ('Client Presentation', 'Prepare design presentation for Monday meeting', 'high', 'admin', 'pending', '${getDateOffset(1)}', 2, 3),
+      ('Portfolio Website Update', 'Add recent projects to personal portfolio site', 'low', 'admin', 'pending', '${getDateOffset(10)}', 3, 3);
+    `);
+
+    // One completed task for variety
+    await sequelize.query(`
+      INSERT IGNORE INTO \`tasks\` (\`title\`, \`description\`, \`priority\`, \`task_type\`, \`status\`, \`deadline\`, \`estimated_hours\`, \`user_id\`) VALUES
+      ('Brand Guidelines Document', 'Completed comprehensive brand guidelines for tech client', 'medium', 'creative', 'completed', '${getDateOffset(-4)}', 5, 3);
+    `);
+
+    console.log('✅ Jasmine Hall creative tasks created (5 total)');
+
     // Add minimal budget tracker seed data
     console.log('💰 Adding budget tracker demo data...');
     
-    // Create budget projects for both users
+    // Create budget projects for all users
     await sequelize.query(`
       INSERT IGNORE INTO \`budget_projects\` (\`id\`, \`user_id\`, \`name\`, \`description\`, \`color\`, \`is_active\`, \`tags\`) VALUES
       ('proj-streaming-setup', 1, 'Streaming Setup', 'Equipment and software for streaming', '#8b5cf6', true, '["streaming", "equipment"]'),
       ('proj-content-creation', 1, 'Content Creation', 'Video editing and content tools', '#059669', true, '["content", "editing"]'),
       ('proj-tech-reviews', 2, 'Tech Reviews', 'Equipment for tech review videos', '#dc2626', true, '["tech", "reviews"]'),
-      ('proj-brand-partnerships', 2, 'Brand Partnerships', 'Sponsored content expenses', '#f59e0b', true, '["sponsorship", "brand"]');
+      ('proj-brand-partnerships', 2, 'Brand Partnerships', 'Sponsored content expenses', '#f59e0b', true, '["sponsorship", "brand"]'),
+      ('proj-design-business', 3, 'Design Business', 'Freelance design work and client projects', '#6366f1', true, '["design", "freelance"]'),
+      ('proj-creative-tools', 3, 'Creative Tools', 'Design software and equipment', '#ec4899', true, '["tools", "software"]');
     `);
     
     // Create budget entries (income and expenses)
@@ -408,25 +444,37 @@ async function seed(forceRecreate = false) {
       -- AllBlk Creator expenses
       ('entry-9', 2, 'expense', 899.00, 'Equipment', 'iPhone 16 for review content', '${getDateOffset(-12)}', 'proj-tech-reviews', '["iphone", "review", "mobile"]'),
       ('entry-10', 2, 'expense', 199.00, 'Software', 'Final Cut Pro annual subscription', '${getDateOffset(-20)}', 'proj-tech-reviews', '["editing", "finalcut"]'),
-      ('entry-11', 2, 'expense', 65.00, 'Supplies', 'Backdrop and lighting for videos', '${getDateOffset(-14)}', 'proj-tech-reviews', '["lighting", "backdrop"]');
+      ('entry-11', 2, 'expense', 65.00, 'Supplies', 'Backdrop and lighting for videos', '${getDateOffset(-14)}', 'proj-tech-reviews', '["lighting", "backdrop"]'),
+      
+      -- Jasmine Hall income
+      ('entry-12', 3, 'income', 2800.00, 'Client Project', 'Mobile app UI design for startup', '${getDateOffset(-3)}', 'proj-design-business', '["ui", "mobile", "client"]'),
+      ('entry-13', 3, 'income', 1200.00, 'Logo Design', 'Brand identity project for tech company', '${getDateOffset(-7)}', 'proj-design-business', '["logo", "branding", "tech"]'),
+      ('entry-14', 3, 'income', 650.00, 'Website Design', 'Portfolio website design for photographer', '${getDateOffset(-10)}', 'proj-design-business', '["website", "portfolio"]'),
+      
+      -- Jasmine Hall expenses
+      ('entry-15', 3, 'expense', 299.00, 'Software', 'Adobe Creative Cloud annual subscription', '${getDateOffset(-25)}', 'proj-creative-tools', '["adobe", "creative-cloud"]'),
+      ('entry-16', 3, 'expense', 89.99, 'Software', 'Figma Pro subscription for team collaboration', '${getDateOffset(-18)}', 'proj-creative-tools', '["figma", "collaboration"]'),
+      ('entry-17', 3, 'expense', 450.00, 'Equipment', 'Wacom Cintiq drawing tablet for digital art', '${getDateOffset(-30)}', 'proj-creative-tools', '["wacom", "tablet", "digital-art"]'),
+      ('entry-18', 3, 'expense', 125.00, 'Business', 'Business cards and marketing materials', '${getDateOffset(-16)}', 'proj-design-business', '["marketing", "business-cards"]');
     `);
     
     console.log('✅ Budget tracker demo data created');
     console.log('📊 Budget Summary:');
-    console.log('   - 4 budget projects created');
-    console.log('   - 11 budget entries (income & expenses) for demo');
-    console.log('   - Realistic streaming/creator financial data');
+    console.log('   - 6 budget projects created');
+    console.log('   - 18 budget entries (income & expenses) for demo');
+    console.log('   - Realistic streaming/creator/design financial data');
 
     console.log('🎊 Database seeding completed successfully!');
     console.log('📊 Summary:');
     console.log('   - 12 tables created with proper foreign key relationships');
     console.log('   - Fixed userId foreign key type mismatch (INTEGER UNSIGNED)');
-    console.log('   - Sample data inserted for 2 users:');
+    console.log('   - Sample data inserted for 3 users:');
     console.log('     • admin@streamscene.net (8 demo tasks + budget data)');
     console.log('     • allblk13@gmail.com (5 demo tasks + budget data)');
-    console.log('   - Total demo tasks: 13 (dramatically reduced from hundreds)');
-    console.log('   - Budget tracker: 4 projects + 11 realistic entries');
-    console.log('   - Default canvases created');
+    console.log('     • jasminehall5935@gmail.com (5 demo tasks + budget data)');
+    console.log('   - Total demo tasks: 18 (diverse creative/admin/business tasks)');
+    console.log('   - Budget tracker: 6 projects + 18 realistic entries');
+    console.log('   - 3 default canvases created');
     console.log('   - Database ready for production use');
     
   } catch (err) {
