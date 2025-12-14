@@ -23,7 +23,7 @@ const SharedCanvas: React.FC = () => {
           </button>
         </div>
       </div>
-    );
+    
   }
 
   // Welcome modal for visitors

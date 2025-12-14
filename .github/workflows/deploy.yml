@@ -1,8 +1,6 @@
 name: Deploy to Personal Server (Clean)
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
