@@ -9,19 +9,19 @@
 import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import {
-    FaBrain,
-    FaCalendarAlt,
-    FaRobot
+  FaBrain,
+  FaCalendarAlt,
+  FaRobot
 } from 'react-icons/fa';
 import {
-    HiClock,
-    HiCog6Tooth,
-    HiDocumentText,
-    HiExclamationTriangle,
-    HiLightBulb,
-    HiMagnifyingGlass,
-    HiPencilSquare,
-    HiSparkles
+  HiClock,
+  HiCog6Tooth,
+  HiDocumentText,
+  HiExclamationTriangle,
+  HiLightBulb,
+  HiMagnifyingGlass,
+  HiPencilSquare,
+  HiSparkles
 } from 'react-icons/hi2';
 import useAuth from '../hooks/useAuth';
 import { Task, TaskFormData } from '../types/task';
@@ -124,8 +124,10 @@ const AIWeeklyPlanner: React.FC = () => {
     return [...tasks].sort((a, b) => {
       switch (sortBy) {
         case 'priority':
-          const priorityOrder = { high: 3, medium: 2, low: 1 };
-          return priorityOrder[b.priority] - priorityOrder[a.priority];
+          const priorityOrder: { [key: string]: number } = { high: 3, medium: 2, low: 1 };
+          const aPriority = priorityOrder[a.priority] || 0;
+          const bPriority = priorityOrder[b.priority] || 0;
+          return bPriority - aPriority;
         case 'deadline':
           if (!a.deadline && !b.deadline) return 0;
           if (!a.deadline) return 1;
@@ -190,7 +192,7 @@ const AIWeeklyPlanner: React.FC = () => {
     return filtered;
   };
 
-  const filteredTasks = getFilteredTasks();
+  const filteredTasks = sortTasks(getFilteredTasks(), taskSort);
 
   // Notification helper function
   const showNotification = (type: 'success' | 'error' | 'info', message: string) => {

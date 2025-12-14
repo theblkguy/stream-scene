@@ -1,153 +1,130 @@
-name: Deploy to Personal Server (Clean)
+name: Deploy to Personal Server
 
 on:
+<<<<<<< HEAD
+=======
+  push:
+    branches: [ live-branch ]
+>>>>>>> a3118a2ca87a254333ff94298a29823c6c27d11e
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-        
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install dependencies 
-      run: |
-        echo "🔧 Fixing dependency lock file sync..."
-        rm -f package-lock.json
-        npm install --package-lock-only
-        
-        echo "📦 Installing ALL dependencies (including devDependencies for build)..."
-        npm ci
-      env:
-        REACT_APP_API_URL: https://streamscene.net
-        REACT_APP_SERVER_URL: https://streamscene.net
-        
-    - name: Build application
-      run: |
-        echo "🏗️ Building application for production..."
-        npm run build
-      env:
-        NODE_ENV: production
-        REACT_APP_API_URL: https://streamscene.net
-        REACT_APP_SERVER_URL: https://streamscene.net
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
 
-    - name: Compile TypeScript
-      run: |
-        echo "📝 Compiling TypeScript..."
-        npx tsc --project server/tsconfig.json
+      - name: Clean install dependencies
+        run: |
+          rm -rf node_modules
+          npm ci
 
-    - name: Create deployment package
-      run: |
-        echo "📦 Creating deployment package..."
-        mkdir -p deploy-minimal
-        
-        # Copy essential files
-        cp -r dist/ deploy-minimal/
-        cp ecosystem.config.cjs deploy-minimal/
-        cp package-server.json deploy-minimal/package.json
-        
-        # Copy ALL client files from public directory
-        echo "📋 Copying all client files..."
-        cp -r public/ deploy-minimal/
-        
-        echo "📋 Files being deployed:"
-        ls -la deploy-minimal/public/ | head -20
-        
-        # Create environment file
-        cat > deploy-minimal/.env << EOF
-        NODE_ENV=production
-        PORT=8000
-        CLIENT_URL=https://streamscene.net
-        REACT_APP_API_URL=https://streamscene.net
-        REACT_APP_SERVER_URL=https://streamscene.net
-        BASE_URL=https://streamscene.net
-        ALLOW_DEMO_LOGIN=true
-        SESSION_SECRET=${{ secrets.SESSION_SECRET }}
-        GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-        GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-        AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION=${{ secrets.AWS_REGION }}
-        AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
-        GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-        DB_HOST=localhost
-        DB_NAME=stream_scene_db
-        DB_USER=root
-        DB_PASS=StreamRoot2024!
-        EOF
-        
-        # Create package
-        cd deploy-minimal
-        tar -czf ../deploy.tar.gz .
-        cd ..
-        
-        echo "📤 Package size: $(ls -lh deploy.tar.gz)"
+      - name: Build client (production)
+        run: npm run build:client:prod
 
-    - name: Test server connectivity
-      run: |
-        timeout 10 nc -zv ${{ secrets.SERVER_HOST }} ${{ secrets.SERVER_PORT || 22 }} || {
-          echo "❌ Cannot connect to server. Check firewall/network."
-          exit 1
-        }
+      - name: Build server
+        run: npm run build:server
 
-    - name: Deploy to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        port: ${{ secrets.SERVER_PORT || 22 }}
-        source: "deploy.tar.gz"
-        target: "/tmp/"
-        
-    - name: Extract and restart application
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        port: ${{ secrets.SERVER_PORT || 22 }}
-        timeout: 10m
-        command_timeout: 10m
-        script: |
-          set -e
-          
-          echo "🔍 Checking uploaded files..."
-          ls -la /tmp/deploy.tar.gz || { echo "❌ Deploy file not found"; exit 1; }
-          
-          echo "🔄 Preparing deployment directory..."
-          cd /var/www/stream-scene || { 
-            echo "Creating directory..."
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy
+          cp -a dist/. deploy/
+          cp dist/index.html deploy/index.html
+          cp ecosystem.config.cjs deploy/
+          cp package-server.json deploy/package.json
+          rm -f deploy/.env
+          printf "PORT=8000\n" > deploy/.env
+          printf "NODE_ENV=production\n" >> deploy/.env
+          printf "SESSION_SECRET=%s\n" "${{ secrets.SESSION_SECRET }}" >> deploy/.env
+          printf "GOOGLE_CLIENT_ID=%s\n" "${{ secrets.GOOGLE_CLIENT_ID }}" >> deploy/.env
+          printf "GOOGLE_CLIENT_SECRET=%s\n" "${{ secrets.GOOGLE_CLIENT_SECRET }}" >> deploy/.env
+          printf "GOOGLE_CALLBACK_URL=http://%s:8000/auth/google/callback\n" "${{ secrets.SERVER_HOST }}" >> deploy/.env
+          printf "AWS_ACCESS_KEY_ID=%s\n" "${{ secrets.AWS_ACCESS_KEY_ID }}" >> deploy/.env
+          printf "AWS_SECRET_ACCESS_KEY=%s\n" "${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> deploy/.env
+          printf "AWS_REGION=%s\n" "${{ secrets.AWS_REGION }}" >> deploy/.env
+          printf "AWS_S3_BUCKET=%s\n" "${{ secrets.AWS_S3_BUCKET }}" >> deploy/.env
+          printf "DB_HOST=%s\n" "${{ secrets.DB_HOST }}" >> deploy/.env
+          printf "DB_NAME=%s\n" "${{ secrets.DB_NAME }}" >> deploy/.env
+          printf "DB_USER=%s\n" "${{ secrets.DB_USER }}" >> deploy/.env
+          printf "DB_PASS=%s\n" "${{ secrets.DB_PASS }}" >> deploy/.env
+
+      - name: Setup server directory
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
             sudo mkdir -p /var/www/stream-scene
             sudo chown $USER:$USER /var/www/stream-scene
+            if ! command -v pm2 &> /dev/null; then
+              sudo npm install -g pm2
+            fi
+            mkdir -p /var/www/stream-scene/logs
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          source: "deploy/**"
+          target: "/var/www/stream-scene/"
+          strip_components: 1
+
+      - name: Before verify
+        run: echo "Before verify step"
+
+      - name: Verify deployed files
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            echo "=== VERIFYING DEPLOYED FILES ==="
+            ls -l /var/www/stream-scene/dist/
+            echo "=== app.js timestamp ==="
+            stat /var/www/stream-scene/dist/server/app.js || echo "app.js missing"
+            echo "=== bundle.js timestamp ==="
+            stat /var/www/stream-scene/dist/bundle.js || echo "bundle.js missing"
+            echo "=== bundle.js head ==="
+            head -20 /var/www/stream-scene/dist/bundle.js || echo "bundle.js not found"
+
+      - name: After verify
+        run: echo "After verify step"
+
+      - name: Deploy application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
             cd /var/www/stream-scene
-          }
-          
-          # Create backup if exists
-          if [ -f "package.json" ]; then
-            echo "📋 Creating backup..."
-            sudo cp -r . ../stream-scene-backup-$(date +%s) 2>/dev/null || echo "Backup skipped"
-          fi
-          
-          # Extract deployment
-          echo "📦 Extracting deployment package..."
-          tar -xzf /tmp/deploy.tar.gz
-          rm -f /tmp/deploy.tar.gz
-          
-          echo "🔧 Installing production dependencies..."
-          npm install --production --silent
-          
-          echo "🔄 Restarting application with PM2..."
-          pm2 restart stream-scene || pm2 start ecosystem.config.cjs --name stream-scene
-          pm2 save
-          
-          echo "✅ Deployment completed successfully!"
-          pm2 list
-          echo "🌐 Application should be available at: https://streamscene.net"
+            npm install --production
+            pm2 stop stream-scene || true
+            pm2 delete stream-scene || true
+            pm2 start ecosystem.config.cjs --env production
+            pm2 save
+
+      - name: Copy index.html to root after upload
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            sudo cp /var/www/stream-scene/dist/index.html /var/www/stream-scene/index.html

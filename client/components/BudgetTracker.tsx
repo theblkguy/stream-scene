@@ -1,26 +1,26 @@
 import {
-    Upload as HiArrowUpTray,
-    Calendar as HiCalendarDays,
-    Check as HiCheck,
-    CheckCircle as HiCheckCircle,
-    Clock as HiClock,
-    Cpu as HiCpuChip,
-    DollarSign as HiCurrencyDollar,
-    Smartphone as HiDevicePhoneMobile,
-    AlertCircle as HiExclamationCircle,
-    Eye as HiEye,
-    FolderPlus as HiFolderPlus,
-    Search as HiMagnifyingGlass,
-    Pencil as HiPencil,
-    Plus as HiPlus,
-    Save as HiSave,
-    Tag as HiTag,
-    Trash as HiTrash,
-    TrendingDown as HiTrendingDown,
-    TrendingUp as HiTrendingUp,
-    Wallet as HiWallet,
-    X as HiXMark,
-    Loader2,
+  Upload as HiArrowUpTray,
+  Calendar as HiCalendarDays,
+  Check as HiCheck,
+  CheckCircle as HiCheckCircle,
+  Clock as HiClock,
+  Cpu as HiCpuChip,
+  DollarSign as HiCurrencyDollar,
+  Smartphone as HiDevicePhoneMobile,
+  AlertCircle as HiExclamationCircle,
+  Eye as HiEye,
+  FolderPlus as HiFolderPlus,
+  Search as HiMagnifyingGlass,
+  Pencil as HiPencil,
+  Plus as HiPlus,
+  Save as HiSave,
+  Tag as HiTag,
+  Trash as HiTrash,
+  TrendingDown as HiTrendingDown,
+  TrendingUp as HiTrendingUp,
+  Wallet as HiWallet,
+  X as HiXMark,
+  Loader2,
 } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import Tesseract from 'tesseract.js';
@@ -317,24 +317,29 @@ const BudgetTracker: React.FC = () => {
       setProgress(0);
       setError(null);
 
+      console.log('🔍 Starting OCR processing for file:', file.name, 'Size:', file.size);
       const imageUrl = URL.createObjectURL(file);
 
-      // Configure Tesseract with explicit worker and core paths for better deployment compatibility
+      // Configure Tesseract with proper TrustedScriptURL handling
       const result = await Tesseract.recognize(imageUrl, 'eng', {
         logger: (m: { status?: string; progress?: number }) => {
           if (m.status === 'recognizing text' && typeof m.progress === 'number') {
             setProgress(Math.round(m.progress * 100));
+            console.log(`📄 OCR Progress: ${Math.round(m.progress * 100)}%`);
           }
         },
-        // Add explicit worker configuration to handle deployment issues
-        workerPath: 'https://unpkg.com/tesseract.js@6.0.1/dist/worker.min.js',
-        langPath: 'https://tessdata.projectnaptha.com/4.0.0',
-        corePath: 'https://unpkg.com/tesseract.js-core@6.0.1/tesseract-core.wasm.js',
+        // Use local files to avoid TrustedScriptURL issues
+        workerPath: '/tesseract-worker.min.js',
+        langPath: '/tessdata',
+        corePath: '/tesseract-core.wasm.js',
       });
 
       const rawText: string = result.data?.text || '';
       // Average confidence fallback - use result confidence or default
       const avgConfidence: number = (result.data?.confidence || 70) / 100;
+
+      console.log('📝 OCR extracted text:', rawText.substring(0, 200) + (rawText.length > 200 ? '...' : ''));
+      console.log('🎯 OCR confidence:', avgConfidence);
 
       URL.revokeObjectURL(imageUrl);
 
@@ -343,16 +348,69 @@ const BudgetTracker: React.FC = () => {
       const vendor = extractVendorFromText(rawText) || undefined;
       const date = extractDateFromText(rawText) || undefined;
 
+      console.log('💰 Extracted amount:', amountGuess);
+      console.log('🏪 Extracted vendor:', vendor);
+      console.log('📅 Extracted date:', date);
+
       return {
         amount: amountGuess?.amount,
         confidence: amountGuess?.confidence ?? avgConfidence,
         vendor,
         date,
         rawText,
+        service: 'tesseract-js'
       };
     } catch (err: unknown) {
       const error = err as Error;
-      console.error('OCR Error Details:', error);
+      console.error('❌ OCR Error Details:', error);
+      
+      // Check if it's a TrustedScriptURL error and try fallback
+      if (error?.message?.includes('TrustedScriptURL') || error?.message?.includes('importScripts')) {
+        console.log('🔄 TrustedScriptURL error detected, trying fallback configuration...');
+        
+        try {
+          // Fallback: Try without explicit worker paths
+          const fallbackResult = await Tesseract.recognize(imageUrl, 'eng', {
+            logger: (m: { status?: string; progress?: number }) => {
+              if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+                setProgress(Math.round(m.progress * 100));
+                console.log(`📄 OCR Fallback Progress: ${Math.round(m.progress * 100)}%`);
+              }
+            }
+            // No explicit paths - let Tesseract use its defaults
+          });
+
+          const rawText: string = fallbackResult.data?.text || '';
+          const avgConfidence: number = (fallbackResult.data?.confidence || 70) / 100;
+
+          console.log('✅ Fallback OCR succeeded');
+          console.log('📝 OCR extracted text:', rawText.substring(0, 200) + (rawText.length > 200 ? '...' : ''));
+          console.log('🎯 OCR confidence:', avgConfidence);
+
+          URL.revokeObjectURL(imageUrl);
+
+          // Parse fields from text
+          const amountGuess = extractAmountFromText(rawText);
+          const vendor = extractVendorFromText(rawText) || undefined;
+          const date = extractDateFromText(rawText) || undefined;
+
+          console.log('💰 Extracted amount:', amountGuess);
+          console.log('🏪 Extracted vendor:', vendor);
+          console.log('📅 Extracted date:', date);
+
+          return {
+            amount: amountGuess?.amount,
+            confidence: amountGuess?.confidence ?? avgConfidence,
+            vendor,
+            date,
+            rawText,
+            service: 'tesseract-js-fallback'
+          };
+        } catch (fallbackError) {
+          console.error('❌ Fallback OCR also failed:', fallbackError);
+          // Continue to regular error handling
+        }
+      }
       
       // Provide more specific error messages for common issues
       let errorMessage = `OCR processing failed: ${error?.message || 'Unknown error'}`;
@@ -361,10 +419,13 @@ const BudgetTracker: React.FC = () => {
         errorMessage = 'OCR failed to load required files. Please check your internet connection and try again.';
       } else if (error?.message?.includes('WebAssembly')) {
         errorMessage = 'OCR engine failed to initialize. Your browser may not support this feature.';
-      } else if (error?.message?.includes('Worker')) {
-        errorMessage = 'OCR worker failed to start. Please try refreshing the page.';
+      } else if (error?.message?.includes('Worker') || error?.message?.includes('importScripts') || error?.message?.includes('TrustedScriptURL')) {
+        errorMessage = 'Browser security settings are blocking OCR. Please try a different browser or disable strict security policies.';
+      } else if (error?.message?.includes('CORS')) {
+        errorMessage = 'OCR files blocked by browser security. Please try refreshing the page or use a different browser.';
       }
       
+      console.log('🔧 Suggested fix: Try refreshing the page, using a different browser, or upload the receipt manually.');
       throw new Error(errorMessage);
     }
   };
@@ -400,6 +461,7 @@ const BudgetTracker: React.FC = () => {
         
         // Try server-side OCR as fallback
         try {
+          console.log('🔄 Trying server-side OCR as fallback...');
           const formData = new FormData();
           formData.append('receipt', file);
           
@@ -412,6 +474,7 @@ const BudgetTracker: React.FC = () => {
           if (response.ok) {
             const serverResult = await response.json();
             if (serverResult.success) {
+              console.log('✅ Server-side OCR succeeded');
               ocrResult = {
                 amount: serverResult.data.amount,
                 confidence: serverResult.data.confidence,
@@ -425,11 +488,21 @@ const BudgetTracker: React.FC = () => {
             }
           } else {
             const errorData = await response.json().catch(() => ({}));
+            console.log('⚠️ Server OCR not available:', errorData.message || response.statusText);
             throw new Error(errorData.message || 'Server OCR not available');
           }
         } catch (serverError) {
-          console.error('Server-side OCR also failed:', serverError);
-          throw new Error(`Both client and server OCR failed. Last error: ${clientError}`);
+          console.error('❌ Server-side OCR also failed:', serverError);
+          
+          // More helpful error message
+          const isNetworkError = serverError instanceof Error && 
+            (serverError.message.includes('Failed to fetch') || serverError.message.includes('NetworkError'));
+          
+          if (isNetworkError) {
+            throw new Error(`OCR unavailable: Network error. Please check your connection and try again. Original error: ${clientError}`);
+          } else {
+            throw new Error(`OCR services are temporarily unavailable. Please enter receipt details manually. (Client: ${clientError}, Server: ${serverError})`);
+          }
         }
       }
 
@@ -458,7 +531,25 @@ const BudgetTracker: React.FC = () => {
       setReceiptUrl(receiptUrlLocal);
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error?.message || 'OCR processing failed. Please try a different image or enter details manually.');
+      console.error('❌ Receipt processing failed:', error);
+      
+      // Provide helpful error message to user
+      const userMessage = error?.message?.includes('Both client and server OCR failed')
+        ? 'Receipt scanning is temporarily unavailable. Please enter the details manually for now.'
+        : error?.message || 'OCR processing failed. Please try a different image or enter details manually.';
+        
+      setError(userMessage);
+      
+      // Still set the file for manual entry
+      if (file) {
+        setReceiptFile(file);
+        const receiptUrlLocal = URL.createObjectURL(file);
+        setReceiptUrl(receiptUrlLocal);
+        setFormData((prev) => ({
+          ...prev,
+          receiptTitle: file.name.replace(/\.[^/.]+$/, ''),
+        }));
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -931,7 +1022,14 @@ const BudgetTracker: React.FC = () => {
                           {isProcessing ? (
                             <div className="space-y-3">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto"></div>
-                              <p className="text-sm text-purple-300">Scanning receipt with AI...</p>
+                              <p className="text-sm text-purple-300">
+                                {progress === 0 
+                                  ? 'Initializing AI scanner...' 
+                                  : progress < 50 
+                                    ? 'Processing image...' 
+                                    : 'Extracting text...'
+                                }
+                              </p>
                               {progress > 0 && (
                                 <div className="w-full bg-slate-700 rounded-full h-2">
                                   <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
@@ -972,6 +1070,14 @@ const BudgetTracker: React.FC = () => {
                                     )}
                                   </span>
                                 )}
+                                <br />
+                                <button
+                                  type="button"
+                                  onClick={() => console.log('🧪 OCR Test - Client status:', !isProcessing, 'Server status:', ocrStatus)}
+                                  className="text-xs text-blue-400 hover:text-blue-300 underline mt-1"
+                                >
+                                  Debug OCR Status
+                                </button>
                               </p>
                             </div>
                           )}
