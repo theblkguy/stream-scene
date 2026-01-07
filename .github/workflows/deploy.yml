@@ -44,7 +44,9 @@ jobs:
           printf "SESSION_SECRET=%s\n" "${{ secrets.SESSION_SECRET }}" >> deploy/.env
           printf "GOOGLE_CLIENT_ID=%s\n" "${{ secrets.GOOGLE_CLIENT_ID }}" >> deploy/.env
           printf "GOOGLE_CLIENT_SECRET=%s\n" "${{ secrets.GOOGLE_CLIENT_SECRET }}" >> deploy/.env
-          printf "GOOGLE_CALLBACK_URL=http://%s:8000/auth/google/callback\n" "${{ secrets.SERVER_HOST }}" >> deploy/.env
+          printf "GOOGLE_CALLBACK_URL=https://streamscene.net/auth/google/callback\n" >> deploy/.env
+          printf "BASE_URL=https://streamscene.net\n" >> deploy/.env
+          printf "CLIENT_URL=https://streamscene.net\n" >> deploy/.env
           printf "AWS_ACCESS_KEY_ID=%s\n" "${{ secrets.AWS_ACCESS_KEY_ID }}" >> deploy/.env
           printf "AWS_SECRET_ACCESS_KEY=%s\n" "${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> deploy/.env
           printf "AWS_REGION=%s\n" "${{ secrets.AWS_REGION }}" >> deploy/.env
