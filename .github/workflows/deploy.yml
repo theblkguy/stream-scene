@@ -1,11 +1,8 @@
 name: Deploy to Personal Server
 
 on:
-<<<<<<< HEAD
-=======
   push:
-    branches: [ live-branch ]
->>>>>>> a3118a2ca87a254333ff94298a29823c6c27d11e
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
