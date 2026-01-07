@@ -17,6 +17,9 @@ import Canvas from '../models/Canvas.js';
 import CanvasCollaborator from '../models/CanvasCollaborator.js';
 import BudgetEntry from '../models/BudgetEntry.js';
 import BudgetProject from '../models/BudgetProject.js';
+import Conversation from '../models/Conversation.js';
+import ConversationParticipant from '../models/ConversationParticipant.js';
+import Message from '../models/Message.js';
 
 // Initialize models
 const File = initFileModel(sequelizeInstance);
@@ -36,6 +39,37 @@ export const associate = () => {
   BudgetProject.hasMany(BudgetEntry, {
     foreignKey: 'project_id',
     as: 'entries',
+  });
+
+  // Messaging model associations
+  ConversationParticipant.belongsTo(Conversation, {
+    foreignKey: 'conversation_id',
+    as: 'conversation',
+  });
+
+  Conversation.hasMany(ConversationParticipant, {
+    foreignKey: 'conversation_id',
+    as: 'participants',
+  });
+
+  ConversationParticipant.belongsTo(User, {
+    foreignKey: 'user_id',
+    as: 'user',
+  });
+
+  Message.belongsTo(Conversation, {
+    foreignKey: 'conversation_id',
+    as: 'conversation',
+  });
+
+  Conversation.hasMany(Message, {
+    foreignKey: 'conversation_id',
+    as: 'messages',
+  });
+
+  Message.belongsTo(User, {
+    foreignKey: 'user_id',
+    as: 'user',
   });
   
   console.log('✅ Database associations ready');
@@ -81,12 +115,18 @@ export async function syncDB() {
     await CanvasCollaborator.sync({ force: false });
     console.log('✅ Canvas tables synced (no force recreation)');
     
+    // Sync messaging models
+    await Conversation.sync({ force: false });
+    await ConversationParticipant.sync({ force: false });
+    await Message.sync({ force: false });
+    console.log('✅ Messaging tables synced');
+    
     // Use sync with alter to handle foreign key mismatches gracefully
     await getSequelize().sync({ 
       force: false,
       alter: false  // Disabled alter to avoid schema conflicts
     });
-    console.log('Database sync complete (File, Task, Comment, CommentReaction, Canvas, CanvasCollaborator, BudgetProject, BudgetEntry)');
+    console.log('Database sync complete (File, Task, Comment, CommentReaction, Canvas, CanvasCollaborator, BudgetProject, BudgetEntry, Conversation, ConversationParticipant, Message)');
   } catch (error) {
     console.error('Database sync failed:', error);
     // Continue without throwing to allow server to start
@@ -104,7 +144,10 @@ export {
   Canvas,
   CanvasCollaborator,
   BudgetProject,
-  BudgetEntry
+  BudgetEntry,
+  Conversation,
+  ConversationParticipant,
+  Message,
 };
 
 export const db = {

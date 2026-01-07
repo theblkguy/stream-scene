@@ -1,0 +1,13 @@
+{
+  "node-option": ["import=tsx/esm"],
+  "timeout": 30000,
+  "recursive": true,
+  "extensions": ["ts"],
+  "spec": ["test/**/*.test.ts"],
+  "require": ["test/setup.ts"],
+  "exit": true,
+  "bail": false,
+  "full-trace": true,
+  "colors": true
+}
+

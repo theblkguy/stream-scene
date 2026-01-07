@@ -10,6 +10,8 @@ import PrivacyPolicyPage from './PrivacyPolicyPage';
 import TermsOfServicePage from './TermsOfServicePage';
 import MobileOptimizations from './MobileOptimizations';
 import SharedCanvas from './SharedCanvas';
+import ProfilePage from './Profile/ProfilePage';
+import MessagingPage from './Messaging/MessagingPage';
 
 export type CurrentView = 'landing' | 'planner' | 'project-center' | 'budget-tracker';
 
@@ -71,6 +73,13 @@ const App: React.FC = () => {
           <Route path="/budget-tracker" element={<BudgetTracker />} />
           <Route path="/shared/:token" element={<SharedFileViewer />} />
           <Route path="/canvas/shared/:token" element={<SharedCanvas />} />
+          {/* Profile pages */}
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/:userId" element={<ProfilePage />} />
+          <Route path="/profile/username/:username" element={<ProfilePage />} />
+          {/* Messaging */}
+          <Route path="/messages" element={<MessagingPage />} />
+          <Route path="/messages/:conversationId" element={<MessagingPage />} />
           {/* Legal pages */}
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsOfServicePage />} />

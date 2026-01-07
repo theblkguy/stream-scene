@@ -35,6 +35,8 @@ import s3ProxyRoutes from "./routes/s3Proxy.js";
 import scheduleRoutes from "./routes/schedule.js";
 import sharesRoutes from "./routes/shares.js";
 import shortLinksRoutes from "./routes/shortLinks.js";
+import profileRoutes from "./routes/profile.js";
+import messagingRoutes from "./routes/messaging.js";
 import { initializeWebSocket } from './services/WebSocketService.js';
 
 const app = express();
@@ -237,6 +239,8 @@ app.use('/api/files', filesRoutes);
 app.use('/api/shares', sharesRoutes);
 app.use('/api/caption', captionRouter);
 app.use('/api/short-links', shortLinksRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api', messagingRoutes);
 // Note: All other API routes (tasks, content-scheduler, threads, budget, etc.) are mounted in routes/index.ts
 
 

@@ -7,6 +7,12 @@ interface UserAttributes {
   email: string;
   name: string;
   google_id?: string;
+  username?: string;
+  bio?: string;
+  profile_picture_url?: string;
+  contact_email?: string;
+  phone?: string;
+  social_links?: string;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -20,6 +26,12 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   declare email: string;
   declare name: string;
   declare google_id?: string;
+  declare username?: string;
+  declare bio?: string;
+  declare profile_picture_url?: string;
+  declare contact_email?: string;
+  declare phone?: string;
+  declare social_links?: string;
   declare created_at?: Date;
   declare updated_at?: Date;
 
@@ -38,7 +50,20 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   }
 
   get profilePic(): string | undefined {
-    return undefined; // Not implemented yet
+    return this.profile_picture_url;
+  }
+
+  get socialLinks(): Record<string, string> | undefined {
+    if (!this.social_links) return undefined;
+    try {
+      return JSON.parse(this.social_links);
+    } catch {
+      return undefined;
+    }
+  }
+
+  set socialLinks(links: Record<string, string> | undefined) {
+    this.social_links = links ? JSON.stringify(links) : undefined;
   }
 }
 
@@ -65,6 +90,41 @@ User.init(
       type: DataTypes.STRING(255),
       allowNull: true,
       unique: true,
+    },
+    username: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      unique: true,
+      validate: {
+        len: [3, 20],
+        is: /^[a-zA-Z0-9_]+$/, // Alphanumeric and underscores only
+      },
+    },
+    bio: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      validate: {
+        len: [0, 500], // Max 500 characters
+      },
+    },
+    profile_picture_url: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    contact_email: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      validate: {
+        isEmail: true,
+      },
+    },
+    phone: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+    },
+    social_links: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
     created_at: {
       type: DataTypes.DATE,

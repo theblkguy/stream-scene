@@ -24,16 +24,74 @@ async function seed(forceRecreate = false) {
         \`email\` VARCHAR(255) NOT NULL UNIQUE,
         \`name\` VARCHAR(255) NOT NULL,
         \`google_id\` VARCHAR(255) UNIQUE,
+        \`username\` VARCHAR(20) UNIQUE,
+        \`bio\` TEXT,
+        \`profile_picture_url\` VARCHAR(500),
+        \`contact_email\` VARCHAR(255),
+        \`phone\` VARCHAR(20),
+        \`social_links\` TEXT,
+        \`created_at\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        \`updated_at\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (\`id\`),
+        INDEX \`idx_username\` (\`username\`)
+      ) ENGINE=InnoDB;
+    `);
+    console.log('✅ Users table created');
+
+    // 2. Create Conversations table
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS \`conversations\` (
+        \`id\` INTEGER UNSIGNED AUTO_INCREMENT,
+        \`type\` ENUM('direct', 'group') NOT NULL,
+        \`name\` VARCHAR(255) NULL,
         \`created_at\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         \`updated_at\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (\`id\`)
       ) ENGINE=InnoDB;
     `);
-    console.log('✅ Users table created');
+    console.log('✅ Conversations table created');
 
+    // 3. Create Conversation Participants table
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS \`conversation_participants\` (
+        \`id\` INTEGER UNSIGNED AUTO_INCREMENT,
+        \`conversation_id\` INTEGER UNSIGNED NOT NULL,
+        \`user_id\` INTEGER UNSIGNED NOT NULL,
+        \`role\` ENUM('admin', 'member') DEFAULT 'member',
+        \`joined_at\` DATETIME DEFAULT CURRENT_TIMESTAMP,
+        \`left_at\` DATETIME NULL,
+        \`created_at\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        \`updated_at\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (\`id\`),
+        FOREIGN KEY (\`conversation_id\`) REFERENCES \`conversations\` (\`id\`) ON DELETE CASCADE,
+        FOREIGN KEY (\`user_id\`) REFERENCES \`users\` (\`id\`) ON DELETE CASCADE,
+        UNIQUE KEY \`unique_participant\` (\`conversation_id\`, \`user_id\`)
+      ) ENGINE=InnoDB;
+    `);
+    console.log('✅ Conversation participants table created');
 
+    // 4. Create Messages table
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS \`messages\` (
+        \`id\` INTEGER UNSIGNED AUTO_INCREMENT,
+        \`conversation_id\` INTEGER UNSIGNED NOT NULL,
+        \`user_id\` INTEGER UNSIGNED NULL,
+        \`content\` TEXT NOT NULL,
+        \`message_type\` ENUM('text', 'image', 'file') NOT NULL DEFAULT 'text',
+        \`file_url\` VARCHAR(500) NULL,
+        \`created_at\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        \`updated_at\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        \`edited_at\` DATETIME NULL,
+        \`deleted_at\` DATETIME NULL,
+        PRIMARY KEY (\`id\`),
+        FOREIGN KEY (\`conversation_id\`) REFERENCES \`conversations\` (\`id\`) ON DELETE CASCADE,
+        FOREIGN KEY (\`user_id\`) REFERENCES \`users\` (\`id\`) ON DELETE SET NULL,
+        INDEX \`idx_conversation_created\` (\`conversation_id\`, \`created_at\`)
+      ) ENGINE=InnoDB;
+    `);
+    console.log('✅ Messages table created');
 
-    // 4. Create Files table
+    // 5. Create Files table
     await sequelize.query(`
       CREATE TABLE IF NOT EXISTS \`files\` (
         \`id\` INTEGER UNSIGNED AUTO_INCREMENT,

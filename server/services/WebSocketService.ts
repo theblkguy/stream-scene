@@ -3,6 +3,9 @@ import { Server as SocketIOServer } from 'socket.io';
 import Canvas from '../models/Canvas.js';
 import Comment from '../models/Comment.js';
 import { User } from '../models/User.js';
+import Conversation from '../models/Conversation.js';
+import ConversationParticipant from '../models/ConversationParticipant.js';
+import Message from '../models/Message.js';
 
 interface SocketUserData {
   userId?: number;
@@ -298,6 +301,268 @@ export class WebSocketService {
         });
       });
 
+      // ──────────────────────────────────────────
+      // MESSAGING EVENTS
+      // ──────────────────────────────────────────
+
+      // Join a conversation room
+      socket.on('join-conversation', async (conversationId: number) => {
+        try {
+          const userData = socket.data.user as SocketUserData;
+          
+          if (!userData?.userId) {
+            socket.emit('error', { message: 'Authentication required' });
+            return;
+          }
+
+          // Verify user is a participant
+          const participant = await ConversationParticipant.findOne({
+            where: {
+              conversation_id: conversationId,
+              user_id: userData.userId,
+              left_at: null,
+            },
+          });
+
+          if (!participant) {
+            socket.emit('error', { message: 'Access denied to conversation' });
+            return;
+          }
+
+          // Join conversation room
+          socket.join(`conversation:${conversationId}`);
+          socket.data.conversationId = conversationId;
+
+          // Notify others of new participant joining
+          socket.to(`conversation:${conversationId}`).emit('user-joined', {
+            conversationId,
+            userId: userData.userId,
+            socketId: socket.id,
+          });
+
+          // Send confirmation
+          socket.emit('conversation-joined', {
+            conversationId,
+            message: 'Successfully joined conversation',
+          });
+        } catch (error) {
+          console.error('Error joining conversation:', error);
+          socket.emit('error', { message: 'Failed to join conversation' });
+        }
+      });
+
+      // Leave a conversation room
+      socket.on('leave-conversation', (conversationId: number) => {
+        socket.leave(`conversation:${conversationId}`);
+        socket.to(`conversation:${conversationId}`).emit('user-left', {
+          conversationId,
+          socketId: socket.id,
+          user: socket.data.user,
+        });
+        socket.data.conversationId = undefined;
+      });
+
+      // Send message via WebSocket
+      socket.on('send-message', async (data: {
+        conversationId: number;
+        content: string;
+        messageType?: 'text' | 'image' | 'file';
+        fileUrl?: string;
+      }) => {
+        try {
+          const userData = socket.data.user as SocketUserData;
+          
+          if (!userData?.userId) {
+            socket.emit('error', { message: 'Authentication required' });
+            return;
+          }
+
+          // Validate content
+          if (!data.content || data.content.trim().length === 0) {
+            socket.emit('error', { message: 'Message content cannot be empty' });
+            return;
+          }
+
+          // Verify user is a participant
+          const participant = await ConversationParticipant.findOne({
+            where: {
+              conversation_id: data.conversationId,
+              user_id: userData.userId,
+              left_at: null,
+            },
+          });
+
+          if (!participant) {
+            socket.emit('error', { message: 'Access denied to conversation' });
+            return;
+          }
+
+          // Create message in database
+          const message = await Message.create({
+            conversation_id: data.conversationId,
+            user_id: userData.userId,
+            content: data.content.trim(),
+            message_type: data.messageType || 'text',
+            file_url: data.fileUrl || undefined,
+          });
+
+          // Fetch message with user association
+          const messageWithUser = await Message.findByPk(message.id, {
+            include: [
+              {
+                model: User,
+                as: 'user',
+                attributes: ['id', 'name', 'email', 'username', 'profile_picture_url'],
+                required: false,
+              },
+            ],
+          });
+
+          // Update conversation updated_at
+          await Conversation.update(
+            { updated_at: new Date() },
+            { where: { id: data.conversationId } }
+          );
+
+          // Broadcast to all participants in the conversation
+          this.io.to(`conversation:${data.conversationId}`).emit('message-sent', {
+            message: messageWithUser,
+            conversationId: data.conversationId,
+          });
+
+        } catch (error) {
+          console.error('Error sending message:', error);
+          socket.emit('error', { message: 'Failed to send message' });
+        }
+      });
+
+      // Typing indicator
+      socket.on('typing', async (data: {
+        conversationId: number;
+        isTyping: boolean;
+      }) => {
+        try {
+          const userData = socket.data.user as SocketUserData;
+          
+          if (!userData?.userId) {
+            return;
+          }
+
+          // Verify user is a participant
+          const participant = await ConversationParticipant.findOne({
+            where: {
+              conversation_id: data.conversationId,
+              user_id: userData.userId,
+              left_at: null,
+            },
+          });
+
+          if (!participant) {
+            return;
+          }
+
+          // Broadcast typing status to other participants
+          socket.to(`conversation:${data.conversationId}`).emit('typing', {
+            conversationId: data.conversationId,
+            userId: userData.userId,
+            isTyping: data.isTyping,
+            socketId: socket.id,
+          });
+        } catch (error) {
+          console.error('Error handling typing indicator:', error);
+        }
+      });
+
+      // Message read receipt
+      socket.on('message-read', async (data: {
+        conversationId: number;
+        messageId: number;
+      }) => {
+        try {
+          const userData = socket.data.user as SocketUserData;
+          
+          if (!userData?.userId) {
+            return;
+          }
+
+          // Verify user is a participant
+          const participant = await ConversationParticipant.findOne({
+            where: {
+              conversation_id: data.conversationId,
+              user_id: userData.userId,
+              left_at: null,
+            },
+          });
+
+          if (!participant) {
+            return;
+          }
+
+          // Broadcast read receipt to other participants
+          socket.to(`conversation:${data.conversationId}`).emit('message-read', {
+            conversationId: data.conversationId,
+            messageId: data.messageId,
+            userId: userData.userId,
+            readAt: new Date(),
+          });
+        } catch (error) {
+          console.error('Error handling read receipt:', error);
+        }
+      });
+
+      // Messaging events
+      socket.on('join-conversation', async (conversationId: number) => {
+        try {
+          const userData = socket.data.user as SocketUserData;
+          if (!userData?.userId) {
+            socket.emit('error', { message: 'Authentication required' });
+            return;
+          }
+
+          // Join conversation room
+          socket.join(`conversation:${conversationId}`);
+          
+          // Also join user-specific room for notifications
+          socket.join(`user:${userData.userId}`);
+
+          // Notify others in the conversation
+          socket.to(`conversation:${conversationId}`).emit('user-joined-conversation', {
+            conversationId,
+            userId: userData.userId,
+          });
+        } catch (error) {
+          console.error('Error joining conversation:', error);
+          socket.emit('error', { message: 'Failed to join conversation' });
+        }
+      });
+
+      socket.on('leave-conversation', (conversationId: number) => {
+        socket.leave(`conversation:${conversationId}`);
+        const userData = socket.data.user as SocketUserData;
+        socket.to(`conversation:${conversationId}`).emit('user-left-conversation', {
+          conversationId,
+          userId: userData?.userId,
+        });
+      });
+
+      socket.on('typing', (data: { conversationId: number; isTyping: boolean }) => {
+        const userData = socket.data.user as SocketUserData;
+        socket.to(`conversation:${data.conversationId}`).emit('typing', {
+          conversationId: data.conversationId,
+          userId: userData?.userId,
+          isTyping: data.isTyping,
+        });
+      });
+
+      socket.on('message-read', (data: { conversationId: number; messageId: number }) => {
+        const userData = socket.data.user as SocketUserData;
+        socket.to(`conversation:${data.conversationId}`).emit('message-read', {
+          conversationId: data.conversationId,
+          messageId: data.messageId,
+          userId: userData?.userId,
+        });
+      });
+
       // Handle disconnection
       socket.on('disconnect', () => {
         // Notify canvas collaborators
@@ -305,6 +570,15 @@ export class WebSocketService {
           socket.to(`canvas:${socket.data.canvasId}`).emit('collaborator-left', {
             socketId: socket.id,
             user: socket.data.user
+          });
+        }
+
+        // Notify conversation participants
+        if (socket.data.conversationId) {
+          socket.to(`conversation:${socket.data.conversationId}`).emit('user-left', {
+            conversationId: socket.data.conversationId,
+            socketId: socket.id,
+            user: socket.data.user,
           });
         }
       });
@@ -323,6 +597,10 @@ export class WebSocketService {
 
   public emitToFile(fileId: string, event: string, data: any) {
     this.io.to(`file:${fileId}`).emit(event, data);
+  }
+
+  public emitToConversation(conversationId: number, event: string, data: any) {
+    this.io.to(`conversation:${conversationId}`).emit(event, data);
   }
 
   public getIO() {

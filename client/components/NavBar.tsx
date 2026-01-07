@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaRobot } from 'react-icons/fa';
 import {
     HiBars3,
     HiHome,
-    HiXMark
+    HiXMark,
+    HiUser
 } from 'react-icons/hi2';
 import useAuth from '../hooks/useAuth';
 import GoogleLoginButton from './GoogleLoginButton';
@@ -33,6 +35,7 @@ const ProjectIcon = () => (
 const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user: authUser } = useAuth();
+  const navigate = useNavigate();
   
   // Use authUser from hook if no user prop provided
   const currentUser = user || authUser;
@@ -173,19 +176,31 @@ const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) =
             <div className="hidden sm:flex items-center gap-3">
               {currentUser ? (
                 <div className="flex items-center gap-3 px-3 py-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                  <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-                    {getUserAvatar(currentUser) ? (
-                      <img src={getUserAvatar(currentUser)} alt={currentUser.name} className="w-8 h-8 rounded-full" />
-                    ) : (
-                      <span className="text-sm font-bold text-white">
-                        {currentUser.name.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-sm">
-                    <p className="text-white font-medium">{currentUser.name}</p>
-                    <p className="text-gray-400 text-xs">Online</p>
-                  </div>
+                  <button
+                    onClick={() => navigate('/profile')}
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                      {getUserAvatar(currentUser) ? (
+                        <img src={getUserAvatar(currentUser)} alt={currentUser.name} className="w-8 h-8 rounded-full" />
+                      ) : (
+                        <span className="text-sm font-bold text-white">
+                          {currentUser.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm">
+                      <p className="text-white font-medium">{currentUser.name}</p>
+                      <p className="text-gray-400 text-xs">Online</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => navigate('/profile')}
+                    className="px-2 py-1 text-xs bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors"
+                    title="View Profile"
+                  >
+                    <HiUser className="w-4 h-4" />
+                  </button>
                   <button 
                     onClick={handleLogout}
                     className="ml-2 px-3 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
@@ -201,7 +216,10 @@ const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) =
             {/* Mobile User Avatar or Login */}
             <div className="sm:hidden">
               {currentUser ? (
-                <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
+                >
                   {getUserAvatar(currentUser) ? (
                     <img src={getUserAvatar(currentUser)} alt={currentUser.name} className="w-8 h-8 rounded-full" />
                   ) : (
@@ -209,7 +227,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) =
                       {currentUser.name.charAt(0).toUpperCase()}
                     </span>
                   )}
-                </div>
+                </button>
               ) : (
                 <div className="scale-75">
                   <GoogleLoginButton />
@@ -261,7 +279,13 @@ const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) =
             <div className="mt-4 pt-4 border-t border-white/10 px-4">
               {currentUser ? (
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      navigate('/profile');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                  >
                     <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
                       {getUserAvatar(currentUser) ? (
                         <img src={getUserAvatar(currentUser)} alt={currentUser.name} className="w-8 h-8 rounded-full" />
@@ -275,13 +299,25 @@ const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) =
                       <p className="text-white font-medium">{currentUser.name}</p>
                       <p className="text-gray-400 text-xs">Online</p>
                     </div>
-                  </div>
-                  <button 
-                    onClick={handleLogout}
-                    className="px-3 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
-                  >
-                    Logout
                   </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        navigate('/profile');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="px-2 py-1 text-xs bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors"
+                      title="View Profile"
+                    >
+                      <HiUser className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={handleLogout}
+                      className="px-3 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex justify-center">
