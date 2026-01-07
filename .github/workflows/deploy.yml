@@ -33,7 +33,9 @@ jobs:
         run: |
           mkdir -p deploy
           cp -a dist/. deploy/
-          cp dist/index.html deploy/index.html
+          mkdir -p deploy/public
+          cp -a public/. deploy/public/
+          cp public/index.html deploy/index.html
           cp ecosystem.config.cjs deploy/
           cp package-server.json deploy/package.json
           rm -f deploy/.env
@@ -124,4 +126,4 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
           script: |
-            sudo cp /var/www/stream-scene/dist/index.html /var/www/stream-scene/index.html
+            sudo cp /var/www/stream-scene/index.html /var/www/stream-scene/index.html || cp /var/www/stream-scene/public/index.html /var/www/stream-scene/index.html
