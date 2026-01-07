@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import useAuth from '../hooks/useAuth'; // Import your auth hook
-import CustomDemoLogin from './CustomDemoLogin';
 
 const GoogleLoginButton: React.FC = () => {
   const { user, loading } = useAuth(); // Get user state from your auth hook
   const isAuthenticated = !!user;
-  const [showDemoModal, setShowDemoModal] = useState(false);
 
   const handleGoogleLogin = (): void => {
     // Use the full URL to ensure we hit the server
@@ -13,10 +11,6 @@ const GoogleLoginButton: React.FC = () => {
     
     // Force a full page navigation (not a React Router navigation)
     window.location.href = loginUrl;
-  };
-
-  const handleDemoLogin = (): void => {
-    setShowDemoModal(true);
   };
 
   const handleLogout = async (): Promise<void> => {
@@ -91,25 +85,6 @@ const GoogleLoginButton: React.FC = () => {
         </span>
       </button>
 
-      {/* Demo Login Button (when enabled) */}
-      {!isAuthenticated && (
-        <button
-          onClick={handleDemoLogin}
-          className="flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] border text-sm bg-purple-500 hover:bg-purple-600 text-white border-purple-600"
-          type="button"
-          title="Try StreamScene with your own information"
-        >
-          <span className="hidden sm:inline">Try Demo</span>
-          <span className="sm:hidden">Demo</span>
-        </button>
-      )}
-
-      {/* Custom Demo Login Modal */}
-      <CustomDemoLogin
-        isVisible={showDemoModal}
-        onClose={() => setShowDemoModal(false)}
-        onSuccess={() => setShowDemoModal(false)}
-      />
     </div>
   );
 };

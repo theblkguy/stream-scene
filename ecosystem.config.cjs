@@ -10,14 +10,12 @@ module.exports = {
     env: {
       NODE_ENV: 'production', // Changed to production by default
       PORT: 8000,
-      HOST: '0.0.0.0',
-      ALLOW_DEMO_LOGIN: 'true' // Explicitly enable demo login for presentations
+      HOST: '0.0.0.0'
     },
     env_production: {
       NODE_ENV: 'production',
       PORT: 8000,
-      HOST: '0.0.0.0',
-      ALLOW_DEMO_LOGIN: 'true' // Explicitly enable demo login for presentations
+      HOST: '0.0.0.0'
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',

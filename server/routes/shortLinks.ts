@@ -3,7 +3,7 @@ import express from 'express';
 
 const router = express.Router();
 
-// In-memory storage for demo (in production, use a database)
+// In-memory storage for short links (in production, use a database)
 const shortLinks = new Map<string, {
   canvasId: string;
   createdAt: Date;
