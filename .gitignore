@@ -41,6 +41,13 @@ test-*.js
 test-*.ts
 debug-*.js
 
+# Test results and coverage (generated files)
+test-results/
+coverage/
+.nyc_output/
+*.lcov
+mochawesome-report/
+
 # Markdown files (except README.md and ENVIRONMENT_SETUP.md)
 *.md
 !README.md
