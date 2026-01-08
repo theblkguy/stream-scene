@@ -353,7 +353,7 @@ router.get('/conversations/:id/messages', requireAuth, async (req: Request, res:
       offset,
       limit,
       total: messages.length,
-    })));
+    });
   } catch (error) {
     console.error('Error fetching messages:', error);
     res.status(500).json({ error: 'Failed to fetch messages' });
