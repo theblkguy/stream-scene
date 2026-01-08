@@ -3,10 +3,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { HiChatBubbleLeftRight } from 'react-icons/hi2';
 import { User } from '../../types/auth';
 import { getProfile, getProfileById, getProfileByUsername } from '../../services/profileService';
 import ProfileEditor from './ProfileEditor';
 import useAuth from '../../hooks/useAuth';
+import messagingService from '../../services/messagingService';
 
 const ProfilePage: React.FC = () => {
   const { userId, username } = useParams<{ userId?: string; username?: string }>();
@@ -54,6 +56,21 @@ const ProfilePage: React.FC = () => {
 
   const handleCancel = () => {
     setIsEditing(false);
+  };
+
+  const handleMessage = async () => {
+    if (!profile || !currentUser || currentUser.id === profile.id) return;
+
+    try {
+      // Create or get existing direct conversation
+      const conversation = await messagingService.createConversation('direct', [profile.id]);
+      // Navigate to messages page with the conversation
+      navigate(`/messages?conversation=${conversation.id}`);
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      // If conversation already exists, just navigate to messages
+      navigate('/messages');
+    }
   };
 
   if (loading) {
@@ -124,14 +141,24 @@ const ProfilePage: React.FC = () => {
               {profile.bio && (
                 <p className="text-gray-300 mb-4">{profile.bio}</p>
               )}
-              {isOwnProfile && (
-                <button
-                  onClick={handleEdit}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
-                >
-                  Edit Profile
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {isOwnProfile ? (
+                  <button
+                    onClick={handleEdit}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors font-medium"
+                  >
+                    Edit Profile
+                  </button>
+                ) : currentUser ? (
+                  <button
+                    onClick={handleMessage}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium"
+                  >
+                    <HiChatBubbleLeftRight className="w-5 h-5" />
+                    Message
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
 
@@ -196,4 +223,5 @@ const ProfilePage: React.FC = () => {
 };
 
 export default ProfilePage;
+
 

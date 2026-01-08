@@ -57,3 +57,4 @@ echo "   FLUSH PRIVILEGES;"
 echo "   exit;"
 echo "3. Update .env.test: DB_USER=testuser, DB_PASS="
 
+

@@ -1,13 +1,16 @@
 // client/components/Messaging/MessagingPage.tsx
 // Main messaging page component
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import ConversationList from './ConversationList';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import UserSearch from './UserSearch';
 import messagingService, { Conversation, Message } from '../../services/messagingService.js';
 
 const MessagingPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -58,6 +61,24 @@ const MessagingPage: React.FC = () => {
     
     return () => clearInterval(interval);
   }, [loadConversations]);
+
+  // Handle URL parameter for opening a specific conversation
+  const conversationProcessedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const conversationIdParam = searchParams.get('conversation');
+    if (conversationIdParam && conversations.length > 0 && conversationProcessedRef.current !== conversationIdParam) {
+      const conversationId = parseInt(conversationIdParam, 10);
+      if (!isNaN(conversationId)) {
+        const conversation = conversations.find(c => c.id === conversationId);
+        if (conversation) {
+          handleSelectConversation(conversationId);
+          conversationProcessedRef.current = conversationIdParam;
+          // Remove the parameter from URL after selecting
+          setSearchParams({});
+        }
+      }
+    }
+  }, [searchParams, conversations, setSearchParams]);
 
   // Load messages for selected conversation
   const loadMessages = useCallback(async (conversationId: number, offset = 0, append = false) => {
@@ -202,13 +223,19 @@ const MessagingPage: React.FC = () => {
   return (
     <div className="flex h-screen bg-slate-900">
       {/* Conversation List Sidebar */}
-      <div className="w-80 flex-shrink-0">
-        <ConversationList
-          conversations={conversations}
-          selectedConversationId={selectedConversation?.id || null}
-          onSelectConversation={handleSelectConversation}
-          currentUserId={currentUserId || 0}
-        />
+      <div className="w-80 flex-shrink-0 flex flex-col border-r border-slate-700">
+        {/* User Search */}
+        <div className="p-4 border-b border-slate-700">
+          <UserSearch onUserSelected={loadConversations} />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <ConversationList
+            conversations={conversations}
+            selectedConversationId={selectedConversation?.id || null}
+            onSelectConversation={handleSelectConversation}
+            currentUserId={currentUserId || 0}
+          />
+        </div>
       </div>
 
       {/* Main Chat Area */}

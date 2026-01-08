@@ -212,7 +212,9 @@ class MessagingService {
     if (!response.ok) {
       throw new Error('Failed to fetch messages');
     }
-    return response.json();
+    const data = await response.json();
+    // API returns { messages: [...] } but we want just the array
+    return data.messages || data;
   }
 
   async sendMessage(

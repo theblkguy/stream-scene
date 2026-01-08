@@ -214,6 +214,45 @@ router.get('/username/check/:username', async (req: Request, res: Response) => {
   }
 });
 
+// Search users by username or name
+router.get('/search', async (req: Request, res: Response) => {
+  try {
+    const query = (req.query.q as string)?.trim();
+    const limit = Math.min(parseInt(req.query.limit as string, 10) || 20, 50);
+
+    if (!query || query.length < 2) {
+      return res.status(400).json({ error: 'Search query must be at least 2 characters' });
+    }
+
+    const searchPattern = `%${query}%`;
+
+    const users = await User.findAll({
+      where: {
+        [Op.or]: [
+          { username: { [Op.like]: searchPattern } },
+          { name: { [Op.like]: searchPattern } },
+        ],
+      },
+      attributes: ['id', 'name', 'username', 'profile_picture_url', 'bio'],
+      limit,
+      order: [['name', 'ASC']],
+    });
+
+    const results = users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      username: (user as any).username,
+      profilePicture: (user as any).profile_picture_url,
+      bio: (user as any).bio,
+    }));
+
+    res.json({ users: results });
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Failed to search users' });
+  }
+});
+
 // Update current user's profile
 router.put('/', requireAuth, async (req: Request, res: Response) => {
   try {

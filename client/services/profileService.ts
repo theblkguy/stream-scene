@@ -139,3 +139,20 @@ export async function checkUsernameAvailability(username: string): Promise<Usern
   return response.json();
 }
 
+/**
+ * Search users by username or name
+ */
+export async function searchUsers(query: string, limit = 20): Promise<User[]> {
+  const response = await fetch(`/api/profile/search?q=${encodeURIComponent(query)}&limit=${limit}`, {
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to search users');
+  }
+
+  const data = await response.json();
+  return data.users;
+}
+
+

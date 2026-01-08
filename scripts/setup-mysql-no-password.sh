@@ -51,3 +51,4 @@ else
     echo "You may need to run this script with sudo or configure MySQL manually"
 fi
 
+

@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaRobot } from 'react-icons/fa';
 import {
     HiBars3,
     HiHome,
     HiXMark,
-    HiUser
+    HiUser,
+    HiChatBubbleLeftRight
 } from 'react-icons/hi2';
 import useAuth from '../hooks/useAuth';
 import GoogleLoginButton from './GoogleLoginButton';
+import messagingService, { Conversation } from '../services/messagingService';
 
 interface NavbarProps {
   currentComponent: 'landing' | 'planner' | 'project-center' | 'budget-tracker';
@@ -34,11 +36,34 @@ const ProjectIcon = () => (
 
 const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Use authUser from hook if no user prop provided
   const currentUser = user || authUser;
+
+  // Fetch unread message count
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const conversations = await messagingService.getConversations();
+        // Simple unread count - you can enhance this later with actual unread tracking
+        // For now, we'll show a badge if there are any conversations
+        setUnreadCount(conversations.length > 0 ? conversations.filter(c => c.lastMessage).length : 0);
+      } catch (error) {
+        console.error('Error fetching conversations:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [currentUser?.id]);
   
   // Helper to get user avatar from either prop structure
   const getUserAvatar = (user: { avatar?: string; profilePicture?: string } | null) => {
@@ -176,6 +201,20 @@ const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) =
             <div className="hidden sm:flex items-center gap-3">
               {currentUser ? (
                 <div className="flex items-center gap-3 px-3 py-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                  {/* Messages Button */}
+                  <button
+                    onClick={() => navigate('/messages')}
+                    className="relative px-2 py-1 text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg transition-colors"
+                    title="Messages"
+                  >
+                    <HiChatBubbleLeftRight className="w-4 h-4" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  
                   <button
                     onClick={() => navigate('/profile')}
                     className="flex items-center gap-3 hover:opacity-80 transition-opacity"
@@ -214,20 +253,34 @@ const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) =
             </div>
 
             {/* Mobile User Avatar or Login */}
-            <div className="sm:hidden">
+            <div className="sm:hidden flex items-center gap-2">
               {currentUser ? (
-                <button
-                  onClick={() => navigate('/profile')}
-                  className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
-                >
-                  {getUserAvatar(currentUser) ? (
-                    <img src={getUserAvatar(currentUser)} alt={currentUser.name} className="w-8 h-8 rounded-full" />
-                  ) : (
-                    <span className="text-sm font-bold text-white">
-                      {currentUser.name.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </button>
+                <>
+                  <button
+                    onClick={() => navigate('/messages')}
+                    className="relative p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    title="Messages"
+                  >
+                    <HiChatBubbleLeftRight className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => navigate('/profile')}
+                    className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
+                  >
+                    {getUserAvatar(currentUser) ? (
+                      <img src={getUserAvatar(currentUser)} alt={currentUser.name} className="w-8 h-8 rounded-full" />
+                    ) : (
+                      <span className="text-sm font-bold text-white">
+                        {currentUser.name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </button>
+                </>
               ) : (
                 <div className="scale-75">
                   <GoogleLoginButton />
@@ -278,46 +331,64 @@ const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) =
             {/* Mobile Authentication Section */}
             <div className="mt-4 pt-4 border-t border-white/10 px-4">
               {currentUser ? (
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => {
-                      navigate('/profile');
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-                      {getUserAvatar(currentUser) ? (
-                        <img src={getUserAvatar(currentUser)} alt={currentUser.name} className="w-8 h-8 rounded-full" />
-                      ) : (
-                        <span className="text-sm font-bold text-white">
-                          {currentUser.name.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-sm">
-                      <p className="text-white font-medium">{currentUser.name}</p>
-                      <p className="text-gray-400 text-xs">Online</p>
-                    </div>
-                  </button>
-                  <div className="flex items-center gap-2">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
                     <button
                       onClick={() => {
                         navigate('/profile');
                         setIsMobileMenuOpen(false);
                       }}
-                      className="px-2 py-1 text-xs bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors"
-                      title="View Profile"
+                      className="flex items-center gap-3 hover:opacity-80 transition-opacity"
                     >
-                      <HiUser className="w-4 h-4" />
+                      <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                        {getUserAvatar(currentUser) ? (
+                          <img src={getUserAvatar(currentUser)} alt={currentUser.name} className="w-8 h-8 rounded-full" />
+                        ) : (
+                          <span className="text-sm font-bold text-white">
+                            {currentUser.name.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm">
+                        <p className="text-white font-medium">{currentUser.name}</p>
+                        <p className="text-gray-400 text-xs">Online</p>
+                      </div>
                     </button>
-                    <button 
-                      onClick={handleLogout}
-                      className="px-3 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
-                    >
-                      Logout
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          navigate('/profile');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="px-2 py-1 text-xs bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors"
+                        title="View Profile"
+                      >
+                        <HiUser className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={handleLogout}
+                        className="px-3 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
+                      >
+                        Logout
+                      </button>
+                    </div>
                   </div>
+                  {/* Messages Button for Mobile */}
+                  <button
+                    onClick={() => {
+                      navigate('/messages');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg transition-colors"
+                  >
+                    <HiChatBubbleLeftRight className="w-5 h-5" />
+                    <span className="font-medium">Messages</span>
+                    {unreadCount > 0 && (
+                      <span className="ml-auto w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
                 </div>
               ) : (
                 <div className="flex justify-center">
