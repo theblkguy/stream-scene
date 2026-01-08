@@ -2,7 +2,7 @@
 // Message list component with infinite scroll
 
 import React, { useEffect, useRef } from 'react';
-import { Message } from '../../services/messagingService.js';
+import { Message } from '../../services/messagingService';
 
 interface MessageListProps {
   messages: Message[];

@@ -2,7 +2,7 @@
 // Conversation list component
 
 import React from 'react';
-import { Conversation } from '../../services/messagingService.js';
+import { Conversation } from '../../services/messagingService';
 
 interface ConversationListProps {
   conversations: Conversation[];

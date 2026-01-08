@@ -7,7 +7,7 @@ import ConversationList from './ConversationList';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import UserSearch from './UserSearch';
-import messagingService, { Conversation, Message } from '../../services/messagingService.js';
+import messagingService, { Conversation, Message } from '../../services/messagingService';
 
 const MessagingPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
