@@ -4,9 +4,18 @@
 import io, { Socket } from 'socket.io-client';
 import { User } from '../types/auth.js';
 
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://streamscene.net' 
-  : 'http://localhost:8000';
+// Use relative URLs for API calls (works in both dev and production)
+const API_BASE_URL = '';
+
+// Get WebSocket server URL from current window location
+const getWebSocketUrl = () => {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return process.env.NODE_ENV === 'production' 
+    ? 'https://streamscene.net' 
+    : 'http://localhost:8000';
+};
 
 export interface Conversation {
   id: number;
@@ -59,7 +68,7 @@ class MessagingService {
     }
 
     this.currentUserId = userId;
-    this.socket = io(API_BASE_URL, {
+    this.socket = io(getWebSocketUrl(), {
       transports: ['polling', 'websocket'],
       withCredentials: true,
     });
