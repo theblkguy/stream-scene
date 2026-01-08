@@ -320,7 +320,8 @@ const BudgetTracker: React.FC = () => {
       console.log('🔍 Starting OCR processing for file:', file.name, 'Size:', file.size);
       const imageUrl = URL.createObjectURL(file);
 
-      // Configure Tesseract with proper TrustedScriptURL handling
+      // Configure Tesseract - let it auto-download from CDN to avoid storing large files
+      // Tesseract.js will automatically download training data from CDN when paths aren't specified
       const result = await Tesseract.recognize(imageUrl, 'eng', {
         logger: (m: { status?: string; progress?: number }) => {
           if (m.status === 'recognizing text' && typeof m.progress === 'number') {
@@ -328,10 +329,8 @@ const BudgetTracker: React.FC = () => {
             console.log(`📄 OCR Progress: ${Math.round(m.progress * 100)}%`);
           }
         },
-        // Use local files to avoid TrustedScriptURL issues
-        workerPath: '/tesseract-worker.min.js',
-        langPath: '/tessdata',
-        corePath: '/tesseract-core.wasm.js',
+        // Let Tesseract.js auto-download from CDN (unpkg/jsdelivr)
+        // This avoids storing large training data files in the repo
       });
 
       const rawText: string = result.data?.text || '';

@@ -36,6 +36,9 @@ server.log
 cookies.txt
 cleanup-*.js
 
+# Tesseract training data (auto-downloaded from CDN at runtime)
+public/tessdata/
+
 # SSH Keys
 *.pem
 *.ppk

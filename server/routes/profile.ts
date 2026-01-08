@@ -84,33 +84,49 @@ const validateURL = (url: string): boolean => {
   }
 };
 
+// Helper function to create default profile from user
+const createProfileFromUser = (user: any) => {
+  return {
+    id: user.id,
+    email: user.email || '',
+    name: user.name || 'User',
+    username: user.username || null,
+    bio: user.bio || null,
+    profilePicture: user.profile_picture_url || null,
+    contactEmail: user.contact_email || null,
+    phone: user.phone || null,
+    socialLinks: user.socialLinks || null,
+    createdAt: user.created_at || new Date(),
+    updatedAt: user.updated_at || new Date(),
+  };
+};
+
 // Get current user's profile
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = (req.user as any).id;
+    const userId = (req.user as any)?.id;
+    
+    if (!userId) {
+      console.error('❌ No user ID found in request');
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    console.log('🔍 Fetching profile for user ID:', userId);
     const user = await User.findByPk(userId);
 
     if (!user) {
+      console.error('❌ User not found in database:', userId);
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const profile = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      username: user.username,
-      bio: user.bio,
-      profilePicture: user.profile_picture_url,
-      contactEmail: user.contact_email,
-      phone: user.phone,
-      socialLinks: user.socialLinks,
-      createdAt: user.created_at,
-      updatedAt: user.updated_at,
-    };
-
+    const profile = createProfileFromUser(user);
+    console.log('✅ Profile fetched successfully for user:', userId);
     res.json(profile);
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    console.error('❌ Error fetching profile:', error);
+    if (error instanceof Error) {
+      console.error('❌ Error details:', error.message, error.stack);
+    }
     res.status(500).json({ error: 'Failed to fetch profile' });
   }
 });
@@ -133,14 +149,14 @@ router.get('/:userId', async (req: Request, res: Response) => {
     // Return public profile (exclude sensitive information)
     const profile = {
       id: user.id,
-      name: user.name,
-      username: user.username,
-      bio: user.bio,
-      profilePicture: user.profile_picture_url,
-      contactEmail: user.contact_email,
-      phone: user.phone,
-      socialLinks: user.socialLinks,
-      createdAt: user.created_at,
+      name: user.name || 'User',
+      username: user.username || null,
+      bio: user.bio || null,
+      profilePicture: user.profile_picture_url || null,
+      contactEmail: user.contact_email || null,
+      phone: user.phone || null,
+      socialLinks: user.socialLinks || null,
+      createdAt: user.created_at || new Date(),
     };
 
     res.json(profile);
@@ -170,14 +186,14 @@ router.get('/username/:username', async (req: Request, res: Response) => {
     // Return public profile
     const profile = {
       id: user.id,
-      name: user.name,
-      username: user.username,
-      bio: user.bio,
-      profilePicture: user.profile_picture_url,
-      contactEmail: user.contact_email,
-      phone: user.phone,
-      socialLinks: user.socialLinks,
-      createdAt: user.created_at,
+      name: user.name || 'User',
+      username: user.username || null,
+      bio: user.bio || null,
+      profilePicture: user.profile_picture_url || null,
+      contactEmail: user.contact_email || null,
+      phone: user.phone || null,
+      socialLinks: user.socialLinks || null,
+      createdAt: user.created_at || new Date(),
     };
 
     res.json(profile);

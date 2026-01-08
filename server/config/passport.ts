@@ -29,12 +29,20 @@ passport.use(
 
         if (!user) {
           console.log('🔍 Creating new user...');
+          const userName = `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim() || profile.displayName || 'User';
           user = await User.create({
             google_id: profile.id,
             email: profile.emails?.[0]?.value,
-            name: `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim(),
+            name: userName,
+            // Set default values for profile fields
+            username: null,
+            bio: null,
+            profile_picture_url: profile.photos?.[0]?.value || null,
+            contact_email: null,
+            phone: null,
+            social_links: null,
           });
-          console.log('✅ New user created:', { id: user.id, email: user.email });
+          console.log('✅ New user created:', { id: user.id, email: user.email, name: user.name });
         }
 
         return done(null, user);
