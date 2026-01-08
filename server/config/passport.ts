@@ -34,13 +34,8 @@ passport.use(
             google_id: profile.id,
             email: profile.emails?.[0]?.value,
             name: userName,
-            // Set default values for profile fields
-            username: null,
-            bio: null,
-            profile_picture_url: profile.photos?.[0]?.value || null,
-            contact_email: null,
-            phone: null,
-            social_links: null,
+            // Optional fields - omit them to use default undefined values
+            ...(profile.photos?.[0]?.value && { profile_picture_url: profile.photos[0].value }),
           });
           console.log('✅ New user created:', { id: user.id, email: user.email, name: user.name });
         }
