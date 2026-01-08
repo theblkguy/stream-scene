@@ -217,9 +217,10 @@ const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) =
                   
                   <button
                     onClick={() => navigate('/profile')}
-                    className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer group"
+                    title="View Profile"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center group-hover:ring-2 group-hover:ring-purple-400 transition-all">
                       {getUserAvatar(currentUser) ? (
                         <img src={getUserAvatar(currentUser)} alt={currentUser.name} className="w-8 h-8 rounded-full" />
                       ) : (
@@ -228,9 +229,13 @@ const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) =
                         </span>
                       )}
                     </div>
-                    <div className="text-sm">
-                      <p className="text-white font-medium">{currentUser.name}</p>
-                      <p className="text-gray-400 text-xs">Online</p>
+                    <div className="text-sm text-left">
+                      <p className="text-white font-medium group-hover:text-purple-300 transition-colors">
+                        {currentUser.name}
+                      </p>
+                      <p className="text-gray-400 text-xs group-hover:text-gray-300 transition-colors">
+                        {currentUser.username ? `@${currentUser.username}` : 'Online'}
+                      </p>
                     </div>
                   </button>
                   <button
@@ -270,7 +275,8 @@ const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) =
                   </button>
                   <button
                     onClick={() => navigate('/profile')}
-                    className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
+                    className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity ring-2 ring-purple-400/50 hover:ring-purple-400"
+                    title="View Profile"
                   >
                     {getUserAvatar(currentUser) ? (
                       <img src={getUserAvatar(currentUser)} alt={currentUser.name} className="w-8 h-8 rounded-full" />
@@ -349,10 +355,10 @@ const Navbar: React.FC<NavbarProps> = ({ currentComponent, onNavigate, user }) =
                           </span>
                         )}
                       </div>
-                      <div className="text-sm">
-                        <p className="text-white font-medium">{currentUser.name}</p>
-                        <p className="text-gray-400 text-xs">Online</p>
-                      </div>
+                    <div className="text-sm text-left">
+                      <p className="text-white font-medium">{currentUser.name}</p>
+                      <p className="text-gray-400 text-xs">{currentUser.username ? `@${currentUser.username}` : 'Online'}</p>
+                    </div>
                     </button>
                     <div className="flex items-center gap-2">
                       <button
