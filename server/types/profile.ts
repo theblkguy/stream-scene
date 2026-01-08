@@ -12,7 +12,7 @@ export interface ProfileResponse {
   profilePicture?: string;
   contactEmail?: string;
   phone?: string;
-  socialLinks?: { twitter?: string; instagram?: string; [key: string]: string };
+  socialLinks?: { twitter?: string; instagram?: string; [key: string]: string | undefined };
   createdAt?: string;
   updatedAt?: string;
 }
@@ -28,7 +28,7 @@ export interface PublicProfileResponse {
   profilePicture?: string;
   contactEmail?: string;
   phone?: string;
-  socialLinks?: { twitter?: string; instagram?: string; [key: string]: string };
+  socialLinks?: { twitter?: string; instagram?: string; [key: string]: string | undefined };
   createdAt?: string;
 }
 
@@ -40,7 +40,7 @@ export interface UpdateProfileRequest {
   bio?: string;
   contactEmail?: string;
   phone?: string;
-  socialLinks?: { twitter?: string; instagram?: string; [key: string]: string };
+  socialLinks?: { twitter?: string; instagram?: string; [key: string]: string | undefined };
 }
 
 /**

@@ -25,6 +25,17 @@ server/.env
 .DS_Store
 Thumbs.db
 
+# Log files
+*.log
+server.log
+
+# Backup files
+*.backup
+
+# Temporary files
+cookies.txt
+cleanup-*.js
+
 # SSH Keys
 *.pem
 *.ppk

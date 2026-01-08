@@ -8,7 +8,7 @@ export interface User {
   profilePicture?: string;
   contactEmail?: string;
   phone?: string;
-  socialLinks?: { twitter?: string; instagram?: string; [key: string]: string };
+  socialLinks?: { twitter?: string; instagram?: string; [key: string]: string | undefined };
 }
 
 export interface AuthResponse {

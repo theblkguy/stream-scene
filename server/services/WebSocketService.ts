@@ -1,5 +1,6 @@
 import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import { Op } from 'sequelize';
 import Canvas from '../models/Canvas.js';
 import Comment from '../models/Comment.js';
 import { User } from '../models/User.js';
@@ -320,8 +321,8 @@ export class WebSocketService {
             where: {
               conversation_id: conversationId,
               user_id: userData.userId,
-              left_at: null,
-            },
+              left_at: { [Op.is]: null } as any,
+            } as any,
           });
 
           if (!participant) {
@@ -388,8 +389,8 @@ export class WebSocketService {
             where: {
               conversation_id: data.conversationId,
               user_id: userData.userId,
-              left_at: null,
-            },
+              left_at: { [Op.is]: null } as any,
+            } as any,
           });
 
           if (!participant) {
@@ -453,8 +454,8 @@ export class WebSocketService {
             where: {
               conversation_id: data.conversationId,
               user_id: userData.userId,
-              left_at: null,
-            },
+              left_at: { [Op.is]: null } as any,
+            } as any,
           });
 
           if (!participant) {
@@ -490,8 +491,8 @@ export class WebSocketService {
             where: {
               conversation_id: data.conversationId,
               user_id: userData.userId,
-              left_at: null,
-            },
+              left_at: { [Op.is]: null } as any,
+            } as any,
           });
 
           if (!participant) {

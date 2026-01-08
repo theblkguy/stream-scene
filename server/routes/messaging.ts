@@ -34,21 +34,21 @@ const checkParticipant = async (userId: number, conversationId: number): Promise
     where: {
       conversation_id: conversationId,
       user_id: userId,
-      left_at: null,
-    },
+      left_at: { [Op.is]: null } as any,
+    } as any,
   });
   return !!participant;
 };
 
 // Helper to check if user is admin/creator
 const checkIsAdmin = async (userId: number, conversationId: number): Promise<boolean> => {
-  const participant = await ConversationParticipant.findOne({
+  const participant: ConversationParticipant | null = await ConversationParticipant.findOne({
     where: {
       conversation_id: conversationId,
       user_id: userId,
       role: 'admin',
-      left_at: null,
-    },
+      left_at: { [Op.is]: null } as any,
+    } as any,
   });
   return !!participant;
 };
@@ -59,11 +59,11 @@ router.get('/conversations', requireAuth, async (req: Request, res: Response) =>
     const userId = (req.user as any).id;
 
     // Get all conversations where user is a participant
-    const participants = await ConversationParticipant.findAll({
+    const participants: ConversationParticipant[] = await ConversationParticipant.findAll({
       where: {
         user_id: userId,
-        left_at: null,
-      },
+        left_at: { [Op.is]: null } as any,
+      } as any,
       include: [{
         model: Conversation,
         as: 'conversation',
@@ -83,17 +83,17 @@ router.get('/conversations', requireAuth, async (req: Request, res: Response) =>
     });
 
     // Format response with last message preview
-    const conversations = await Promise.all(participants.map(async (participant) => {
+    const conversations = await Promise.all(participants.map(async (participant: ConversationParticipant) => {
       const conversation = (participant as any).conversation;
       const lastMessage = conversation?.messages?.[0];
 
       // Get other participants for direct conversations
-      const otherParticipants = await ConversationParticipant.findAll({
+      const otherParticipants: ConversationParticipant[] = await ConversationParticipant.findAll({
         where: {
           conversation_id: conversation.id,
           user_id: { [Op.ne]: userId },
-          left_at: null,
-        },
+          left_at: { [Op.is]: null } as any,
+        } as any,
         include: [{
           model: User,
           as: 'user',
@@ -171,18 +171,18 @@ router.post('/conversations', requireAuth, async (req: Request, res: Response) =
           as: 'participants',
           where: {
             user_id: { [Op.in]: [userId, participantIds[0]] },
-            left_at: null,
-          },
+            left_at: { [Op.is]: null } as any,
+          } as any,
         }],
       });
 
       // Check if this conversation has exactly these two participants
       if (existingConversation) {
-        const participants = await ConversationParticipant.findAll({
+        const participants: ConversationParticipant[] = await ConversationParticipant.findAll({
           where: {
             conversation_id: existingConversation.id,
-            left_at: null,
-          },
+            left_at: { [Op.is]: null } as any,
+          } as any,
         });
 
         if (participants.length === 2) {
@@ -268,7 +268,7 @@ router.get('/conversations/:id', requireAuth, async (req: Request, res: Response
       include: [{
         model: ConversationParticipant,
         as: 'participants',
-        where: { left_at: null },
+        where: { left_at: { [Op.is]: null } as any } as any,
         include: [{
           model: User,
           as: 'user',
@@ -322,8 +322,8 @@ router.get('/conversations/:id/messages', requireAuth, async (req: Request, res:
     const messages = await Message.findAll({
       where: {
         conversation_id: conversationId,
-        deleted_at: null,
-      },
+        deleted_at: { [Op.is]: null } as any,
+      } as any,
       include: [{
         model: User,
         as: 'user',
@@ -558,8 +558,8 @@ router.post('/conversations/:id/participants', requireAuth, async (req: Request,
       where: {
         conversation_id: conversationId,
         user_id: participantId,
-        left_at: null,
-      },
+        left_at: { [Op.is]: null } as any,
+      } as any,
     });
 
     if (existingParticipant) {
@@ -624,8 +624,8 @@ router.delete('/conversations/:id/participants/:userId', requireAuth, async (req
       where: {
         conversation_id: conversationId,
         user_id: participantUserId,
-        left_at: null,
-      },
+        left_at: { [Op.is]: null } as any,
+      } as any,
     });
 
     if (!participant) {
