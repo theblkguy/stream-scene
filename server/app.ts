@@ -240,7 +240,9 @@ app.use('/api/shares', sharesRoutes);
 app.use('/api/caption', captionRouter);
 app.use('/api/short-links', shortLinksRoutes);
 app.use('/api/profile', profileRoutes);
+console.log('✅ Profile routes mounted at /api/profile');
 app.use('/api', messagingRoutes);
+console.log('✅ Messaging routes mounted at /api');
 // Note: All other API routes (tasks, content-scheduler, threads, budget, etc.) are mounted in routes/index.ts
 
 
